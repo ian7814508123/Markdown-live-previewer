@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Scrollbar is already in index.html, but moving here is good practice if we want to consolidate. 
+   For now, we just add the list styling. */
+
+/* Multi-level Ordered List Styling */
+.prose ol {
+    list-style-type: upper-roman;
+    /* Level 1: I, II, III */
+}
+
+.prose ol ol {
+    list-style-type: lower-roman;
+    /* Level 2: i, ii, iii */
+}
+
+.prose ol ol ol {
+    list-style-type: upper-alpha;
+    /* Level 3: A, B, C */
+}
+
+.prose ol ol ol ol {
+    list-style-type: lower-alpha;
+    /* Level 4: a, b, c */
+}
+
+.prose ol ol ol ol ol {
+    list-style-type: decimal;
+    /* Level 5: 1, 2, 3 */
+}
+
+/* Multi-level Unordered List Styling */
+.prose ul {
+    list-style-type: disc;
+    /* Level 1 */
+}
+
+.prose ul ul {
+    list-style-type: circle;
+    /* Level 2 */
+}
+
+.prose ul ul ul {
+    list-style-type: square;
+    /* Level 3 */
+}
+
+.prose ul ul ul ul {
+    list-style-type: disc;
+    /* Level 4 */
+}
+
+.prose ul ul ul ul ul {
+    list-style-type: circle;
+    /* Level 5 */
+}
+
+/* Print Styles Override (Consolidated) */
+/* Print Styles handled by Tailwind classes in components */

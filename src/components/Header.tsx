@@ -1,5 +1,7 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { Sparkles, Download, ChevronDown, Image as ImageIcon, FileImage, FileJson, FileText, Printer, Sun, Moon } from 'lucide-react';
+import { useRef, useState, useEffect } from 'react';
+import { Sparkles, Download, ChevronDown, Image as ImageIcon, FileImage, FileJson, FileText, Printer, Sun, Moon, Table } from 'lucide-react';
+import { parseTableToMarkdown } from '../services/tableParser';
+import { parseExcelToMarkdown } from '../services/excelParser';
 
 interface HeaderProps {
     mode: 'mermaid' | 'markdown';
@@ -12,6 +14,7 @@ interface HeaderProps {
     onExportImage: (format: 'png' | 'svg' | 'jpg') => void;
     isSyncScroll: boolean;
     setIsSyncScroll: (isSync: boolean) => void;
+    onInsertCode: (code: string) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -24,10 +27,12 @@ const Header: React.FC<HeaderProps> = ({
     onDownloadMarkdown,
     onExportImage,
     isSyncScroll,
-    setIsSyncScroll
+    setIsSyncScroll,
+    onInsertCode
 }) => {
     const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState(false);
     const downloadMenuRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -53,8 +58,34 @@ const Header: React.FC<HeaderProps> = ({
         setIsDownloadMenuOpen(false);
     }
 
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        const file = files[0];
+        try {
+            const md = await parseExcelToMarkdown(file);
+            if (md) {
+                onInsertCode(md);
+            }
+        } catch (error) {
+            console.error("Failed to parse file", error);
+            alert("Failed to parse Excel file");
+        }
+
+        // Reset input
+        e.target.value = '';
+    };
+
     return (
-        <header className="h-16 flex items-center justify-between px-6 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-30 shrink-0 shadow-sm transition-colors duration-200">
+        <header className="h-16 flex items-center justify-between px-6 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-30 shrink-0 shadow-sm transition-colors duration-200 select-none print:hidden">
+            <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept=".xlsx,.xls,.csv"
+                onChange={handleFileUpload}
+            />
             <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-indigo-200 dark:shadow-indigo-900/40">
                     <Sparkles size={24} />
@@ -124,6 +155,17 @@ const Header: React.FC<HeaderProps> = ({
                             <div className={`w-2 h-2 rounded-full ${isSyncScroll ? 'bg-indigo-500 animate-pulse' : 'bg-slate-300 dark:bg-slate-600'}`} />
                             同步滾動
                         </button>
+
+                        <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-2" />
+
+                        <button
+                            onClick={() => fileInputRef.current?.click()}
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border bg-transparent border-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                            title="匯入表格"
+                        >
+                            <Table size={14} />
+                            匯入表格
+                        </button>
                         <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-2" />
                     </>
                 )}
@@ -162,10 +204,17 @@ const Header: React.FC<HeaderProps> = ({
                                     </button>
                                 </>
                             ) : (
-                                <button onClick={() => handleExport(onDownloadMarkdown)} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                                    <div className="w-9 h-9 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg flex items-center justify-center"><FileText size={18} /></div>
-                                    <div className="flex flex-col items-start"><span className="font-bold">標註掉落 檔案</span><span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase">.md 源碼</span></div>
-                                </button>
+                                <>
+                                    <button onClick={() => handleExport(onDownloadMarkdown)} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                        <div className="w-9 h-9 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg flex items-center justify-center"><FileText size={18} /></div>
+                                        <div className="flex flex-col items-start"><span className="font-bold">標註掉落 檔案</span><span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase">.md 源碼</span></div>
+                                    </button>
+                                    <div className="mx-4 my-1 border-t border-slate-100 dark:border-slate-700" />
+                                    <button onClick={() => handleExport(() => window.print())} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                        <div className="w-9 h-9 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-lg flex items-center justify-center"><Printer size={18} /></div>
+                                        <div className="flex flex-col items-start"><span className="font-bold">列印 / 可攜式文件格式</span><span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase">瀏覽器原生</span></div>
+                                    </button>
+                                </>
                             )}
                         </div>
                     )}

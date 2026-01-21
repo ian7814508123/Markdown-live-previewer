@@ -11,6 +11,8 @@ interface EditorProps {
     copied: boolean;
     onScroll?: (e: React.UIEvent<HTMLTextAreaElement>) => void;
     isDarkMode: boolean;
+    onMouseEnter?: () => void;
+    onMouseLeave?: () => void;
 }
 
 const Editor = forwardRef<HTMLTextAreaElement, EditorProps>(({
@@ -22,7 +24,9 @@ const Editor = forwardRef<HTMLTextAreaElement, EditorProps>(({
     onClear,
     copied,
     onScroll,
-    isDarkMode
+    isDarkMode,
+    onMouseEnter,
+    onMouseLeave
 }, ref) => {
     const lineNumbersRef = React.useRef<HTMLDivElement>(null);
 
@@ -48,19 +52,79 @@ const Editor = forwardRef<HTMLTextAreaElement, EditorProps>(({
             const start = target.selectionStart;
             const end = target.selectionEnd;
             const value = target.value;
+            const lines = value.split('\n');
 
-            const newValue = value.substring(0, start) + "  " + value.substring(end);
+            // Find start and end line indices
+            let startLineIndex = value.substring(0, start).split('\n').length - 1;
+            let endLineIndex = value.substring(0, end).split('\n').length - 1;
 
-            setCode(newValue);
+            if (e.shiftKey) {
+                // Shift+Tab: Unindent
+                const newLines = lines.map((line, i) => {
+                    if (i >= startLineIndex && i <= endLineIndex) {
+                        return line.startsWith('  ') ? line.substring(2) : line;
+                    }
+                    return line;
+                });
 
-            setTimeout(() => {
-                target.selectionStart = target.selectionEnd = start + 2;
-            }, 0);
+                const newValue = newLines.join('\n');
+                setCode(newValue);
+
+                // Adjust selection
+                // Simple adjustment: keep selection range but shifted. 
+                // A full robust cursor adjustment is complex, but this is usually sufficient for simple editors.
+                // Re-calculating cursor position is tricky without tracking exact changes per line.
+                // We'll try to maintain relative position if possible, but resetting to end of range is safer to avoid glitches.
+                // For a proper implementation, we would calculate the exact delta.
+
+                // Calculate removed characters
+                let removedChars = 0;
+                for (let i = startLineIndex; i <= endLineIndex; i++) {
+                    if (lines[i].startsWith('  ')) removedChars += 2;
+                }
+
+                setTimeout(() => {
+                    target.selectionStart = Math.max(0, start - (lines[startLineIndex].startsWith('  ') ? 2 : 0));
+                    target.selectionEnd = Math.max(0, end - removedChars);
+                }, 0);
+
+            } else {
+                // Tab: Indent
+                if (start !== end) {
+                    // Multi-line selection indent
+                    const newLines = lines.map((line, i) => {
+                        if (i >= startLineIndex && i <= endLineIndex) {
+                            return '  ' + line;
+                        }
+                        return line;
+                    });
+
+                    const newValue = newLines.join('\n');
+                    setCode(newValue);
+
+                    setTimeout(() => {
+                        // Adjust selection to cover the indentations
+                        target.selectionStart = start + 2;
+                        target.selectionEnd = end + (endLineIndex - startLineIndex + 1) * 2;
+                    }, 0);
+                } else {
+                    // Single line / Cursor indent
+                    const newValue = value.substring(0, start) + "  " + value.substring(end);
+                    setCode(newValue);
+                    setTimeout(() => {
+                        target.selectionStart = target.selectionEnd = start + 2;
+                    }, 0);
+                }
+            }
         }
     };
 
     return (
-        <section className="w-[400px] lg:w-[480px] flex flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 z-20 shadow-xl transition-colors duration-200">
+        <section
+            className="w-[400px] lg:w-[480px] flex flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 z-20 shadow-xl transition-colors duration-200 print:hidden"
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+        >
             <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-slate-600 font-bold text-sm">
                     <FileCode size={18} className="text-indigo-500" />

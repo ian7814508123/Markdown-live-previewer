@@ -21,6 +21,8 @@ interface PreviewPanelProps {
     theme: any; // Needed for markdown
     onScroll?: (e: React.UIEvent<HTMLDivElement>) => void;
     isDarkMode: boolean;
+    onMouseEnter?: () => void;
+    onMouseLeave?: () => void;
 }
 
 const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
@@ -40,21 +42,27 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
     code,
     theme,
     onScroll,
-    isDarkMode
+    isDarkMode,
+    onMouseEnter,
+    onMouseLeave
 }, ref) => {
 
     // DIFFERENT LAYOUT STRATEGY BASED ON MODE
     if (mode === 'markdown') {
         return (
-            <section className="flex-1 flex flex-col bg-slate-100 dark:bg-slate-950 relative overflow-hidden group/preview transition-colors duration-200">
+            <section
+                className="flex-1 flex flex-col bg-slate-100 dark:bg-slate-950 relative overflow-hidden group/preview transition-colors duration-200"
+                onMouseEnter={onMouseEnter}
+                onMouseLeave={onMouseLeave}
+            >
                 {/* Markdown Toolbar / Status if needed, or just container */}
                 <div
                     ref={ref}
                     onScroll={onScroll}
-                    className="flex-1 overflow-auto custom-scrollbar p-8 bg-white dark:bg-slate-900"
+                    className="flex-1 overflow-auto custom-scrollbar p-8 bg-white dark:bg-slate-900 print:p-0 print:overflow-visible"
                 >
-                    <div className="max-w-4xl mx-auto min-h-full bg-white p-8 shadow-sm">
-                        <MarkdownPreview content={code} theme={theme} />
+                    <div className="max-w-4xl mx-auto min-h-full bg-white dark:bg-slate-900 p-8 shadow-sm transition-colors duration-200 print:max-w-none print:w-full print:shadow-none print:p-0">
+                        <MarkdownPreview content={code} theme={theme} isDarkMode={isDarkMode} />
                     </div>
                 </div>
 
@@ -71,6 +79,8 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
         <section
             className="flex-1 flex flex-col bg-slate-100 dark:bg-slate-950 relative overflow-hidden group/preview transition-colors duration-200"
             onWheel={onWheel}
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
         >
             {error && (
                 <div className="absolute top-6 left-6 right-6 z-40 flex flex-col gap-3 p-5 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-xl text-red-800 dark:text-red-200 shadow-2xl animate-in slide-in-from-top-4 duration-300">
@@ -115,7 +125,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
                     {/* Mermaid Preview */}
                     {svgContent ? (
                         <div
-                            className="bg-white p-16 rounded-[2.5rem] shadow-2xl border border-slate-200/50 transition-all duration-300 ease-out pointer-events-auto"
+                            className="bg-white dark:bg-slate-800 p-16 rounded-[2.5rem] shadow-2xl border border-slate-200/50 dark:border-slate-700/50 transition-all duration-300 ease-out pointer-events-auto"
                             style={{ transform: `scale(${zoom / 100})` }}
                             dangerouslySetInnerHTML={{ __html: svgContent }}
                         />

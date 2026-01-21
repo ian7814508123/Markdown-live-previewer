@@ -99,66 +99,61 @@ graph TB
     %%     "部署" : 10
 `;
 
-const DEFAULT_MARKDOWN = `# Markdown 文法指南
+const DEFAULT_MARKDOWN = `# Markdown 語法與功能指南
+
+## 🌟 新功能亮點
+* **Excel/表格 匯入**: 點擊工具列的 "匯入表格" 按鈕，上傳 .xlsx 檔或貼上 CSV 資料。
+* **PDF 匯出**: 在下載選單中選擇 "列印 / PDF" 以儲存為高品質文件。
+* **同步滾動**: 編輯區與預覽區現在會流暢地同步捲動。
+* **智慧縮排**: 按下 Tab 鍵可自動縮排，Shift+Tab 可取消縮排（支援多行）。
+
+## 列表演示
+
+### 有序列表 (支援且樣式化至 5 階)
+1. 第一階 (I)
+    1. 第二階 (i)
+        1. 第三階 (A)
+            1. 第四階 (a)
+                1. 第五階 (1)
+                2. 第五階項目 B
+
+
+### 無序列表 (支援且樣式化至 5 階)
+* 第一階 (實心圓)
+    * 第二階 (空心圓)
+        * 第三階 (方塊)
+            * 第四階 (實心圓)
+                * 第五階 (空心圓)
+                * 第五階項目 B
 
 ## 標題
-# 這是標題 h1
-## 這是標題 h2
-###### 這是標題 h6
+# H1 標題
+## H2 標題
+### H3 標題
 
-## 強調
-*此文字將為斜體*
-_此文字也將為斜體_
+## 強調與格式
+*斜體* 或 _斜體_
+**粗體** 或 __粗體__
+***粗斜體***
+~~刪除線~~
 
-**此文字將為粗體**
-__此文字也將為粗體__
+## 程式碼
+行內程式碼: \`console.log('Hello')\`
 
-_您可以 **組合使用** 它們_
-
-## 列表
-
-### 無序列表
-* 項目 1
-* 項目 2
-  * 項目 2a
-  * 項目 2b
-* 項目 3
-  * 項目 3a
-  * 項目 3b
-
-### 有序列表
-1. 項目 1
-2. 項目 2
-3. 項目 3
-   1. 項目 3a
-   2. 項目 3b
-
-## 圖片
-![這是替代文字](/image/Markdown-mark.svg "這是一張範例圖片")
-
-## 連結
-您可能正在使用 [Markdown 線上預覽](https://markdownlivepreview.com/)。
-
-## 引用區塊
-> Markdown 是一種輕量級的標記語言，採用純文字格式語法，由 John Gruber 和 Aaron Swartz 於 2004 年創建。
->
-> Markdown 常用於格式化 README 文件、在線上論壇中撰寫訊息，以及使用純文字編輯器建立富文本。
-
-## 表格
-| 左列 | 右列 |
-| ------------- |:-------------:|
-| 左列 foo | 右列 foo |
-| 左列 bar | 右列 bar |
-| 左列 baz | 右列 baz |
-
-## 程式碼區塊
+區塊程式碼:
 \`\`\`javascript
-let message = 'Hello world';
-alert(message);
+function sayHello() {
+  console.log('Hello, Mermaid Lens Pro!');
+}
 \`\`\`
 
-## 行內程式碼
-本網站使用 \`markedjs/marked\`。`;
+## 表格範例 (試試看匯入 Excel!)
+| 功能 | 狀態 | 描述 |
+|:-----|:----:|:-----|
+| 即時預覽 | ✅ | 修改即見 |
+| Excel 匯入 | ✅ | 支援 .xlsx |
+| PDF 匯出 | ✅ | 乾淨版面 |
+`;
 
 type EditorMode = 'mermaid' | 'markdown';
 
@@ -212,67 +207,65 @@ const App: React.FC = () => {
 
   const previewRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLTextAreaElement>(null);
-  const isScrolling = useRef(false);
 
-  // Auto-fit diagram when content changes
-  useEffect(() => {
-    if (mode !== 'mermaid' || !svgContent || !previewRef.current) return;
+  // Sync Scroll State
+  const targetScrollTop = useRef(0);
+  const currentScrollTop = useRef(0);
+  const isHoveringEditor = useRef(false);
+  const isHoveringPreview = useRef(false);
+  const rafId = useRef<number | null>(null);
 
-    const timer = setTimeout(() => {
-      const container = previewRef.current;
-      if (!container) return;
+  const syncLoop = useCallback(() => {
+    if (!previewRef.current || !editorRef.current) return;
 
-      const viewport = container.parentElement;
-      if (!viewport) return;
+    const diff = targetScrollTop.current - currentScrollTop.current;
+    if (Math.abs(diff) < 0.5) {
+      currentScrollTop.current = targetScrollTop.current;
+      rafId.current = null; // Stop loop
+    } else {
+      currentScrollTop.current += diff * 0.1; // Smooth factor
+      rafId.current = requestAnimationFrame(syncLoop);
+    }
 
-      const containerW = viewport.clientWidth;
-      const containerH = viewport.clientHeight;
-
-      const svgEl = container.querySelector('svg');
-      if (svgEl) {
-        try {
-          const bbox = svgEl.getBBox();
-          fitToView(bbox.width, bbox.height, containerW, containerH, 40);
-        } catch (e) { }
-      }
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [svgContent, mode, fitToView]);
+    if (isHoveringEditor.current) {
+      previewRef.current.scrollTop = currentScrollTop.current;
+    } else if (isHoveringPreview.current) {
+      editorRef.current.scrollTop = currentScrollTop.current;
+    }
+  }, []);
 
   const handleEditorScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
-    if (!isSyncScroll || mode !== 'markdown' || isScrolling.current) return;
+    if (!isSyncScroll || mode !== 'markdown' || !isHoveringEditor.current) return;
 
-    isScrolling.current = true;
     const target = e.target as HTMLTextAreaElement;
     const percentage = target.scrollTop / (target.scrollHeight - target.clientHeight);
 
     if (previewRef.current) {
-      requestAnimationFrame(() => {
-        if (previewRef.current) {
-          previewRef.current.scrollTop = percentage * (previewRef.current.scrollHeight - previewRef.current.clientHeight);
-        }
-      });
-    }
+      targetScrollTop.current = percentage * (previewRef.current.scrollHeight - previewRef.current.clientHeight);
 
-    setTimeout(() => { isScrolling.current = false; }, 150);
+      if (!rafId.current) {
+        // Sync starting point to avoid jump
+        currentScrollTop.current = previewRef.current.scrollTop;
+        rafId.current = requestAnimationFrame(syncLoop);
+      }
+    }
   };
 
   const handlePreviewScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (!isSyncScroll || mode !== 'markdown' || isScrolling.current) return;
+    if (!isSyncScroll || mode !== 'markdown' || !isHoveringPreview.current) return;
 
-    isScrolling.current = true;
     const target = e.target as HTMLDivElement;
     const percentage = target.scrollTop / (target.scrollHeight - target.clientHeight);
 
     if (editorRef.current) {
-      requestAnimationFrame(() => {
-        if (editorRef.current) {
-          editorRef.current.scrollTop = percentage * (editorRef.current.scrollHeight - editorRef.current.clientHeight);
-        }
-      });
-    }
+      targetScrollTop.current = percentage * (editorRef.current.scrollHeight - editorRef.current.clientHeight);
 
-    setTimeout(() => { isScrolling.current = false; }, 150);
+      if (!rafId.current) {
+        // Sync starting point to avoid jump
+        currentScrollTop.current = editorRef.current.scrollTop;
+        rafId.current = requestAnimationFrame(syncLoop);
+      }
+    }
   };
 
 
@@ -486,7 +479,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen max-h-screen bg-slate-50 dark:bg-slate-900 select-none transition-colors duration-200">
+    <div className="flex flex-col h-screen max-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
       <Header
         mode={mode}
         setMode={handleModeSwitch}
@@ -498,9 +491,10 @@ const App: React.FC = () => {
         onExportImage={exportAsImage}
         isSyncScroll={isSyncScroll}
         setIsSyncScroll={setIsSyncScroll}
+        onInsertCode={(newCode) => setCode(prev => prev + '\n\n' + newCode)}
       />
 
-      <main className="flex-1 flex overflow-hidden">
+      <main className="flex-1 flex overflow-hidden print:block print:overflow-visible">
         <Editor
           ref={editorRef}
           mode={mode}
@@ -512,6 +506,8 @@ const App: React.FC = () => {
           copied={copied}
           onScroll={handleEditorScroll}
           isDarkMode={isDarkMode}
+          onMouseEnter={() => { isHoveringEditor.current = true; }}
+          onMouseLeave={() => { isHoveringEditor.current = false; }}
         />
 
         <PreviewPanel
@@ -533,6 +529,8 @@ const App: React.FC = () => {
           code={code}
           theme={theme}
           isDarkMode={isDarkMode}
+          onMouseEnter={() => { isHoveringPreview.current = true; }}
+          onMouseLeave={() => { isHoveringPreview.current = false; }}
         />
       </main>
     </div>

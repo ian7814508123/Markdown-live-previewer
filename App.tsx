@@ -99,61 +99,136 @@ graph TB
     %%     "部署" : 10
 `;
 
-const DEFAULT_MARKDOWN = `# Markdown 語法與功能指南
+const DEFAULT_MARKDOWN =
+  `# Markdown 文法指南
 
-## 🌟 新功能亮點
-* **Excel/表格 匯入**: 點擊工具列的 "匯入表格" 按鈕，上傳 .xlsx 檔或貼上 CSV 資料。
-* **PDF 匯出**: 在下載選單中選擇 "列印 / PDF" 以儲存為高品質文件。
-* **同步滾動**: 編輯區與預覽區現在會流暢地同步捲動。
-* **智慧縮排**: 按下 Tab 鍵可自動縮排，Shift+Tab 可取消縮排（支援多行）。
+歡迎使用 **Markdown 即時編輯器** ✨  
+本指南將帶你快速了解常用 Markdown 語法，並示範本編輯器支援的進階功能。
 
-## 列表演示
+---
 
-### 有序列表 (支援且樣式化至 5 階)
+## 標題（Headings）
+
+# 這是標題 H1
+## 這是標題 H2
+### 這是標題 H3
+###### 這是標題 H6
+
+---
+
+## 強調（Emphasis）
+
+*此文字為斜體*  
+_此文字也是斜體_
+
+**此文字為粗體**  
+__此文字也是粗體__
+
+***粗斜體***  
+~~刪除線~~
+
+_你也可以 **混合使用** 不同樣式_
+
+---
+
+## 列表（Lists）
+
+### 無序列表（Unordered）
+
+* 項目 1
+* 項目 2
+  * 項目 2a
+  * 項目 2b
+* 項目 3
+  * 項目 3a
+  * 項目 3b
+
+### 有序列表（Ordered）
+
+1. 項目 1
+2. 項目 2
+3. 項目 3
+   1. 項目 3a
+   2. 項目 3b
+
+---
+
+## 列表進階示範（支援至 5 階）
+
+### 有序列表樣式
+
 1. 第一階 (I)
     1. 第二階 (i)
         1. 第三階 (A)
             1. 第四階 (a)
                 1. 第五階 (1)
-                2. 第五階項目 B
 
+### 無序列表樣式
 
-### 無序列表 (支援且樣式化至 5 階)
-* 第一階 (實心圓)
-    * 第二階 (空心圓)
-        * 第三階 (方塊)
-            * 第四階 (實心圓)
-                * 第五階 (空心圓)
-                * 第五階項目 B
+* 第一階（實心圓）
+    * 第二階（空心圓）
+        * 第三階（方塊）
+            * 第四階（實心圓）
+                * 第五階（空心圓）
 
-## 標題
-# H1 標題
-## H2 標題
-### H3 標題
+---
 
-## 強調與格式
-*斜體* 或 _斜體_
-**粗體** 或 __粗體__
-***粗斜體***
-~~刪除線~~
+## 連結（Links）
 
-## 程式碼
-行內程式碼: \`console.log('Hello')\`
+您可能正在使用  
+[Markdown 即時編輯器](http://localhost:3000)
 
-區塊程式碼:
+---
+
+## 圖片（Images）
+
+![這是替代文字](/image/markdown_liveditor.svg "這是一張範例圖片")
+
+---
+
+## 引用區塊（Blockquote）
+
+> Markdown 是一種輕量級的標記語言，  
+> 採用純文字語法，於 2004 年由 John Gruber 與 Aaron Swartz 創建。
+>
+> 常用於 README、技術文件、論壇文章與筆記整理。
+
+---
+
+## 程式碼（Code）
+
+### 行內程式碼
+
+本網站使用 \`markedjs/marked\` 進行解析。  
+例如：\`console.log('Hello')\`
+
+### 程式碼區塊
+
 \`\`\`javascript
 function sayHello() {
-  console.log('Hello, Mermaid Lens Pro!');
+  console.log('Hello, Markdown Live Editor!');
 }
 \`\`\`
 
-## 表格範例 (試試看匯入 Excel!)
-| 功能 | 狀態 | 描述 |
-|:-----|:----:|:-----|
-| 即時預覽 | ✅ | 修改即見 |
-| Excel 匯入 | ✅ | 支援 .xlsx |
-| PDF 匯出 | ✅ | 乾淨版面 |
+---
+
+## 🧠 智慧縮排（編輯輔助功能）
+
+本編輯器支援 **智慧縮排**，可大幅提升列表與程式碼編輯效率。
+
+### 使用方式
+
+1. 將游標放在任一行，或選取多行
+2. 按下 \`Tab\`  
+   → 增加一層縮排
+3. 按下 \`Shift + Tab\`  
+   → 取消一層縮排
+
+> 💡 小技巧  
+> - 可同時選取多行進行縮排  
+> - 特別適合巢狀列表與程式碼區塊編輯
 `;
+
 
 type EditorMode = 'mermaid' | 'markdown';
 
@@ -164,7 +239,7 @@ const App: React.FC = () => {
 
   const [code, setCode] = useState(() => {
     const savedMode = (localStorage.getItem('editor-mode') as EditorMode) || 'mermaid';
-    return localStorage.getItem(`${savedMode}-session-code`) || (savedMode === 'mermaid' ? DEFAULT_MERMAID : DEFAULT_MARKDOWN);
+    return localStorage.getItem(`${savedMode} -session - code`) || (savedMode === 'mermaid' ? DEFAULT_MERMAID : DEFAULT_MARKDOWN);
   });
   const [svgContent, setSvgContent] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -188,7 +263,7 @@ const App: React.FC = () => {
   }, [mode]);
 
   useEffect(() => {
-    localStorage.setItem(`${mode}-session-code`, code);
+    localStorage.setItem(`${mode} -session - code`, code);
   }, [code, mode]);
 
   // Custom Hook for Navigation
@@ -279,7 +354,7 @@ const App: React.FC = () => {
     setMode(newMode);
 
     // Try to restore saved session for the new mode, or valid default
-    const savedCode = localStorage.getItem(`${newMode}-session-code`);
+    const savedCode = localStorage.getItem(`${newMode} -session - code`);
     if (savedCode) {
       setCode(savedCode);
     } else {
@@ -333,7 +408,7 @@ const App: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `document-${Date.now()}.md`;
+    link.download = `document - ${Date.now()}.md`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -408,13 +483,13 @@ const App: React.FC = () => {
     const serializer = new XMLSerializer();
 
     if (format === 'svg') {
-      svgEl.setAttribute('viewBox', `${x - padding} ${y - padding} ${width + padding * 2} ${height + padding * 2}`);
+      svgEl.setAttribute('viewBox', `${x - padding} ${y - padding} ${width + padding * 2} ${height + padding * 2} `);
       const svgData = serializer.serializeToString(svgEl);
       const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `mermaid-diagram-${Date.now()}.svg`;
+      link.download = `mermaid - diagram - ${Date.now()}.svg`;
       link.click();
       URL.revokeObjectURL(url);
     } else {
@@ -442,8 +517,8 @@ const App: React.FC = () => {
 
         try {
           const link = document.createElement('a');
-          link.download = `mermaid-diagram-${Date.now()}.${format}`;
-          link.href = canvas.toDataURL(`image/${format}`, 0.9);
+          link.download = `mermaid - diagram - ${Date.now()}.${format} `;
+          link.href = canvas.toDataURL(`image / ${format} `, 0.9);
           link.click();
         } catch (e) {
           console.error("Export canvas error:", e);

@@ -47,7 +47,7 @@ Start the development server:
 ```bash
 npm run dev
 ```
-
+如果要打開網際網路存取(不安全), 在vite.config.ts中的server段落加上host: "0.0.0.0"
 Open your browser to `http://localhost:5173` (or the port shown in your terminal).
 
 ## Usage

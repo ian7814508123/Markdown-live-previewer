@@ -1,5 +1,5 @@
 import React, { forwardRef } from 'react';
-import { FileCode, Check, Copy, RefreshCw, Trash2 } from 'lucide-react';
+import { FileCode, Check, Copy, RefreshCw, Trash2, Menu } from 'lucide-react';
 
 interface EditorProps {
     mode: 'mermaid' | 'markdown';
@@ -13,6 +13,7 @@ interface EditorProps {
     isDarkMode: boolean;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
+    onToggleSidebar?: () => void;  // 新增漢堡選單回調
 }
 
 const Editor = forwardRef<HTMLTextAreaElement, EditorProps>(({
@@ -26,7 +27,8 @@ const Editor = forwardRef<HTMLTextAreaElement, EditorProps>(({
     onScroll,
     isDarkMode,
     onMouseEnter,
-    onMouseLeave
+    onMouseLeave,
+    onToggleSidebar
 }, ref) => {
     const lineNumbersRef = React.useRef<HTMLDivElement>(null);
 
@@ -127,6 +129,14 @@ const Editor = forwardRef<HTMLTextAreaElement, EditorProps>(({
         >
             <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-slate-600 font-bold text-sm">
+                    {/* 漢堡選單按鈕 */}
+                    <button
+                        onClick={onToggleSidebar}
+                        className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-all text-slate-500 dark:text-slate-400 active:scale-90"
+                        title="文檔歷史"
+                    >
+                        <Menu size={18} />
+                    </button>
                     <FileCode size={18} className="text-indigo-500" />
                     <span className="uppercase text-slate-600 dark:text-slate-400">{mode === 'mermaid' ? '美人魚 編輯者' : '標記掉落 編輯者'}</span>
                 </div>

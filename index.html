@@ -44,7 +44,8 @@
 
     @media print {
       @page {
-        margin: 0;
+        margin: 1cm;
+        /* 設定頁面邊距為 1cm，避免被裁切 */
         size: auto;
       }
 
@@ -58,14 +59,16 @@
         display: block !important;
         background: white !important;
         margin: 0 !important;
-        padding: 2cm !important;
-        /* Restore padding since we killed page margins */
+        padding: 0 !important;
+        /* 移除 padding，避免內容偏下 */
       }
 
       /* 2. Hide Non-Print Elements */
       header,
       section:first-of-type,
       /* Editor Panel */
+      aside,
+      /* Sidebar */
       .editor-pane,
       .controls,
       button {
@@ -81,6 +84,8 @@
         border: none !important;
         background: white !important;
         overflow: visible !important;
+        padding: 0 !important;
+        margin: 0 !important;
       }
 
       /* Hide Floating Controls, Tips, and Status Bar within Preview Panel */
@@ -90,7 +95,7 @@
         display: none !important;
       }
 
-      /* 4. Fix The Diagram Container Structure */
+      /* 4. Fix The Diagram Container Structure (for Mermaid) */
 
       /* The Viewport (flex-1 overflow-hidden) */
       section:last-of-type>div.flex-1 {
@@ -101,6 +106,8 @@
         background: white !important;
         /* Remove grid background */
         background-image: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
       }
 
       /* The Panning Container (absolute inset-0) */
@@ -113,7 +120,8 @@
         display: flex !important;
         justify-content: center !important;
         align-items: flex-start !important;
-        padding-top: 20px !important;
+        padding: 0 !important;
+        margin: 0 !important;
       }
 
       /* The Diagram Card (bg-white p-16...) */
@@ -129,13 +137,44 @@
         max-width: 100% !important;
       }
 
-      /* The SVG itself */
+      /* The SVG itself (for Mermaid diagrams) */
       svg {
         width: 100% !important;
         max-width: 100% !important;
         height: auto !important;
         display: block !important;
         margin: 0 auto !important;
+      }
+
+      /* 5. Markdown Preview Specific Styles */
+      /* Target the prose container for Markdown content */
+      .prose {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        /* 確保 Markdown 內容從頁面頂部開始 */
+      }
+
+      /* Remove any top margin from first element */
+      .prose>*:first-child {
+        margin-top: 0 !important;
+      }
+
+      /* Optimize spacing for print */
+      .prose h1,
+      .prose h2,
+      .prose h3,
+      .prose h4,
+      .prose h5,
+      .prose h6 {
+        page-break-after: avoid;
+        /* 避免標題後分頁 */
+      }
+
+      .prose pre,
+      .prose table {
+        page-break-inside: avoid;
+        /* 避免程式碼和表格被分頁切斷 */
       }
     }
   </style>

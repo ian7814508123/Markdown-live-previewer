@@ -4,7 +4,9 @@ import mermaid from 'mermaid';
 import Header from './src/components/Header';
 import Editor from './src/components/Editor';
 import PreviewPanel from './src/components/PreviewPanel';
+import HistorySidebar from './src/components/HistorySidebar';
 import { usePanZoom } from './src/hooks/usePanZoom';
+import { useDocumentStorage } from './src/hooks/useDocumentStorage';
 
 type Theme = 'default' | 'neutral' | 'dark' | 'forest';
 
@@ -233,20 +235,31 @@ function sayHello() {
 type EditorMode = 'mermaid' | 'markdown';
 
 const App: React.FC = () => {
-  const [mode, setMode] = useState<EditorMode>(() => {
-    return (localStorage.getItem('editor-mode') as EditorMode) || 'mermaid';
-  });
+  // 文檔管理
+  const {
+    documents,
+    currentDocId,
+    currentDocument,
+    createDocument,
+    updateCurrentDocument,
+    switchDocument,
+    deleteDocument,
+    renameDocument,
+    storageUsage,
+  } = useDocumentStorage();
 
-  const [code, setCode] = useState(() => {
-    const savedMode = (localStorage.getItem('editor-mode') as EditorMode) || 'mermaid';
-    return localStorage.getItem(`${savedMode} -session - code`) || (savedMode === 'mermaid' ? DEFAULT_MERMAID : DEFAULT_MARKDOWN);
-  });
+  // UI 狀態
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [svgContent, setSvgContent] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [theme, setTheme] = useState<Theme>('neutral');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isSyncScroll, setIsSyncScroll] = useState(true);
+
+  // 從當前文檔取得 mode 和 code
+  const mode = currentDocument?.mode || 'mermaid';
+  const code = currentDocument?.content || '';
 
   // Toggle Dark Mode
   useEffect(() => {
@@ -257,14 +270,23 @@ const App: React.FC = () => {
     }
   }, [isDarkMode]);
 
-  // Save state to localStorage
+  // 初始化：如果沒有文檔，建立預設文檔
   useEffect(() => {
-    localStorage.setItem('editor-mode', mode);
-  }, [mode]);
+    if (documents.length === 0) {
+      createDocument('mermaid', DEFAULT_MERMAID, '預設 Mermaid 文檔');
+    }
+  }, [documents.length, createDocument]);
 
+  // 自動儲存當前文檔內容
   useEffect(() => {
-    localStorage.setItem(`${mode} -session - code`, code);
-  }, [code, mode]);
+    if (!currentDocument) return;
+
+    const timer = setTimeout(() => {
+      updateCurrentDocument(code);
+    }, 500); // debounce 500ms
+
+    return () => clearTimeout(timer);
+  }, [code, currentDocument, updateCurrentDocument]);
 
   // Custom Hook for Navigation
   const {
@@ -350,18 +372,40 @@ const App: React.FC = () => {
     setSvgContent('');
   }, [mode]);
 
-  const handleModeSwitch = (newMode: EditorMode) => {
-    setMode(newMode);
+  // 更新編輯器內容
+  const handleCodeChange = (newCode: string) => {
+    if (currentDocument) {
+      // 直接更新當前文檔（debounce 在上面的 useEffect 中處理）
+      updateCurrentDocument(newCode);
+    }
+  };
 
-    // Try to restore saved session for the new mode, or valid default
-    const savedCode = localStorage.getItem(`${newMode} -session - code`);
-    if (savedCode) {
-      setCode(savedCode);
-    } else {
-      setCode(newMode === 'mermaid' ? DEFAULT_MERMAID : DEFAULT_MARKDOWN);
+  // 處理文檔切換
+  const handleDocumentSwitch = (docId: string) => {
+    switchDocument(docId);
+    // 只在手機版（小螢幕）自動關閉側邊欄，桌面版保持開啟以便雙擊重命名
+    if (window.innerWidth < 1024) {
+      setIsSidebarOpen(false);
+    }
+    resetNavigation();
+  };
+
+  // 處理新增文檔
+  const handleCreateDocument = () => {
+    const newMode = mode; // 使用當前模式
+    const defaultContent = newMode === 'mermaid' ? DEFAULT_MERMAID : DEFAULT_MARKDOWN;
+    createDocument(newMode, defaultContent);
+  };
+
+  // 處理模式切換（Header 中的切換）
+  const handleModeSwitch = (newMode: EditorMode) => {
+    if (!currentDocument || newMode === currentDocument.mode) return;
+    const modeName = newMode === 'mermaid' ? '美人魚' : '標記掉落';
+    if (confirm(`切換到 ${modeName} 模式？將建立一個新的 ${modeName} 文檔`)) {
+      const defaultContent = newMode === 'mermaid' ? DEFAULT_MERMAID : DEFAULT_MARKDOWN;
+      createDocument(newMode, defaultContent);
     }
 
-    resetNavigation();
   };
 
   // Render Mermaid code to SVG
@@ -544,13 +588,28 @@ const App: React.FC = () => {
   const handleReset = () => {
     if (confirm("重置當前的工作到預設?")) {
       const defaultCode = mode === 'mermaid' ? DEFAULT_MERMAID : DEFAULT_MARKDOWN;
-      setCode(defaultCode);
+      handleCodeChange(defaultCode);
       resetNavigation();
     }
   };
 
   const handleClear = () => {
-    setCode('');
+    handleCodeChange('');
+  };
+
+  // 處理全檔案匯入
+  const handleImportFullFile = (file: File, content: string) => {
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    let importMode: EditorMode = 'markdown';
+
+    if (extension === 'mmd' || content.includes('graph ') || content.includes('sequenceDiagram')) {
+      importMode = 'mermaid';
+    }
+
+    const newDocId = createDocument(importMode, content, file.name.replace(/\.[^/.]+$/, ""));
+    if (newDocId) {
+      handleDocumentSwitch(newDocId);
+    }
   };
 
   return (
@@ -566,15 +625,29 @@ const App: React.FC = () => {
         onExportImage={exportAsImage}
         isSyncScroll={isSyncScroll}
         setIsSyncScroll={setIsSyncScroll}
-        onInsertCode={(newCode) => setCode(prev => prev + '\n\n' + newCode)}
+        onInsertCode={(newCode) => handleCodeChange(code + '\n\n' + newCode)}
+        onImportFullFile={handleImportFullFile}
       />
 
       <main className="flex-1 flex overflow-hidden print:block print:overflow-visible">
+        {/* 歷史側邊欄 */}
+        <HistorySidebar
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+          documents={documents}
+          currentDocId={currentDocId}
+          onSelectDocument={handleDocumentSwitch}
+          onCreateDocument={handleCreateDocument}
+          onDeleteDocument={deleteDocument}
+          onRenameDocument={renameDocument}
+          storageUsage={storageUsage}
+        />
+
         <Editor
           ref={editorRef}
           mode={mode}
           code={code}
-          setCode={setCode}
+          setCode={handleCodeChange}
           onCopy={handleCopy}
           onReset={handleReset}
           onClear={handleClear}
@@ -583,6 +656,7 @@ const App: React.FC = () => {
           isDarkMode={isDarkMode}
           onMouseEnter={() => { isHoveringEditor.current = true; }}
           onMouseLeave={() => { isHoveringEditor.current = false; }}
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         />
 
         <PreviewPanel

@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
-import { Sparkles, Download, ChevronDown, Image as ImageIcon, FileImage, FileJson, FileText, Printer, Sun, Moon, Table } from 'lucide-react';
-import { parseTableToMarkdown } from '../services/tableParser';
+import { Sparkles, Download, ChevronDown, Image as ImageIcon, FileImage, FileJson, FileText, Printer, Sun, Moon, FileUp } from 'lucide-react';
 import { parseExcelToMarkdown } from '../services/excelParser';
 
 interface HeaderProps {
@@ -15,6 +14,7 @@ interface HeaderProps {
     isSyncScroll: boolean;
     setIsSyncScroll: (isSync: boolean) => void;
     onInsertCode: (code: string) => void;
+    onImportFullFile: (file: File, content: string) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -28,7 +28,8 @@ const Header: React.FC<HeaderProps> = ({
     onExportImage,
     isSyncScroll,
     setIsSyncScroll,
-    onInsertCode
+    onInsertCode,
+    onImportFullFile
 }) => {
     const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState(false);
     const downloadMenuRef = useRef<HTMLDivElement>(null);
@@ -63,14 +64,29 @@ const Header: React.FC<HeaderProps> = ({
         if (!files || files.length === 0) return;
 
         const file = files[0];
+        const fileName = file.name.toLowerCase();
+
         try {
-            const md = await parseExcelToMarkdown(file);
-            if (md) {
-                onInsertCode(md);
+            // 判斷是否為表格類檔案（插入到當前游標）
+            if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls') || fileName.endsWith('.csv')) {
+                const md = await parseExcelToMarkdown(file);
+                if (md) {
+                    onInsertCode(md);
+                }
+            } else {
+                // 否則視為完整檔案匯入（建立新文檔）
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const content = event.target?.result as string;
+                    if (content !== undefined) {
+                        onImportFullFile(file, content);
+                    }
+                };
+                reader.readAsText(file);
             }
         } catch (error) {
             console.error("Failed to parse file", error);
-            alert("Failed to parse Excel file");
+            alert("匯入失敗，請檢查檔案格式是否正確");
         }
 
         // Reset input
@@ -83,9 +99,10 @@ const Header: React.FC<HeaderProps> = ({
                 type="file"
                 ref={fileInputRef}
                 className="hidden"
-                accept=".xlsx,.xls,.csv"
+                accept=".xlsx,.xls,.csv,.md,.txt,.mmd"
                 onChange={handleFileUpload}
             />
+            {/* ... 省略 ... */}
             <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-indigo-200 dark:shadow-indigo-900/40">
                     <Sparkles size={24} />
@@ -161,10 +178,10 @@ const Header: React.FC<HeaderProps> = ({
                         <button
                             onClick={() => fileInputRef.current?.click()}
                             className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border bg-transparent border-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                            title="匯入表格"
+                            title="匯入檔案 (.md, .txt, .xlsx, .csv)"
                         >
-                            <Table size={14} />
-                            匯入表格
+                            <FileUp size={14} />
+                            匯入檔案
                         </button>
                         <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-2" />
                     </>

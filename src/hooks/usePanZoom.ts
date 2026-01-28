@@ -7,7 +7,7 @@ export const usePanZoom = (initialZoom = 100) => {
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
     const handleZoom = (delta: number) => {
-        setZoom(prev => Math.min(Math.max(prev + delta, 5), 1000));
+        setZoom(prev => Math.round(Math.min(Math.max(prev + delta, 5), 1000)));
     };
 
     const resetNavigation = useCallback(() => {
@@ -56,7 +56,7 @@ export const usePanZoom = (initialZoom = 100) => {
         // Let's cap at 200% just in case, or 100%? Let's try 150%.
         const scale = Math.min(scaleX, scaleY);
 
-        const newZoom = Math.min(Math.max(scale * 100, 5), 200);
+        const newZoom = Math.round(Math.min(Math.max(scale * 100, 5), 200));
 
         setZoom(newZoom);
         setPosition({ x: 0, y: 0 }); // Center it (translation is applied from center in CSS usually)

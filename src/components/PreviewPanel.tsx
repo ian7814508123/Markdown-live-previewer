@@ -11,6 +11,7 @@ interface PreviewPanelProps {
     position: { x: number; y: number };
     isDragging: boolean;
     onZoom: (delta: number) => void;
+    onSetZoom: (zoom: number) => void;
     onResetNav: () => void;
     // Mouse event handlers passed from parent hook
     onMouseDown: (e: React.MouseEvent) => void;
@@ -34,6 +35,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
     position,
     isDragging,
     onZoom,
+    onSetZoom,
     onResetNav,
     onMouseDown,
     onMouseMove,
@@ -157,8 +159,18 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
                 </div>
                 <div className="flex items-center gap-6">
                     <div className="flex items-center gap-2">
-                        <span className="opacity-50">縮放</span>
-                        <span className="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md tabular-nums">{zoom}%</span>
+                        <span className="opacity-50 text-[9px]">縮放</span>
+                        <div className="relative group/zoom">
+                            <input
+                                type="text"
+                                value={`${Math.round(zoom)}%`}
+                                onChange={(e) => {
+                                    const val = e.target.value.replace(/[^0-9]/g, '');
+                                    if (val) onSetZoom(Math.min(Math.max(parseInt(val), 5), 1000));
+                                }}
+                                className="w-14 text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md tabular-nums border-none outline-none focus:ring-1 focus:ring-indigo-300 text-center transition-all"
+                            />
+                        </div>
                     </div>
                     <div className="flex items-center gap-2">
                         <span className="opacity-50">位置</span>

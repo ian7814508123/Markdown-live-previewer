@@ -1,6 +1,12 @@
-import React from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import mermaid from 'mermaid';
+import embed from 'vega-embed';
+
+import 'katex/dist/katex.min.css';
 
 interface MarkdownPreviewProps {
     content: string;
@@ -8,14 +14,144 @@ interface MarkdownPreviewProps {
     isDarkMode: boolean;
 }
 
+const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(({ code, isDarkMode }) => {
+    const [svg, setSvg] = useState('');
+    const [isPending, setIsPending] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        setIsPending(true);
+        const timer = setTimeout(async () => {
+            try {
+                // 1. Validate syntax first directly
+                // This prevents mermaid.render from injecting error artifacts into the DOM
+                await mermaid.parse(code);
+
+                // 2. Only render if valid
+                const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
+                const { svg: renderedSvg } = await mermaid.render(id, code);
+
+                setSvg(renderedSvg);
+                setError(null); // Clear error on success
+            } catch (err: any) {
+                console.error('Mermaid render error:', err);
+                setError(err.message || 'Syntax Error');
+                // We do NOT clear setSvg here, preserving the last good render
+            } finally {
+                setIsPending(false);
+            }
+        }, 500); // 500ms debounce to stabilize typing
+        return () => clearTimeout(timer);
+    }, [code, isDarkMode]);
+
+    // If we have no SVG and an error, show the error box.
+    // If we have an SVG (even if stale) and an error, show the stale SVG with an overlay.
+    // If we have an SVG and no error, show the SVG.
+
+    if (!svg && error) {
+        return (
+            <div className="my-6 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-xs font-mono whitespace-pre-wrap">
+                <div className="font-bold mb-2">Mermaid Syntax Error</div>
+                {error}
+            </div>
+        );
+    }
+
+    return (
+        <div className="my-6 relative group">
+            <div
+                className={`flex justify-center bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200/50 dark:border-slate-700/50 overflow-auto transition-opacity duration-300 ${isPending ? 'opacity-50' : 'opacity-100'}`}
+                dangerouslySetInnerHTML={{ __html: svg }}
+            />
+
+            {/* Loading Indicator */}
+            {isPending && !error && (
+                <div className="absolute top-2 right-2">
+                    <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+            )}
+
+            {/* Error Overlay (Lightweight hint) */}
+            {error && (
+                <div className="absolute top-0 left-0 right-0 -mt-3 flex justify-center z-10 pointer-events-none">
+                    <div className="bg-red-100 dark:bg-red-900/80 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-200 text-[10px] font-bold px-3 py-1 rounded-full shadow-sm flex items-center gap-2 backdrop-blur-sm">
+                        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                        Syntax Error - Showing last valid version
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+});
+
+const VegaBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(({ code, isDarkMode }) => {
+    const ref = useRef<HTMLDivElement>(null);
+    const [isPending, setIsPending] = useState(false);
+
+    useEffect(() => {
+        setIsPending(true);
+        const timer = setTimeout(async () => {
+            if (!ref.current) return;
+            try {
+                const spec = JSON.parse(code);
+                await embed(ref.current, spec, { actions: false, theme: isDarkMode ? 'dark' : 'vox' });
+            } catch (err) {
+                console.error('Vega render error:', err);
+            } finally {
+                setIsPending(false);
+            }
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [code, isDarkMode]);
+
+    return (
+        <div className="my-6 relative group">
+            <div
+                ref={ref}
+                className={`overflow-auto bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200/50 dark:border-slate-700/50 transition-opacity duration-300 ${isPending ? 'opacity-50' : 'opacity-100'}`}
+            />
+            {isPending && (
+                <div className="absolute top-2 right-2">
+                    <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+            )}
+        </div>
+    );
+});
+
 const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDarkMode }) => {
-    // Priority: usage of global dark mode for markdown, or specific mermaid theme if needed. 
-    // Generally for Markdown we want to follow the UI mode.
-    const isDark = isDarkMode; // Override theme-based decision for consistency
+    const isDark = isDarkMode;
+
+    const components = useMemo(() => ({
+        code({ node, inline, className, children, ...props }: any) {
+            const match = /language-(\w+)/.exec(className || '');
+            const language = match ? match[1] : '';
+            const codeString = String(children).replace(/\n$/, '');
+
+            if (!inline) {
+                if (language === 'mermaid') {
+                    return <MermaidBlock code={codeString} isDarkMode={isDark} />;
+                }
+                if (language === 'vega' || language === 'vega-lite') {
+                    return <VegaBlock code={codeString} isDarkMode={isDark} />;
+                }
+            }
+
+            return (
+                <code className={className} {...props}>
+                    {children}
+                </code>
+            );
+        }
+    }), [isDark]);
 
     return (
         <div className={`prose max-w-none p-8 select-text ${isDark ? 'prose-invert' : 'prose-slate'} prose-headings:font-bold prose-a:text-indigo-600 prose-img:rounded-xl prose-table:border-collapse prose-th:border prose-th:border-slate-300 dark:prose-th:border-slate-700 prose-th:p-2 prose-td:border prose-td:border-slate-300 dark:prose-td:border-slate-700 prose-td:p-2 print:p-0 print:max-w-none`}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            <ReactMarkdown
+                remarkPlugins={[remarkGfm, remarkMath]}
+                rehypePlugins={[rehypeKatex]}
+                components={components}
+            >
                 {content || '*No content provided*'}
             </ReactMarkdown>
         </div>

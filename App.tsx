@@ -272,6 +272,59 @@ function sayHello() {
 
 ---
 
+---
+
+## 🚀 進階擴展功能
+
+本編輯器支援多種進階渲染引擎，讓您的 Markdown 文檔更具表現力。
+
+### 1. Mermaid 圖表 (內嵌式)
+
+可以直接在 Markdown 中撰寫 Mermaid 語法：
+
+\`\`\`mermaid
+graph LR
+    A[Markdown] --> B{內嵌渲染}
+    B --> C[Mermaid]
+    B --> D[KaTeX]
+    B --> E[Vega]
+\`\`\`
+
+### 2. 數學公式 (KaTeX)
+
+支援 LaTeX 語法進行科學運算與公式顯示：
+
+- **行內公式**：$E = mc^2$
+- **區塊公式**：
+
+$$
+I = \int_{0}^{\infty} e^{-x^2} dx = \frac{\sqrt{\pi}}{2}
+$$
+
+### 3. 數據視覺化 (Vega-Lite)
+
+支援以 JSON 語法定義專業圖表：
+
+\`\`\`vega-lite
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "簡單的長條圖",
+  "data": {
+    "values": [
+      {"a": "A", "b": 28}, {"a": "B", "b": 55}, {"a": "C", "b": 43},
+      {"a": "D", "b": 91}, {"a": "E", "b": 81}, {"a": "F", "b": 53}
+    ]
+  },
+  "mark": "bar",
+  "encoding": {
+    "x": {"field": "a", "type": "nominal", "axis": {"labelAngle": 0}},
+    "y": {"field": "b", "type": "quantitative"}
+  }
+}
+\`\`\`
+
+---
+
 ## 🧠 智慧縮排（編輯輔助功能）
 
 本編輯器支援 **智慧縮排**，可大幅提升列表與程式碼編輯效率。

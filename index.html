@@ -176,6 +176,21 @@
         page-break-inside: avoid;
         /* 避免程式碼和表格被分頁切斷 */
       }
+      
+      /* Vega Chart Print Optimization */
+      /* Scale down Vega charts to 90% to fit better */
+      .vega-embed,
+      .vega-embed canvas,
+      .vega-embed svg {
+        transform: scale(0.9) !important;
+        transform-origin: top center !important; 
+        max-width: 100% !important;
+      }
+      
+      /* Ensure margins are exactly 10mm */
+      @page {
+        margin: 10mm !important;
+      }
     }
   </style>
   <script type="importmap">

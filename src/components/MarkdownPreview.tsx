@@ -44,9 +44,31 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo
         return () => clearTimeout(timer);
     }, [code, isDarkMode]);
 
-    // If we have no SVG and an error, show the error box.
-    // If we have an SVG (even if stale) and an error, show the stale SVG with an overlay.
-    // If we have an SVG and no error, show the SVG.
+    // Extract custom size directives (%% width: ... or %% scale: ...)
+    // This allows users to override SVG sizing behavior directly from the markdown
+    const containerStyle = useMemo(() => {
+        const style: React.CSSProperties = {};
+
+        // Match %% width: 50% or 500px
+        const widthMatch = code.match(/%%\s*width:\s*([^\n]+)/i);
+        if (widthMatch) {
+            style.width = widthMatch[1].trim();
+            style.maxWidth = 'none'; // Override default constraints
+        }
+
+        // Match %% scale: 0.8
+        const scaleMatch = code.match(/%%\s*scale:\s*([\d.]+)/i);
+        if (scaleMatch) {
+            const scale = parseFloat(scaleMatch[1]);
+            if (!isNaN(scale)) {
+                style.transform = `scale(${scale})`;
+                style.transformOrigin = 'top center';
+                style.width = `${100 / scale}%`; // Compensate width if scaling down to prevent empty space
+            }
+        }
+
+        return style;
+    }, [code]);
 
     if (!svg && error) {
         return (
@@ -58,7 +80,7 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo
     }
 
     return (
-        <div className="my-6 relative group">
+        <div className="my-6 relative group" style={containerStyle}>
             <div
                 className={`flex justify-center bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200/50 dark:border-slate-700/50 overflow-auto transition-opacity duration-300 ${isPending ? 'opacity-50' : 'opacity-100'}`}
                 dangerouslySetInnerHTML={{ __html: svg }}

@@ -130,12 +130,14 @@ const Header: React.FC<HeaderProps> = ({
                         <button
                             onClick={() => handleModeChange('mermaid')}
                             className={`px-3 py-1 rounded text-xs font-bold transition-all ${mode === 'mermaid' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'}`}
+                            title="切換至 美人魚"
                         >
                             美人魚
                         </button>
                         <button
                             onClick={() => handleModeChange('markdown')}
                             className={`px-3 py-1 rounded text-xs font-bold transition-all ${mode === 'markdown' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'}`}
+                            title="切換至 標記掉落"
                         >
                             標記掉落
                         </button>
@@ -167,7 +169,7 @@ const Header: React.FC<HeaderProps> = ({
                         <button
                             onClick={() => setIsSyncScroll(!isSyncScroll)}
                             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${isSyncScroll ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'bg-transparent border-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
-                            title="Sync Scroll"
+                            title="同步滾動"
                         >
                             <div className={`w-2 h-2 rounded-full ${isSyncScroll ? 'bg-indigo-500 animate-pulse' : 'bg-slate-300 dark:bg-slate-600'}`} />
                             同步滾動

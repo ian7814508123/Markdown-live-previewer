@@ -178,10 +178,10 @@ const Header: React.FC<HeaderProps> = ({
                         <button
                             onClick={() => fileInputRef.current?.click()}
                             className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border bg-transparent border-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                            title="匯入檔案 (.md, .txt, .xlsx, .csv)"
+                            title="進口檔案 (.md, .txt, .xlsx, .csv)"
                         >
                             <FileUp size={14} />
-                            匯入檔案
+                            進口檔案
                         </button>
                         <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-2" />
                     </>

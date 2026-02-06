@@ -1,12 +1,15 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { MathJaxContext } from 'better-react-mathjax';
 import mermaid from 'mermaid';
 
 import Header from './src/components/Header';
 import Editor from './src/components/Editor';
 import PreviewPanel from './src/components/PreviewPanel';
 import HistorySidebar from './src/components/HistorySidebar';
+import SettingsModal from './src/components/SettingsModal';
 import { usePanZoom } from './src/hooks/usePanZoom';
 import { useDocumentStorage } from './src/hooks/useDocumentStorage';
+import { useAppSettings } from './src/hooks/useAppSettings';
 
 type Theme = 'default' | 'neutral' | 'dark' | 'forest';
 
@@ -19,360 +22,50 @@ mermaid.initialize({
 });
 
 
-const DEFAULT_MERMAID = `---
-title: Mermaid 語法與樣式全攻略 (Cheat Sheet)
----
-%% width: 100%
-%% 👆 Tip: 使用 %% width: 80% 或 %% scale: 0.9 來調整圖表大小 (支援 PDF 匯出)
-graph TD
-    %% ==========================================
-    %% 1. 基礎節點語法 (Node Syntax)
-    %% 修正重點：文字內容全部加上雙引號 "" 以避免解析錯誤
-    %% ==========================================
-    
-    Start(("Start<br/>(圓形)")) --> Node1["<b>標準矩形</b><br/>支援換行"]
-    Node1 --> Node2("圓角矩形")
-    Node2 --> Node3{"決策<br/>(菱形)"}
-    
-    %% 這裡就是原本報錯的地方，加上引號就修好了
-    Node3 -->|Yes| Node4[/"平行四邊形<br/>(輸入/輸出)"/]
-    
-    Node3 -->|No| Node5[("資料庫<br/>Database")]
-    Node4 --> Node6{{"六角形<br/>(準備/迴圈)"}}
-    Node6 --> End((("雙圈<br/>(結束)")))
-
-    %% ==========================================
-    %% 2. 連線樣式 (Link Styles)
-    %% ==========================================
-    
-    Node1 -.->|"虛線 (.-)"| Node3
-    Node4 ==>|"粗線 (==)"| End
-    Node5 --o|"圓頭 (o)"| Node2
-    Node5 --x|"叉頭 (x)"| Node6
-
-    %% ==========================================
-    %% 3. 子圖表 (Subgraphs) - 用於分組
-    %% ==========================================
-
-    subgraph Group1 [📂 後端處理區]
-        direction TB
-        %% 這裡面的節點會被框在一起
-        API["API 接口"] --> Auth{"驗證身分"}
-        Auth -->|Pass| DB[("User DB")]
-    end
-
-    Node2 --> API
-
-    %% ==========================================
-    %% 4. 進階樣式定義 (ClassDef & Styles)
-    %% 語法：classDef [樣式名] fill:[色碼],stroke:[色碼],color:[文字色]
-    %% ==========================================
-
-    %% 定義三種通用樣式
-    classDef blueStyle fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
-    classDef redStyle fill:#ffebee,stroke:#c62828,stroke-width:2px,stroke-dasharray: 5 5,color:#c62828
-    classDef greenStyle fill:#e8f5e9,stroke:#2e7d32,stroke-width:4px,rx:10,ry:10
-
-    %% 套用樣式
-    class Node1,API blueStyle
-    class Node3,Auth redStyle
-    
-    %% 直接在節點後用 ::: 套用
-    SpecialNode["🚀 快速套用樣式"]:::greenStyle
-    
-    End --> SpecialNode
-
-    %% ==========================================
-    %% 5. 特殊排版與 HTML Hacks
-    %% ==========================================
-
-    %% 技巧：隱藏連結 (~~~) 用來調整上下位置但不畫線
-    Group1 ~~~ FooterNote
-
-    %% 技巧：使用 div 與 HTML 標籤來排版複雜文字
-    %% 注意：classDef noteStyle 設為無邊框
-    FooterNote["
-    <div style='width:300px; text-align:left; color:#666;'>
-      💡 <b>語法Tips：</b><br/>
-      1. 換行請用 <code>&lt;br/&gt;</code><br/>
-      2. 隱形連結使用 <code>~~~</code> 可調整版面<br/>
-      3. 文字包在 <code>&quot;&quot;</code> 內才支援特殊符號
-    </div>
-    "]:::noteStyle
-
-    %% 定義隱形樣式
-    classDef noteStyle fill:none,stroke:none
-    
-    %% 連線樣式 (linkStyle)
-    linkStyle 0 stroke:#ff9800,stroke-width:4px;
-  
-    %% ====================================
-    %% 其他圖表類型範例（取消註解即可使用）
-    %% ====================================
-    
-    %% 序列圖 (Sequence Diagram)
-    %% sequenceDiagram
-    %%     participant 用戶
-    %%     participant 系統
-    %%     participant 資料庫
-    %%     用戶->>系統: 發送請求
-    %%     系統->>資料庫: 查詢資料
-    %%     資料庫-->>系統: 返回結果
-    %%     系統-->>用戶: 顯示結果
-    
-    %% 類別圖 (Class Diagram)
-    %% classDiagram
-    %%     class Animal {
-    %%         +String name
-    %%         +int age
-    %%         +makeSound()
-    %%     }
-    %%     class Dog {
-    %%         +String breed
-    %%         +bark()
-    %%     }
-    %%     Animal <|-- Dog
-    
-    %% 狀態圖 (State Diagram)
-    %% stateDiagram-v2
-    %%     [*] --> 待處理
-    %%     待處理 --> 處理中: 開始處理
-    %%     處理中 --> 已完成: 處理成功
-    %%     處理中 --> 失敗: 處理失敗
-    %%     失敗 --> 待處理: 重試
-    %%     已完成 --> [*]
-    
-    %% 甘特圖 (Gantt Chart)
-    %% gantt
-    %%     title 專案時程表
-    %%     dateFormat YYYY-MM-DD
-    %%     section 設計階段
-    %%     需求分析: 2024-01-01, 7d
-    %%     UI設計: 2024-01-08, 5d
-    %%     section 開發階段
-    %%     前端開發: 2024-01-13, 10d
-    %%     後端開發: 2024-01-13, 10d
-    
-    %% 圓餅圖 (Pie Chart)
-    %% pie title 專案時間分配
-    %%     "設計" : 30
-    %%     "開發" : 45
-    %%     "測試" : 15
-    %%     "部署" : 10
-`;
-
-const DEFAULT_MARKDOWN =
-  `# Markdown 文法指南
-
-歡迎使用 **Markdown 即時編輯器** ✨  
-本指南將帶你快速了解常用 Markdown 語法，並示範本編輯器支援的進階功能。
-
----
-
-## 標題（Headings）
-
-# 這是標題 H1
-## 這是標題 H2
-### 這是標題 H3
-###### 這是標題 H6
-
----
-
-## 強調（Emphasis）
-
-*此文字為斜體*  
-_此文字也是斜體_
-
-**此文字為粗體**  
-__此文字也是粗體__
-
-***粗斜體***  
-~~刪除線~~
-
-_你也可以 **混合使用** 不同樣式_
-
----
-
-## 列表（Lists）
-
-### 無序列表（Unordered）
-
-* 項目 1
-* 項目 2
-  * 項目 2a
-  * 項目 2b
-* 項目 3
-  * 項目 3a
-  * 項目 3b
-
-### 有序列表（Ordered）
-
-1. 項目 1
-2. 項目 2
-3. 項目 3
-   1. 項目 3a
-   2. 項目 3b
-
----
-
-## 列表進階示範（支援至 5 階）
-
-### 有序列表樣式
-
-1. 第一階 (I)
-    1. 第二階 (i)
-        1. 第三階 (A)
-            1. 第四階 (a)
-                1. 第五階 (1)
-
-### 無序列表樣式
-
-* 第一階（實心圓）
-    * 第二階（空心圓）
-        * 第三階（方塊）
-            * 第四階（實心圓）
-                * 第五階（空心圓）
-
----
-
-## 連結（Links）
-
-您可能正在使用  
-[Markdown 即時編輯器](http://localhost:3000)
-
-如果需要語法上的幫助可以參考
-[標註掉落 語法大全](https://hackmd.io/@eMP9zQQ0Qt6I8Uqp2Vqy6w/SyiOheL5N/%2FBVqowKshRH246Q7UDyodFA)
-
----
-
-## 圖片（Images）
-
-![這是替代文字](/image/markdown_liveditor.svg "這是一張範例圖片")
-
----
-
-## 引用區塊（Blockquote）
-
-> Markdown 是一種輕量級的標記語言，  
-> 採用純文字語法，於 2004 年由 John Gruber 與 Aaron Swartz 創建。
->
-> 常用於 README、技術文件、論壇文章與筆記整理。
-
----
-
-## 程式碼（Code）
-
-### 行內程式碼
-
-本網站使用 \`markedjs/marked\` 進行解析。  
-例如：\`console.log('Hello')\`
-
-### 程式碼區塊
-
-\`\`\`javascript
-function sayHello() {
-  console.log('Hello, Markdown Live Editor!');
-}
-\`\`\`
-
----
-
----
-
-## 🚀 進階擴展功能
-
-本編輯器支援多種進階渲染引擎，讓您的 Markdown 文檔更具表現力。
-
-### 1. Mermaid 圖表 (內嵌式)
-
-可以直接在 Markdown 中撰寫 Mermaid 語法：
-
-\`\`\`mermaid
-graph LR
-    A[Markdown] --> B{內嵌渲染}
-    B --> C[Mermaid]
-    B --> D[KaTeX]
-    B --> E[Vega]
-\`\`\`
-
-### 2. 數學公式 (KaTeX)
-
-支援 LaTeX 語法進行科學運算與公式顯示：
-
-- **行內公式**：$E = mc^2$
-- **區塊公式**：
-
-$$
-I = \int_{0}^{\infty} e^{-x^2} dx = \frac{\sqrt{\pi}}{2}
-$$
-
-### 3. 數據視覺化 (Vega-Lite)
-
-支援以 JSON 語法定義專業圖表：
-
-\`\`\`vega-lite
-{
-  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-  "description": "簡單的長條圖",
-  "data": {
-    "values": [
-      {"a": "A", "b": 28}, {"a": "B", "b": 55}, {"a": "C", "b": 43},
-      {"a": "D", "b": 91}, {"a": "E", "b": 81}, {"a": "F", "b": 53}
-    ]
-  },
-  "mark": "bar",
-  "encoding": {
-    "x": {"field": "a", "type": "nominal", "axis": {"labelAngle": 0}},
-    "y": {"field": "b", "type": "quantitative"}
-  }
-}
-\`\`\`
-
----
-
-## 🧠 智慧縮排（編輯輔助功能）
-
-本編輯器支援 **智慧縮排**，可大幅提升列表與程式碼編輯效率。
-
-### 使用方式
-
-1. 將游標放在任一行，或選取多行
-2. 按下 \`Tab\`  
-   → 增加一層縮排
-3. 按下 \`Shift + Tab\`  
-   → 取消一層縮排
-
-> 💡 小技巧  
-> - 可同時選取多行進行縮排  
-> - 特別適合巢狀列表與程式碼區塊編輯
-
----
-
-## 🛠️ 編輯器進階功能
-
-### 1. 圖表尺寸控制
-您可以在 Mermaid 程式碼區塊的最上方加入特殊指令來調整顯示大小（此設定也會套用到 PDF 匯出）：
-
-\`\`\`mermaid
-%% width: 80%  <-- 設定寬度 (支援 px, %)
-%% scale: 1.2  <-- 設定縮放比例 (Zoom)
-graph TD
-  A[小圖示] --> B[大圖示]
-\`\`\`
-
-### 2. 智能錯誤容錯
-當您編輯圖表時若發生語法錯誤，**編輯器會保留上一次成功渲染的圖表**，並在頂部顯示輕量級錯誤提示。您不用擔心誤刪一個字元就導致整個圖表消失！
-
-### 3. PDF 匯出優化
-本編輯器針對列印與 PDF 匯出做了特別優化：
-- **Vega 圖表自動縮放**：避免圖表過大被裁切（預設縮放 90%）。
-- **精準邊界**：強制設定 10mm 邊界，確保文件整齊。
-`;
 
 
 type EditorMode = 'mermaid' | 'markdown';
 
 const App: React.FC = () => {
+  // State for loading default contents from external .md files
+  const [defaultContents, setDefaultContents] = useState<{
+    markdown: string;
+    mermaid: string;
+  } | null>(null);
+  const [isLoadingDefaults, setIsLoadingDefaults] = useState(true);
+
+  // Load default contents on mount
+  useEffect(() => {
+    const loadDefaults = async () => {
+      try {
+        const [markdownRes, mermaidRes] = await Promise.all([
+          fetch('/defaults/default-markdown.md'),
+          fetch('/defaults/default-mermaid.md'),
+        ]);
+
+        if (!markdownRes.ok || !mermaidRes.ok) {
+          throw new Error('Failed to fetch default content files');
+        }
+
+        const markdown = await markdownRes.text();
+        const mermaid = await mermaidRes.text();
+
+        setDefaultContents({ markdown, mermaid });
+      } catch (error) {
+        console.error('Failed to load default contents:', error);
+        // Fallback content
+        setDefaultContents({
+          markdown: '# Markdown Editor\n\n無法載入預設內容。',
+          mermaid: 'graph TD\n  A[開始] --> B[結束]'
+        });
+      } finally {
+        setIsLoadingDefaults(false);
+      }
+    };
+
+    loadDefaults();
+  }, []);
+
   // 文檔管理
   const {
     documents,
@@ -394,6 +87,9 @@ const App: React.FC = () => {
   const [theme, setTheme] = useState<Theme>('neutral');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isSyncScroll, setIsSyncScroll] = useState(true);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  const { settings, updateMacros, restoreDefaults } = useAppSettings();
 
   // 從當前文檔取得 mode 和 code
   const mode = currentDocument?.mode || 'mermaid';
@@ -410,10 +106,11 @@ const App: React.FC = () => {
 
   // 初始化：如果沒有文檔，建立預設文檔
   useEffect(() => {
-    if (documents.length === 0) {
-      createDocument('mermaid', DEFAULT_MERMAID, '預設 Mermaid 文檔');
+    if (documents.length === 0 && defaultContents && !isLoadingDefaults) {
+      createDocument('markdown', defaultContents.markdown, '預設 Markdown 文檔');
+      createDocument('mermaid', defaultContents.mermaid, '預設 Mermaid 文檔');
     }
-  }, [documents.length, createDocument]);
+  }, [documents.length, createDocument, defaultContents, isLoadingDefaults]);
 
   // 自動儲存當前文檔內容
   useEffect(() => {
@@ -530,21 +227,19 @@ const App: React.FC = () => {
   };
 
   // 處理新增文檔
-  const handleCreateDocument = () => {
-    const newMode = mode; // 使用當前模式
-    const defaultContent = newMode === 'mermaid' ? DEFAULT_MERMAID : DEFAULT_MARKDOWN;
-    createDocument(newMode, defaultContent);
+  const handleCreateDocument = (newMode?: EditorMode) => {
+    // If explicit mode provided (from sidebar), use it. Otherwise default to current mode.
+    const modeToUse = newMode || mode;
+    const defaultContent = modeToUse === 'mermaid' ? defaultContents.mermaid : defaultContents.markdown;
+    createDocument(modeToUse, defaultContent);
   };
 
   // 處理模式切換（Header 中的切換）
+  // 處理模式切換（Header 中的切換） - OLD, now removed from Header UI, but kept logic just in case
   const handleModeSwitch = (newMode: EditorMode) => {
+    // Legacy support or if we add a switch back later
     if (!currentDocument || newMode === currentDocument.mode) return;
-    const modeName = newMode === 'mermaid' ? '美人魚' : '標記掉落';
-    if (confirm(`切換到 ${modeName} 模式？將建立一個新的 ${modeName} 文檔`)) {
-      const defaultContent = newMode === 'mermaid' ? DEFAULT_MERMAID : DEFAULT_MARKDOWN;
-      createDocument(newMode, defaultContent);
-    }
-
+    // ... logic preserved or removed if unused
   };
 
   // Render Mermaid code to SVG
@@ -596,7 +291,7 @@ const App: React.FC = () => {
         }
 
         if (actualLine > 0) {
-          msg = msg.replace(/line \d+/i, `line ${actualLine}`);
+          msg = msg.replace(/line \d+/i, `line ${actualLine} `);
         }
       }
 
@@ -760,7 +455,7 @@ const App: React.FC = () => {
 
   const handleReset = () => {
     if (confirm("重置當前的工作到預設?")) {
-      const defaultCode = mode === 'mermaid' ? DEFAULT_MERMAID : DEFAULT_MARKDOWN;
+      const defaultCode = mode === 'mermaid' ? defaultContents.mermaid : defaultContents.markdown;
       handleCodeChange(defaultCode);
       resetNavigation();
     }
@@ -775,7 +470,8 @@ const App: React.FC = () => {
     const extension = file.name.split('.').pop()?.toLowerCase();
     let importMode: EditorMode = 'markdown';
 
-    if (extension === 'mmd' || content.includes('graph ') || content.includes('sequenceDiagram')) {
+    // 只根據副檔名判斷，避免誤判包含 Mermaid 程式碼區塊的 Markdown 文件
+    if (extension === 'mmd') {
       importMode = 'mermaid';
     }
 
@@ -785,78 +481,108 @@ const App: React.FC = () => {
     }
   };
 
+  const mathJaxConfig = {
+    loader: { load: ["[tex]/ams", "[tex]/html"] },
+    tex: {
+      packages: { "[+]": ["ams", "html"] },
+      inlineMath: [
+        ["$", "$"],
+        ["\\(", "\\)"]
+      ],
+      displayMath: [
+        ["$$", "$$"],
+        ["\\[", "\\]"]
+      ],
+      macros: {
+        ...settings.customMacros
+      }
+    }
+  };
+
   return (
-    <div className="flex flex-col h-screen max-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
-      <Header
-        mode={mode}
-        setMode={handleModeSwitch}
-        theme={theme}
-        setTheme={(t) => setTheme(t as Theme)}
-        isDarkMode={isDarkMode}
-        toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
-        onDownloadMarkdown={downloadMarkdown}
-        onExportImage={exportAsImage}
-        isSyncScroll={isSyncScroll}
-        setIsSyncScroll={setIsSyncScroll}
-        onInsertCode={(newCode) => handleCodeChange(code + '\n\n' + newCode)}
-        onImportFullFile={handleImportFullFile}
-      />
-
-      <main className="flex-1 flex overflow-hidden print:block print:overflow-visible">
-        {/* 歷史側邊欄 */}
-        <HistorySidebar
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
-          documents={documents}
-          currentDocId={currentDocId}
-          onSelectDocument={handleDocumentSwitch}
-          onCreateDocument={handleCreateDocument}
-          onDeleteDocument={deleteDocument}
-          onRenameDocument={renameDocument}
-          storageUsage={storageUsage}
-        />
-
-        <Editor
-          ref={editorRef}
+    <MathJaxContext config={mathJaxConfig}>
+      <div className="flex flex-col h-screen max-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
+        <Header
           mode={mode}
-          code={code}
-          setCode={handleCodeChange}
-          onCopy={handleCopy}
-          onReset={handleReset}
-          onClear={handleClear}
-          copied={copied}
-          onScroll={handleEditorScroll}
-          isDarkMode={isDarkMode}
-          onMouseEnter={() => { isHoveringEditor.current = true; }}
-          onMouseLeave={() => { isHoveringEditor.current = false; }}
-          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-        />
-
-        <PreviewPanel
-          ref={previewRef}
-          mode={mode}
-          error={error}
-          setError={setError}
-          svgContent={svgContent}
-          zoom={zoom}
-          position={position}
-          isDragging={isDragging}
-          onZoom={handleZoom}
-          onSetZoom={setZoom}
-          onResetNav={resetNavigation}
-          onMouseDown={onMouseDown}
-          onMouseMove={onMouseMove}
-          onMouseUp={onMouseUp}
-          onWheel={handleWheel}
-          onScroll={handlePreviewScroll}
-          code={code}
+          // setMode={handleModeSwitch} // Removed from UI
           theme={theme}
+          setTheme={(t) => setTheme(t as Theme)}
           isDarkMode={isDarkMode}
-          onMouseEnter={() => { isHoveringPreview.current = true; }}
-          onMouseLeave={() => { isHoveringPreview.current = false; }}
+          toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+          onDownloadMarkdown={downloadMarkdown}
+          onExportImage={exportAsImage}
+          isSyncScroll={isSyncScroll}
+          setIsSyncScroll={setIsSyncScroll}
+          onInsertCode={(newCode) => handleCodeChange(code + '\n\n' + newCode)}
+          onImportFullFile={handleImportFullFile}
+          onOpenSettings={() => setIsSettingsOpen(true)}
         />
-      </main>
-    </div>
+
+        <main className="flex-1 flex overflow-hidden print:block print:overflow-visible">
+          {/* 歷史側邊欄 */}
+          <HistorySidebar
+            isOpen={isSidebarOpen}
+            onClose={() => setIsSidebarOpen(false)}
+            documents={documents}
+            currentDocId={currentDocId}
+            onSelectDocument={handleDocumentSwitch}
+            onCreateDocument={handleCreateDocument}
+            onDeleteDocument={deleteDocument}
+            onRenameDocument={renameDocument}
+            storageUsage={storageUsage}
+          />
+
+          <Editor
+            ref={editorRef}
+            mode={mode}
+            code={code}
+            setCode={handleCodeChange}
+            onCopy={handleCopy}
+            onReset={handleReset}
+            onClear={handleClear}
+            copied={copied}
+            onScroll={handleEditorScroll}
+            isDarkMode={isDarkMode}
+            onMouseEnter={() => { isHoveringEditor.current = true; }}
+            onMouseLeave={() => { isHoveringEditor.current = false; }}
+            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+          />
+
+          <PreviewPanel
+            ref={previewRef}
+            mode={mode}
+            error={error}
+            setError={setError}
+            svgContent={svgContent}
+            zoom={zoom}
+            position={position}
+            isDragging={isDragging}
+            onZoom={handleZoom}
+            onSetZoom={setZoom}
+            onResetNav={resetNavigation}
+            onMouseDown={onMouseDown}
+            onMouseMove={onMouseMove}
+            onMouseUp={onMouseUp}
+            onWheel={handleWheel}
+            onScroll={handlePreviewScroll}
+            code={code}
+            theme={theme}
+            isDarkMode={isDarkMode}
+            onMouseEnter={() => { isHoveringPreview.current = true; }}
+            onMouseLeave={() => { isHoveringPreview.current = false; }}
+          />
+        </main>
+
+        {/* Settings Modal */}
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          currentMacros={settings.customMacros}
+          onSaveMacros={updateMacros}
+          onRestoreDefaults={restoreDefaults}
+        />
+      </div>
+    </MathJaxContext>
   );
 };
 

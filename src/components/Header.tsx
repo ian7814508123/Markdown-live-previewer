@@ -1,10 +1,10 @@
 import { useRef, useState, useEffect } from 'react';
-import { Sparkles, Download, ChevronDown, Image as ImageIcon, FileImage, FileJson, FileText, Printer, Sun, Moon, FileUp } from 'lucide-react';
+import { Sparkles, Download, ChevronDown, Image as ImageIcon, FileImage, FileJson, FileText, Printer, Sun, Moon, FileUp, Settings } from 'lucide-react';
 import { parseExcelToMarkdown } from '../services/excelParser';
 
 interface HeaderProps {
     mode: 'mermaid' | 'markdown';
-    setMode: (mode: 'mermaid' | 'markdown') => void;
+    // setMode removed - controlled via sidebar creation
     theme: string;
     setTheme: (theme: string) => void;
     isDarkMode: boolean;
@@ -15,11 +15,12 @@ interface HeaderProps {
     setIsSyncScroll: (isSync: boolean) => void;
     onInsertCode: (code: string) => void;
     onImportFullFile: (file: File, content: string) => void;
+    onOpenSettings: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
     mode,
-    setMode,
+    // setMode,
     theme,
     setTheme,
     isDarkMode,
@@ -29,7 +30,8 @@ const Header: React.FC<HeaderProps> = ({
     isSyncScroll,
     setIsSyncScroll,
     onInsertCode,
-    onImportFullFile
+    onImportFullFile,
+    onOpenSettings
 }) => {
     const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState(false);
     const downloadMenuRef = useRef<HTMLDivElement>(null);
@@ -45,6 +47,8 @@ const Header: React.FC<HeaderProps> = ({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    // Mode switching logic moved to Sidebar/New Document flow
+    /* 
     const handleModeChange = (newMode: 'mermaid' | 'markdown') => {
         if (newMode === mode) return;
         const modeName = newMode === 'mermaid' ? '美人魚' : '標記掉落';
@@ -53,6 +57,7 @@ const Header: React.FC<HeaderProps> = ({
             setIsDownloadMenuOpen(false); // Close menu if open
         }
     };
+    */
 
     const handleExport = (action: () => void) => {
         action();
@@ -124,27 +129,15 @@ const Header: React.FC<HeaderProps> = ({
 
                 <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
 
-                <div className="flex items-center bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-1">
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 px-2 uppercase">模式</span>
-                    <div className="flex gap-1">
-                        <button
-                            onClick={() => handleModeChange('mermaid')}
-                            className={`px-3 py-1 rounded text-xs font-bold transition-all ${mode === 'mermaid' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'}`}
-                            title="切換至 美人魚"
-                        >
-                            美人魚
-                        </button>
-                        <button
-                            onClick={() => handleModeChange('markdown')}
-                            className={`px-3 py-1 rounded text-xs font-bold transition-all ${mode === 'markdown' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'}`}
-                            title="切換至 標記掉落"
-                        >
-                            標記掉落
-                        </button>
-                    </div>
-                </div>
+                <button
+                    onClick={onOpenSettings}
+                    className="p-2 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-indigo-400 dark:hover:bg-slate-800 transition-all active:scale-95"
+                    title="設定"
+                >
+                    <Settings size={20} />
+                </button>
 
-                <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-2" />
+
 
                 {mode === 'mermaid' && (
                     <div className="flex items-center bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-1">
@@ -238,9 +231,13 @@ const Header: React.FC<HeaderProps> = ({
                         </div>
                     )}
                 </div>
+
+
+
             </div>
-        </header>
+        </header >
     );
 };
+
 
 export default Header;

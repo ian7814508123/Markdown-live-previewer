@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, Plus, FolderOpen } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Plus, FolderOpen, FileText, Image as ImageIcon } from 'lucide-react';
 import { DocumentRecord } from '../types';
 import DocumentItem from './DocumentItem';
 
@@ -9,7 +9,7 @@ interface HistorySidebarProps {
     documents: DocumentRecord[];
     currentDocId: string | null;
     onSelectDocument: (docId: string) => void;
-    onCreateDocument: () => void;
+    onCreateDocument: (mode: 'markdown' | 'mermaid') => void;
     onDeleteDocument: (docId: string) => void;
     onRenameDocument: (docId: string, newName: string) => void;
     storageUsage: number;
@@ -26,6 +26,8 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
     onRenameDocument,
     storageUsage,
 }) => {
+    const [isCreating, setIsCreating] = useState(false);
+
     return (
         <>
             {/* 背景遮罩（僅手機版） */}
@@ -67,13 +69,42 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
 
                 {/* 新增按鈕 */}
                 <div className="p-3 border-b border-slate-100 dark:border-slate-800">
-                    <button
-                        onClick={onCreateDocument}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all text-sm font-semibold shadow-sm active:scale-95"
-                    >
-                        <Plus size={16} />
-                        <span>新增文檔</span>
-                    </button>
+                    {!isCreating ? (
+                        <button
+                            onClick={() => setIsCreating(true)}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all text-sm font-semibold shadow-sm active:scale-95"
+                        >
+                            <Plus size={16} />
+                            <span>新增文檔</span>
+                        </button>
+                    ) : (
+                        <div className="flex flex-col gap-2 animate-in slide-in-from-top-2 duration-200">
+                            <button
+                                onClick={() => { onCreateDocument('markdown'); setIsCreating(false); }}
+                                className="w-full flex items-center gap-3 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg transition-colors text-sm font-medium"
+                            >
+                                <div className="p-1.5 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-md">
+                                    <FileText size={16} />
+                                </div>
+                                新增 Markdown
+                            </button>
+                            <button
+                                onClick={() => { onCreateDocument('mermaid'); setIsCreating(false); }}
+                                className="w-full flex items-center gap-3 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg transition-colors text-sm font-medium"
+                            >
+                                <div className="p-1.5 bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 rounded-md">
+                                    <ImageIcon size={16} />
+                                </div>
+                                新增 Mermaid
+                            </button>
+                            <button
+                                onClick={() => setIsCreating(false)}
+                                className="w-full text-center text-xs text-slate-400 hover:text-slate-500 py-1"
+                            >
+                                取消
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {/* 文檔列表 */}

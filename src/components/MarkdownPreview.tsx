@@ -2,10 +2,12 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
-import rehypeMathjax from 'rehype-mathjax/svg';
+import { MathJax } from 'better-react-mathjax';
 import rehypeRaw from 'rehype-raw';
 import mermaid from 'mermaid';
 import embed from 'vega-embed';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 interface MarkdownPreviewProps {
     content: string;
@@ -143,6 +145,54 @@ const VegaBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(({
 const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDarkMode }) => {
     const isDark = isDarkMode;
 
+    // Add debounce for content to reduce re-rendering during typing
+    const [debouncedContent, setDebouncedContent] = useState(content);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedContent(content);
+        }, 300); // 300ms debounce for markdown/math rendering
+
+        return () => clearTimeout(timer);
+    }, [content]);
+
+    // 1. Pre-process content to protect MathJax from Markdown parsers
+    const processedContent = useMemo(() => {
+        if (!debouncedContent) return { text: '', store: {} };
+
+        let protectedContent = debouncedContent;
+        const mathStore: Record<string, string> = {};
+        const codeBlockStore: Record<string, string> = {};
+
+        // Step 1: Protect code blocks first (to prevent math inside code blocks from being processed)
+        protectedContent = protectedContent.replace(/```[\s\S]*?```/g, (match) => {
+            const id = `CODE-BLOCK-${Math.random().toString(36).substr(2, 9)}`;
+            codeBlockStore[id] = match;
+            return id;
+        });
+
+        // Step 2: Protect display math $$...$$
+        protectedContent = protectedContent.replace(/\$\$([\s\S]*?)\$\$/g, (match, tex) => {
+            const id = `MATH-DISPLAY-${Math.random().toString(36).substr(2, 9)}`;
+            mathStore[id] = tex;
+            return `<div data-math-id="${id}" class="math-display-protector"></div>`;
+        });
+
+        // Step 3: Protect inline math $...$ 
+        protectedContent = protectedContent.replace(/(?<!\\)\$((?:\\.|[^$])+?)(?<!\\)\$/g, (match, tex) => {
+            const id = `MATH-INLINE-${Math.random().toString(36).substr(2, 9)}`;
+            mathStore[id] = tex;
+            return `<span data-math-id="${id}" class="math-inline-protector"></span>`;
+        });
+
+        // Step 4: Restore code blocks
+        protectedContent = protectedContent.replace(/CODE-BLOCK-[a-z0-9]+/g, (id) => {
+            return codeBlockStore[id] || id;
+        });
+
+        return { text: protectedContent, store: mathStore };
+    }, [debouncedContent]);
+
     const components = useMemo(() => ({
         code({ node, inline, className, children, ...props }: any) {
             const match = /language-(\w+)/.exec(className || '');
@@ -150,12 +200,33 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
             const codeString = String(children).replace(/\n$/, '');
 
             if (!inline) {
+                // Special renderers for Mermaid and Vega
                 if (language === 'mermaid') {
                     return <MermaidBlock code={codeString} isDarkMode={isDark} />;
                 }
                 if (language === 'vega' || language === 'vega-lite') {
                     return <VegaBlock code={codeString} isDarkMode={isDark} />;
                 }
+
+                // Syntax highlighting for all other code blocks
+                return (
+                    <SyntaxHighlighter
+                        language={language || 'text'}
+                        style={isDark ? vscDarkPlus : vs}
+                        customStyle={{
+                            borderRadius: '0.75rem',
+                            padding: '1rem',
+                            marginTop: '1.5rem',
+                            marginBottom: '1.5rem',
+                            fontSize: '0.875rem',
+                            lineHeight: '1.5',
+                        }}
+                        showLineNumbers={true}
+                        wrapLines={true}
+                    >
+                        {codeString}
+                    </SyntaxHighlighter>
+                );
             }
 
             return (
@@ -163,17 +234,42 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
                     {children}
                 </code>
             );
+        },
+        // Custom handlers for our protected math blocks
+        div: ({ node, ...props }: any) => {
+            if (props.className === 'math-display-protector' && props['data-math-id']) {
+                const id = props['data-math-id'];
+                const tex = processedContent.store[id];
+                if (tex) {
+                    return (
+                        <div className="my-4 overflow-x-auto">
+                            <MathJax dynamic>{`$$${tex}$$`}</MathJax>
+                        </div>
+                    );
+                }
+            }
+            return <div {...props} />;
+        },
+        span: ({ node, ...props }: any) => {
+            if (props.className === 'math-inline-protector' && props['data-math-id']) {
+                const id = props['data-math-id'];
+                const tex = processedContent.store[id];
+                if (tex) {
+                    return <MathJax dynamic inline>{`$${tex}$`}</MathJax>;
+                }
+            }
+            return <span {...props} />;
         }
-    }), [isDark]);
+    }), [isDark, processedContent]);
 
     return (
         <div className={`prose max-w-none p-8 select-text ${isDark ? 'prose-invert' : 'prose-slate'} prose-headings:font-bold prose-a:text-indigo-600 prose-img:rounded-xl prose-table:border-collapse prose-th:border prose-th:border-slate-300 dark:prose-th:border-slate-700 prose-th:p-2 prose-td:border prose-td:border-slate-300 dark:prose-td:border-slate-700 prose-td:p-2 print:p-0 print:max-w-none`}>
             <ReactMarkdown
-                remarkPlugins={[remarkGfm, remarkMath]}
-                rehypePlugins={[rehypeRaw, rehypeMathjax]}
+                remarkPlugins={[remarkGfm]} // Removed remarkMath as we handle it manually
+                rehypePlugins={[rehypeRaw]}
                 components={components}
             >
-                {content || '*No content provided*'}
+                {processedContent.text}
             </ReactMarkdown>
         </div>
     );

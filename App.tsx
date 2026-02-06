@@ -240,6 +240,9 @@ _你也可以 **混合使用** 不同樣式_
 您可能正在使用  
 [Markdown 即時編輯器](http://localhost:3000)
 
+如果需要語法上的幫助可以參考
+[標註掉落 語法大全](https://hackmd.io/@eMP9zQQ0Qt6I8Uqp2Vqy6w/SyiOheL5N/%2FBVqowKshRH246Q7UDyodFA)
+
 ---
 
 ## 圖片（Images）

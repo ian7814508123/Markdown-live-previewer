@@ -58,5 +58,32 @@ Open your browser to `http://localhost:5173` (or the port shown in your terminal
 3. **Preview**: See the result on the right panel.
 4. **Download**: Click the **Download** button in the header to save your creation.
 
----
-*Built with React, Vite, Mermaid.js, and Lucide React.*
+
+## Deployment & Preview
+
+This project is configured with a specific `base` path for GitHub Pages deployment.
+
+### 🔧 Development (Local)
+Runs on `http://localhost:3000/` (Root path).
+```bash
+npm run dev
+```
+
+### 🚀 Production Preview (Local)
+To verify the production build locally, use the `preview` command.
+**Do not use `npx serve dist`** directly, as it doesn't handle the base path configuration correctly.
+
+```bash
+npm run build
+npm run preview
+```
+This will start a server at `http://localhost:4173/Markdown-live-previewer/`.
+
+### 📦 Deployment (GitHub Pages)
+The `vite.config.ts` is configured to set the base path to `/Markdown-live-previewer/` when running `vite build`.
+
+1.  **Build**: `npm run build`
+2.  **Deploy**: Push the `dist` folder to your `gh-pages` branch (or configure GitHub Actions).
+
+**Note on Styling**:
+Production builds include specific CSS overrides in `public/index.css` to ensure MathJax equations render correctly without unwanted line breaks. Always verify with `npm run preview` before deploying.

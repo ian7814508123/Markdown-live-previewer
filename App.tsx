@@ -38,9 +38,11 @@ const App: React.FC = () => {
   useEffect(() => {
     const loadDefaults = async () => {
       try {
+        // Use Vite's BASE_URL for GitHub Pages support
+        const baseUrl = import.meta.env.BASE_URL;
         const [markdownRes, mermaidRes] = await Promise.all([
-          fetch('/defaults/default-markdown.md'),
-          fetch('/defaults/default-mermaid.md'),
+          fetch(`${baseUrl}defaults/default-markdown.md`),
+          fetch(`${baseUrl}defaults/default-mermaid.md`),
         ]);
 
         if (!markdownRes.ok || !mermaidRes.ok) {

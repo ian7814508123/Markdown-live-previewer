@@ -255,7 +255,11 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
                 const id = props['data-math-id'];
                 const tex = processedContent.store[id];
                 if (tex) {
-                    return <MathJax dynamic inline>{`$${tex}$`}</MathJax>;
+                    return (
+                        <span style={{ display: 'inline-block', whiteSpace: 'nowrap' }}>
+                            <MathJax dynamic inline>{`$${tex}$`}</MathJax>
+                        </span>
+                    );
                 }
             }
             return <span {...props} />;

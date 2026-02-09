@@ -74,7 +74,7 @@ _你也可以 **混合使用** 不同樣式_
 ## 連結（Links）
 
 您可能正在使用  
-[Markdown 即時編輯器](http://localhost:3000)
+[Markdown 即時編輯器](https://huangjyunying.github.io/Markdown-live-previewer/)
 
 如果需要語法上的幫助可以參考
 [標註掉落 語法大全](https://hackmd.io/@eMP9zQQ0Qt6I8Uqp2Vqy6w/SyiOheL5N/%2FBVqowKshRH246Q7UDyodFA)
@@ -83,7 +83,7 @@ _你也可以 **混合使用** 不同樣式_
 
 ## 圖片（Images）
 
-![這是替代文字](/image/markdown_liveditor.svg "這是一張範例圖片")
+![這是替代文字](./image/markdown_liveditor.svg "這是一張範例圖片")
 
 ---
 

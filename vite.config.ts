@@ -5,7 +5,7 @@ import { viteCommonjs } from '@originjs/vite-plugin-commonjs';
 
 export default defineConfig(({ mode }) => {
   return {
-    base: process.env.BASE_URL || '/',
+    base: mode === 'production' ? '/Markdown-live-previewer/' : '/',
     server: {
       port: 3000,
       host: "0.0.0.0"

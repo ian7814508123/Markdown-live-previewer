@@ -59,3 +59,14 @@
 
 /* Print Styles Override (Consolidated) */
 /* Print Styles handled by Tailwind classes in components */
+
+/* MathJax Override for Production Build */
+mjx-container[display="true"] {
+    display: block;
+    margin: 1em 0 !important;
+}
+
+mjx-container:not([display="true"]) {
+    display: inline-block !important;
+    vertical-align: middle;
+}

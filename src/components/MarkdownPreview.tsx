@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -156,42 +156,30 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
         return () => clearTimeout(timer);
     }, [content]);
 
-    // 1. Pre-process content to protect MathJax from Markdown parsers
-    const processedContent = useMemo(() => {
-        if (!debouncedContent) return { text: '', store: {} };
-
-        let protectedContent = debouncedContent;
-        const mathStore: Record<string, string> = {};
-        const codeBlockStore: Record<string, string> = {};
-
-        // Step 1: Protect code blocks first (to prevent math inside code blocks from being processed)
-        protectedContent = protectedContent.replace(/```[\s\S]*?```/g, (match) => {
-            const id = `CODE-BLOCK-${Math.random().toString(36).substr(2, 9)}`;
-            codeBlockStore[id] = match;
-            return id;
-        });
-
-        // Step 2: Protect display math $$...$$
-        protectedContent = protectedContent.replace(/\$\$([\s\S]*?)\$\$/g, (match, tex) => {
-            const id = `MATH-DISPLAY-${Math.random().toString(36).substr(2, 9)}`;
-            mathStore[id] = tex;
-            return `<div data-math-id="${id}" class="math-display-protector"></div>`;
-        });
-
-        // Step 3: Protect inline math $...$ 
-        protectedContent = protectedContent.replace(/(?<!\\)\$((?:\\.|[^$])+?)(?<!\\)\$/g, (match, tex) => {
-            const id = `MATH-INLINE-${Math.random().toString(36).substr(2, 9)}`;
-            mathStore[id] = tex;
-            return `<span data-math-id="${id}" class="math-inline-protector"></span>`;
-        });
-
-        // Step 4: Restore code blocks
-        protectedContent = protectedContent.replace(/CODE-BLOCK-[a-z0-9]+/g, (id) => {
-            return codeBlockStore[id] || id;
-        });
-
-        return { text: protectedContent, store: mathStore };
-    }, [debouncedContent]);
+    // Customize how remark-math nodes are converted to HAST (HTML)
+    // This ensures that 'math' nodes become 'div.math-display' and 'inlineMath' become 'span.math-inline'
+    // containing the raw LaTeX, which our custom components will then render using MathJax.
+    const remarkRehypeOptions = useMemo(() => ({
+        handlers: {
+            math: (h: any, node: any) => {
+                // Return HAST element directly
+                return {
+                    type: 'element' as const,
+                    tagName: 'div',
+                    properties: { className: ['math-display'] },
+                    children: [{ type: 'text' as const, value: node.value }]
+                };
+            },
+            inlineMath: (h: any, node: any) => {
+                return {
+                    type: 'element' as const,
+                    tagName: 'span',
+                    properties: { className: ['math-inline'] },
+                    children: [{ type: 'text' as const, value: node.value }]
+                };
+            }
+        }
+    }), []);
 
     const components = useMemo(() => ({
         code({ node, inline, className, children, ...props }: any) {
@@ -236,44 +224,37 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
             );
         },
         // Custom handlers for our protected math blocks
-        div: ({ node, ...props }: any) => {
-            if (props.className === 'math-display-protector' && props['data-math-id']) {
-                const id = props['data-math-id'];
-                const tex = processedContent.store[id];
-                if (tex) {
-                    return (
-                        <div className="my-4 overflow-x-auto">
-                            <MathJax dynamic>{`$$${tex}$$`}</MathJax>
-                        </div>
-                    );
-                }
+        div: ({ node, className, children, ...props }: any) => {
+            if (className?.includes('math-display')) {
+                return (
+                    <div className="my-4 overflow-x-auto">
+                        <MathJax dynamic>{`$$${children}$$`}</MathJax>
+                    </div>
+                );
             }
-            return <div {...props} />;
+            return <div className={className} {...props}>{children}</div>;
         },
-        span: ({ node, ...props }: any) => {
-            if (props.className === 'math-inline-protector' && props['data-math-id']) {
-                const id = props['data-math-id'];
-                const tex = processedContent.store[id];
-                if (tex) {
-                    return (
-                        <span style={{ display: 'inline-block', whiteSpace: 'nowrap' }}>
-                            <MathJax dynamic inline>{`$${tex}$`}</MathJax>
-                        </span>
-                    );
-                }
+        span: ({ node, className, children, ...props }: any) => {
+            if (className?.includes('math-inline')) {
+                return (
+                    <span className="math-inline">
+                        <MathJax dynamic inline>{`$${children}$`}</MathJax>
+                    </span>
+                );
             }
-            return <span {...props} />;
+            return <span className={className} {...props}>{children}</span>;
         }
-    }), [isDark, processedContent]);
+    }), [isDark]);
 
     return (
         <div className={`prose max-w-none p-8 select-text ${isDark ? 'prose-invert' : 'prose-slate'} prose-headings:font-bold prose-a:text-indigo-600 prose-img:rounded-xl prose-table:border-collapse prose-th:border prose-th:border-slate-300 dark:prose-th:border-slate-700 prose-th:p-2 prose-td:border prose-td:border-slate-300 dark:prose-td:border-slate-700 prose-td:p-2 print:p-0 print:max-w-none`}>
             <ReactMarkdown
-                remarkPlugins={[remarkGfm]} // Removed remarkMath as we handle it manually
+                remarkPlugins={[remarkGfm, remarkMath]}
                 rehypePlugins={[rehypeRaw]}
+                remarkRehypeOptions={remarkRehypeOptions}
                 components={components}
             >
-                {processedContent.text}
+                {debouncedContent}
             </ReactMarkdown>
         </div>
     );

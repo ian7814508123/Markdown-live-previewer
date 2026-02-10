@@ -1,11 +1,9 @@
 import path from 'path';
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { viteCommonjs } from '@originjs/vite-plugin-commonjs';
 
-export default defineConfig(({ mode }) => {
-  // 支援環境變數控制 base path，預設 Docker 環境使用根路徑
-
+export default defineConfig(() => {
   return {
     base: '/',
     server: {

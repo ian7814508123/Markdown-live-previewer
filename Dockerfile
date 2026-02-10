@@ -15,9 +15,6 @@ RUN npm ci --only=production=false
 # 複製所有原始碼
 COPY . .
 
-# 設定環境變數：強制使用根路徑（Docker 部署不需要子路徑）
-ENV VITE_BASE_PATH=/
-
 # 執行生產構建
 RUN npm run build
 

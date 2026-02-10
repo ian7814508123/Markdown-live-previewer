@@ -498,6 +498,28 @@ const App: React.FC = () => {
       macros: {
         ...settings.customMacros
       }
+    },
+    chtml: {
+      scale: 1,
+      minScale: 0.5,
+      mtextInheritFont: false,
+      merrorInheritFont: true,
+      mathmlSpacing: false,
+      skipAttributes: {},
+      exFactor: 0.5,
+      displayAlign: 'center',
+      displayIndent: '0'
+    },
+    svg: {
+      scale: 1,
+      minScale: 0.5,
+      mtextInheritFont: false,
+      merrorInheritFont: true,
+      mathmlSpacing: false,
+      skipAttributes: {},
+      exFactor: 0.5,
+      displayAlign: 'center',
+      displayIndent: '0'
     }
   };
 

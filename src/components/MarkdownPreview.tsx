@@ -227,7 +227,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
         div: ({ node, className, children, ...props }: any) => {
             if (className?.includes('math-display')) {
                 return (
-                    <div className="my-4 overflow-x-auto">
+                    <div className="my-4 overflow-x-auto" style={{ whiteSpace: 'nowrap' }}>
                         <MathJax dynamic>{`$$${children}$$`}</MathJax>
                     </div>
                 );

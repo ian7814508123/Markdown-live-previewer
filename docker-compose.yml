@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  markdown-previewer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: markdown-previewer:latest
+    container_name: markdown-previewer
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    
+    # 健康檢查（可選）
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    
+    # 資源限制（可選，防止資源濫用）
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M

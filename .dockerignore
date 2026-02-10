@@ -1,0 +1,43 @@
+# 依賴目錄
+node_modules
+npm-debug.log*
+
+# 構建產物
+dist
+.vite
+
+# Git 相關
+.git
+.gitignore
+.github
+
+# IDE 配置
+.vscode
+.idea
+*.swp
+*.swo
+
+# 測試相關
+tests
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+coverage
+
+# 文件（根據需求調整，這裡保留以便 image 內可查看）
+# docs
+
+# 其他
+.DS_Store
+Thumbs.db
+*.log
+
+# Docker 相關
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# 環境變數檔案
+.env.local
+.env.*.local

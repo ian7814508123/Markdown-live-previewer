@@ -4,8 +4,10 @@ import react from '@vitejs/plugin-react';
 import { viteCommonjs } from '@originjs/vite-plugin-commonjs';
 
 export default defineConfig(({ mode }) => {
+  // 支援環境變數控制 base path，預設 Docker 環境使用根路徑
+
   return {
-    base: mode === 'production' ? '/Markdown-live-previewer/' : '/',
+    base: '/',
     server: {
       port: 3000,
       host: "0.0.0.0"

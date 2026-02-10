@@ -59,6 +59,8 @@ Open your browser to `http://localhost:5173` (or the port shown in your terminal
 4. **Download**: Click the **Download** button in the header to save your creation.
 
 
+
+
 ## Deployment & Preview
 
 This project is configured with a specific `base` path for GitHub Pages deployment.
@@ -79,6 +81,29 @@ npm run preview
 ```
 This will start a server at `http://localhost:4173/Markdown-live-previewer/`.
 
+### 🐳 Docker Deployment (推薦用於生產環境)
+
+使用 Docker 部署可以獲得一致的運行環境，適合生產環境使用。
+
+**快速啟動**：
+```bash
+docker-compose up -d
+```
+訪問 `http://localhost:8080`
+
+**詳細說明**請參考 [Docker 部署指南](docs/docker-deployment.md)。
+
+### ☁️ 雲端部署 (推薦用於公開存取)
+
+如果需要讓其他人也能存取你的應用,推薦使用免費的雲端平台:
+
+- **Render** (最推薦): 永久免費,零配置,自動 HTTPS
+- **Railway**: 簡單易用,每月 $5 免費額度  
+- **Fly.io**: 高性能,免費 3 個 VM
+- **Google Cloud Run**: Serverless,按使用計費
+
+**完整教學**請參考 [雲端部署指南](docs/cloud-deployment.md)。
+
 ### 📦 Deployment (GitHub Pages)
 The `vite.config.ts` is configured to set the base path to `/Markdown-live-previewer/` when running `vite build`.
 
@@ -87,3 +112,4 @@ The `vite.config.ts` is configured to set the base path to `/Markdown-live-previ
 
 **Note on Styling**:
 Production builds include specific CSS overrides in `public/index.css` to ensure MathJax equations render correctly without unwanted line breaks. Always verify with `npm run preview` before deploying.
+

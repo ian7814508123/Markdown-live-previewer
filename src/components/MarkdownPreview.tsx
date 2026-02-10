@@ -237,7 +237,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
         span: ({ node, className, children, ...props }: any) => {
             if (className?.includes('math-inline')) {
                 return (
-                    <span className="math-inline">
+                    <span className="math-inline" style={{ whiteSpace: 'nowrap' }}>
                         <MathJax dynamic inline>{`$${children}$`}</MathJax>
                     </span>
                 );

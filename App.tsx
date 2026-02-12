@@ -94,7 +94,7 @@ const App: React.FC = () => {
   const { settings, updateMacros, restoreDefaults } = useAppSettings();
 
   // 從當前文檔取得 mode 和 code
-  const mode = currentDocument?.mode || 'mermaid';
+  const mode = currentDocument?.mode || 'markdown';
   const code = currentDocument?.content || '';
 
   // Toggle Dark Mode
@@ -109,8 +109,8 @@ const App: React.FC = () => {
   // 初始化：如果沒有文檔，建立預設文檔
   useEffect(() => {
     if (documents.length === 0 && defaultContents && !isLoadingDefaults) {
-      createDocument('markdown', defaultContents.markdown, '預設 Markdown 文檔');
-      createDocument('mermaid', defaultContents.mermaid, '預設 Mermaid 文檔');
+      createDocument('markdown', defaultContents.markdown, '預設 標註掉落 文檔');
+      createDocument('mermaid', defaultContents.mermaid, '預設 美人魚 文檔');
     }
   }, [documents.length, createDocument, defaultContents, isLoadingDefaults]);
 

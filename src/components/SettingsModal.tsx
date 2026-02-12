@@ -62,7 +62,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className="flex items-center justify-between">
                     <div>
                         <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">設定</h2>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">MathJax 自定義巨集 (JSON 格式)</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">MathJax 自定義巨集 (爪哇腳本 物件表示法 格式)</p>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-500">
                         <X size={20} />

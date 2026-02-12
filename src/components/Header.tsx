@@ -219,7 +219,7 @@ const Header: React.FC<HeaderProps> = ({
                                 <>
                                     <button onClick={() => handleExport(onDownloadMarkdown)} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                                         <div className="w-9 h-9 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg flex items-center justify-center"><FileText size={18} /></div>
-                                        <div className="flex flex-col items-start"><span className="font-bold">標註掉落 檔案</span><span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase">.md 源碼</span></div>
+                                        <div className="flex flex-col items-start"><span className="font-bold">標記掉落 檔案</span><span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase">.md 源碼</span></div>
                                     </button>
                                     <div className="mx-4 my-1 border-t border-slate-100 dark:border-slate-700" />
                                     <button onClick={() => handleExport(() => window.print())} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">

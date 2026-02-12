@@ -117,7 +117,7 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
                             ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
                             : 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400'
                             }`}>
-                            {document.mode === 'mermaid' ? '美人魚' : '標註掉落'}
+                            {document.mode === 'mermaid' ? '美人魚' : '標記掉落'}
                         </span>
                     </div>
                 </div>

@@ -109,7 +109,7 @@ const App: React.FC = () => {
   // 初始化：如果沒有文檔，建立預設文檔
   useEffect(() => {
     if (documents.length === 0 && defaultContents && !isLoadingDefaults) {
-      createDocument('markdown', defaultContents.markdown, '預設 標註掉落 文檔');
+      createDocument('markdown', defaultContents.markdown, '預設 標記掉落 文檔');
       createDocument('mermaid', defaultContents.mermaid, '預設 美人魚 文檔');
     }
   }, [documents.length, createDocument, defaultContents, isLoadingDefaults]);
@@ -317,12 +317,20 @@ const App: React.FC = () => {
   }, [code, theme, renderDiagram]);
 
 
+  // 清理檔案名稱中的非法字元
+  const sanitizeFileName = (name: string): string => {
+    // Windows 和多數系統禁止的字元：< > : " / \ | ? *
+    return name.replace(/[<>:"/\\|?*]/g, '-').trim();
+  };
+
   const downloadMarkdown = () => {
     const blob = new Blob([code], { type: 'text/markdown;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `document - ${Date.now()}.md`;
+    // 使用文檔自訂名稱，若無則使用時間戳記
+    const fileName = currentDocument?.name ? sanitizeFileName(currentDocument.name) : `document-${Date.now()}`;
+    link.download = `${fileName}.md`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -403,7 +411,9 @@ const App: React.FC = () => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `mermaid - diagram - ${Date.now()}.svg`;
+      // 使用文檔自訂名稱，若無則使用時間戳記
+      const fileName = currentDocument?.name ? sanitizeFileName(currentDocument.name) : `mermaid-diagram-${Date.now()}`;
+      link.download = `${fileName}.svg`;
       link.click();
       URL.revokeObjectURL(url);
     } else {
@@ -431,7 +441,9 @@ const App: React.FC = () => {
 
         try {
           const link = document.createElement('a');
-          link.download = `mermaid - diagram - ${Date.now()}.${format} `;
+          // 使用文檔自訂名稱，若無則使用時間戳記
+          const fileName = currentDocument?.name ? sanitizeFileName(currentDocument.name) : `mermaid-diagram-${Date.now()}`;
+          link.download = `${fileName}.${format}`;
           link.href = canvas.toDataURL(`image / ${format} `, 0.9);
           link.click();
         } catch (e) {

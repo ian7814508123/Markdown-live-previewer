@@ -86,7 +86,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                                 <div className="p-1.5 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-md">
                                     <FileText size={16} />
                                 </div>
-                                新增 Markdown
+                                新增 標記掉落
                             </button>
                             <button
                                 onClick={() => { onCreateDocument('mermaid'); setIsCreating(false); }}
@@ -95,7 +95,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                                 <div className="p-1.5 bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 rounded-md">
                                     <ImageIcon size={16} />
                                 </div>
-                                新增 Mermaid
+                                新增 美人魚
                             </button>
                             <button
                                 onClick={() => setIsCreating(false)}

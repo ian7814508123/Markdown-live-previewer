@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
-import { Sparkles, Download, ChevronDown, Image as ImageIcon, FileImage, FileJson, FileText, Printer, Sun, Moon, FileUp, Settings } from 'lucide-react';
+import { Download, ChevronDown, Image as ImageIcon, FileImage, FileJson, FileText, Printer, Sun, Moon, FileUp, Settings } from 'lucide-react';
 import { parseExcelToMarkdown } from '../services/excelParser';
 
 interface HeaderProps {
@@ -107,10 +107,10 @@ const Header: React.FC<HeaderProps> = ({
                 accept=".xlsx,.xls,.csv,.md,.txt,.mmd"
                 onChange={handleFileUpload}
             />
-            {/* ... 省略 ... */}
+
             <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-indigo-200 dark:shadow-indigo-900/40">
-                    <Sparkles size={24} />
+                    <img src="/image/markdown_liveditor.svg" alt="Logo" className="w-12 h-12" />
                 </div>
                 <div>
                     <h1 className="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100">標記掉落 即時編輯者</h1>

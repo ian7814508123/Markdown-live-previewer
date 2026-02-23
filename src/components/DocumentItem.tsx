@@ -68,10 +68,10 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
             onClick={onClick}
             onDoubleClick={handleDoubleClick}
             className={`
-        group relative px-3 py-2.5 mx-2 rounded-lg cursor-pointer transition-all
+        group relative px-3 py-2.5 mx-2 rounded-2xl cursor-pointer transition-all
         ${isActive
                     ? 'bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800'
-                    : 'hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent'
+                    : 'hover:bg-slate-100 dark:hover:bg-white/10 border border-transparent'
                 }
       `}
         >
@@ -125,7 +125,7 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
                 {/* 刪除按鈕 */}
                 <button
                     onClick={handleDeleteClick}
-                    className="opacity-0 group-hover:opacity-100 shrink-0 p-1 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 rounded transition-all"
+                    className="md-ripple-root opacity-0 group-hover:opacity-100 shrink-0 p-1.5 rounded-full hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-all [&_.md-ripple-wave]:text-red-600/20"
                     title="刪除文檔"
                 >
                     <Trash2 size={14} />

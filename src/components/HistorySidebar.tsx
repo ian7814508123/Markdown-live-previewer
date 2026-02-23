@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { X, Plus, FolderOpen, FileText, Image as ImageIcon } from 'lucide-react';
+import { X, Plus, FolderOpen, FileText, Image as ImageIcon, Wrench } from 'lucide-react';
 import { DocumentRecord } from '../types';
 import DocumentItem from './DocumentItem';
+import ToolsModal from './ToolsModal';
+import RippleButton from './RippleButton';
 
 interface HistorySidebarProps {
     isOpen: boolean;
@@ -27,6 +29,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
     storageUsage,
 }) => {
     const [isCreating, setIsCreating] = useState(false);
+    const [isToolsOpen, setIsToolsOpen] = useState(false);
 
     return (
         <>
@@ -58,48 +61,52 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                         <FolderOpen size={18} className="text-indigo-500" />
                         <h2 className="text-sm font-bold text-slate-700 dark:text-slate-300">我的文檔</h2>
                     </div>
-                    <button
+                    <RippleButton
+                        variant="icon"
                         onClick={onClose}
-                        className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-all text-slate-500 dark:text-slate-400"
+                        className="w-8 h-8 text-slate-500 dark:text-slate-400"
                         title="關閉側邊欄"
                     >
                         <X size={18} />
-                    </button>
+                    </RippleButton>
                 </div>
 
                 {/* 新增按鈕 */}
                 <div className="p-3 border-b border-slate-100 dark:border-slate-800">
                     {!isCreating ? (
-                        <button
+                        <RippleButton
+                            variant="filled"
                             onClick={() => setIsCreating(true)}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all text-sm font-semibold shadow-sm active:scale-95"
+                            className="w-full justify-center text-sm"
                         >
                             <Plus size={16} />
                             <span>新增文檔</span>
-                        </button>
+                        </RippleButton>
                     ) : (
                         <div className="flex flex-col gap-2 animate-in slide-in-from-top-2 duration-200">
-                            <button
+                            <RippleButton
+                                variant="tonal"
                                 onClick={() => { onCreateDocument('markdown'); setIsCreating(false); }}
-                                className="w-full flex items-center gap-3 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg transition-colors text-sm font-medium"
+                                className="w-full justify-start text-sm text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700"
                             >
-                                <div className="p-1.5 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-md">
+                                <div className="p-1.5 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-lg">
                                     <FileText size={16} />
                                 </div>
                                 新增 標記掉落
-                            </button>
-                            <button
+                            </RippleButton>
+                            <RippleButton
+                                variant="tonal"
                                 onClick={() => { onCreateDocument('mermaid'); setIsCreating(false); }}
-                                className="w-full flex items-center gap-3 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg transition-colors text-sm font-medium"
+                                className="w-full justify-start text-sm text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700"
                             >
-                                <div className="p-1.5 bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 rounded-md">
+                                <div className="p-1.5 bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 rounded-lg">
                                     <ImageIcon size={16} />
                                 </div>
                                 新增 美人魚
-                            </button>
+                            </RippleButton>
                             <button
                                 onClick={() => setIsCreating(false)}
-                                className="w-full text-center text-xs text-slate-400 hover:text-slate-500 py-1"
+                                className="md-press w-full text-center text-xs text-slate-400 hover:text-slate-500 py-1 rounded-lg"
                             >
                                 取消
                             </button>
@@ -118,7 +125,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                     ) : (
                         <div className="py-2 space-y-1">
                             {documents
-                                .sort((a, b) => b.updatedAt - a.updatedAt) // 最新的在最上面
+                                .sort((a, b) => b.updatedAt - a.updatedAt)
                                 .map(doc => (
                                     <DocumentItem
                                         key={doc.id}
@@ -133,7 +140,18 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                     )}
                 </div>
 
-                {/* 底部提示與容量 */}
+                {/* ── 更多工具按鈕（開啟 Modal） ── */}
+                <div className="border-t border-slate-200 dark:border-slate-800">
+                    <button
+                        onClick={() => setIsToolsOpen(true)}
+                        className="w-full flex items-center gap-2.5 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:text-violet-600 dark:hover:text-violet-400 transition-colors group"
+                    >
+                        <Wrench size={14} className="text-violet-400 group-hover:text-violet-500 transition-colors" />
+                        <span className="text-xs font-bold tracking-wide">更多工具</span>
+                    </button>
+                </div>
+
+                {/* 底部容量統計 */}
                 <div className="px-4 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
                     <div className="flex items-center justify-between gap-4">
                         <div className="flex-1 text-center">
@@ -146,8 +164,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                             <div className="flex flex-col items-center">
                                 <div className="w-full h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-1">
                                     <div
-                                        className={`h-full transition-all duration-500 ${storageUsage > 80 ? 'bg-red-500' : storageUsage > 50 ? 'bg-amber-500' : 'bg-indigo-500'
-                                            }`}
+                                        className={`h-full transition-all duration-500 ${storageUsage > 80 ? 'bg-red-500' : storageUsage > 50 ? 'bg-amber-500' : 'bg-indigo-500'}`}
                                         style={{ width: `${storageUsage}%` }}
                                     />
                                 </div>
@@ -157,6 +174,9 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                     </div>
                 </div>
             </aside>
+
+            {/* 更多工具 Modal */}
+            <ToolsModal isOpen={isToolsOpen} onClose={() => setIsToolsOpen(false)} />
         </>
     );
 };

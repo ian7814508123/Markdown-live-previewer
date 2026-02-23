@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, RotateCcw, AlertCircle, Check } from 'lucide-react';
+import RippleButton from './RippleButton';
 
 interface SettingsModalProps {
     isOpen: boolean;
@@ -56,7 +57,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     return (
         <>
             <div className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm" onClick={onClose} />
-            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 z-50 p-6 flex flex-col gap-6 animate-in zoom-in-95 duration-200">
+            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 z-50 p-6 flex flex-col gap-6 animate-in zoom-in-95 duration-200">
 
                 {/* Header */}
                 <div className="flex items-center justify-between">
@@ -64,9 +65,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">設定</h2>
                         <p className="text-sm text-slate-500 dark:text-slate-400">MathJax 自定義巨集 (爪哇腳本 物件表示法 格式)</p>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-500">
+                    <RippleButton variant="icon" onClick={onClose} className="w-9 h-9 text-slate-500">
                         <X size={20} />
-                    </button>
+                    </RippleButton>
                 </div>
 
                 {/* Editor */}
@@ -93,30 +94,27 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
                 {/* Footer */}
                 <div className="flex items-center justify-between pt-2">
-                    <button
+                    <RippleButton
+                        variant="text"
                         onClick={handleRestore}
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors"
+                        className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
                     >
                         <RotateCcw size={16} />
                         還原預設
-                    </button>
+                    </RippleButton>
 
                     <div className="flex items-center gap-3">
-                        <button
-                            onClick={onClose}
-                            className="px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all font-medium"
-                        >
+                        <RippleButton variant="outlined" onClick={onClose}>
                             取消
-                        </button>
-                        <button
+                        </RippleButton>
+                        <RippleButton
+                            variant="filled"
                             onClick={handleSave}
-                            className={`flex items-center gap-2 px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all text-sm font-semibold shadow-md active:scale-95
-                                ${success ? 'bg-green-600 hover:bg-green-700' : ''}
-                            `}
+                            className={success ? 'bg-green-600 hover:bg-green-700' : ''}
                         >
                             {success ? <Check size={18} /> : <Save size={18} />}
                             {success ? '已儲存' : '儲存變更'}
-                        </button>
+                        </RippleButton>
                     </div>
                 </div>
             </div>

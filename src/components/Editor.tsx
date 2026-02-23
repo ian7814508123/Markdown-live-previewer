@@ -1,5 +1,6 @@
 import React, { forwardRef } from 'react';
 import { FileCode, Check, Copy, RefreshCw, Trash2, Menu } from 'lucide-react';
+import RippleButton from './RippleButton';
 
 interface EditorProps {
     mode: 'mermaid' | 'markdown';
@@ -130,22 +131,23 @@ const Editor = forwardRef<HTMLTextAreaElement, EditorProps>(({
             <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-slate-600 font-bold text-sm">
                     {/* 漢堡選單按鈕 */}
-                    <button
+                    <RippleButton
+                        variant="icon"
                         onClick={onToggleSidebar}
-                        className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-all text-slate-500 dark:text-slate-400 active:scale-90"
                         title="文檔歷史"
+                        className="w-9 h-9 text-slate-500 dark:text-slate-400"
                     >
                         <Menu size={18} />
-                    </button>
+                    </RippleButton>
                     <FileCode size={18} className="text-indigo-500" />
                     <span className="uppercase text-slate-600 dark:text-slate-400">{mode === 'mermaid' ? '美人魚 編輯者' : '標記掉落 編輯者'}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                    <button onClick={onCopy} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-all text-slate-500 dark:text-slate-400 active:scale-90" title="複製">
+                    <RippleButton variant="icon" onClick={onCopy} title="複製" className="w-9 h-9 text-slate-500 dark:text-slate-400">
                         {copied ? <Check size={16} className="text-green-600 dark:text-green-500" /> : <Copy size={16} />}
-                    </button>
-                    <button onClick={onReset} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-all text-slate-500 dark:text-slate-400 active:scale-90" title="重置"><RefreshCw size={16} /></button>
-                    <button onClick={onClear} className="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 rounded-md transition-all text-slate-500 dark:text-slate-400 active:scale-90" title="清除"><Trash2 size={16} /></button>
+                    </RippleButton>
+                    <RippleButton variant="icon" onClick={onReset} title="重置" className="w-9 h-9 text-slate-500 dark:text-slate-400"><RefreshCw size={16} /></RippleButton>
+                    <RippleButton variant="icon" onClick={onClear} title="清除" className="w-9 h-9 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30"><Trash2 size={16} /></RippleButton>
                 </div>
             </div>
 

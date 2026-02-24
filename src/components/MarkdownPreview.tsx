@@ -153,6 +153,7 @@ const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(
 
     useEffect(() => {
         setIsPending(true);
+        setError(null);
         const timer = setTimeout(() => {
             if (!svgRef.current) return;
 
@@ -160,54 +161,34 @@ const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(
                 // 清空上一次渲染結果
                 svgRef.current.innerHTML = '';
 
-                const options = {
+                // ⚠️ 只傳入官方文件明確支援的選項，
+                // 自訂 themes / weights 物件會讓內部迭代器崩潰（c.every is not a function）
+                const drawer = new SmilesDrawer.SvgDrawer({
                     width: 500,
                     height: 300,
+                    padding: 20,
                     bondThickness: 1.0,
                     bondLength: 15,
                     shortBondLength: 0.85,
                     bondSpacing: 4,
-                    atomVisualization: 'default',
-                    themes: {
-                        custom: {
-                            C: isDarkMode ? '#e2e8f0' : '#1e293b',
-                            N: isDarkMode ? '#93c5fd' : '#3b82f6',
-                            O: isDarkMode ? '#fca5a5' : '#ef4444',
-                            S: isDarkMode ? '#fde68a' : '#f59e0b',
-                            BACKGROUND: isDarkMode ? '#1e293b' : '#ffffff',
-                        }
-                    },
-                    theme: 'custom',
-                    isometric: false,
-                    debug: false,
-                    terminalCarbons: false,
-                    explicitHydrogens: false,
-                    overlapSensitivity: 0.42,
-                    overlapResolutionIterations: 1,
                     compactDrawing: true,
                     fontFamily: 'Inter, Arial, sans-serif',
-                    fontSizeLarge: 6,
-                    fontSizeSmall: 4,
-                    padding: 20,
-                    experimentalSSSR: true,
-                    kkThreshold: 0.1,
-                    kkInnerThreshold: 0.1,
-                    kkMaxIteration: 20000,
-                    kkMaxInnerIteration: 50,
-                    kkMaxEnergy: 1e9,
-                    weights: { ringOverlap: 10, overlap: 10, bondLength: 1 },
-                };
+                    terminalCarbons: false,
+                    explicitHydrogens: false,
+                });
 
-                const drawer = new SmilesDrawer.SvgDrawer(options);
                 SmilesDrawer.parse(
                     code.trim(),
                     (tree: any) => {
-                        // 建立 SVG 元素並渲染
+                        if (!svgRef.current) return;
+                        // 建立 SVG 元素並掛入容器後再渲染
                         const svgEl = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
                         svgEl.setAttribute('width', '100%');
                         svgEl.setAttribute('height', '300');
-                        svgRef.current?.appendChild(svgEl);
-                        drawer.draw(tree, svgEl, isDarkMode ? 'dark' : 'light', false);
+                        svgRef.current.appendChild(svgEl);
+                        // 正確的參數順序：draw(data, target, themeName, weights, infoOnly)
+                        // weights 預設為 null，infoOnly 預設為 false，不需傳入
+                        drawer.draw(tree, svgEl, isDarkMode ? 'dark' : 'light');
                         setError(null);
                     },
                     (err: any) => {
@@ -216,7 +197,7 @@ const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(
                     }
                 );
             } catch (err: any) {
-                console.error('SMILES render error:', err)
+                console.error('SMILES render error:', err);
                 setError(err?.message || '渲染失敗');
             } finally {
                 setIsPending(false);

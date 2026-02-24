@@ -496,7 +496,7 @@ const App: React.FC = () => {
   };
 
   const mathJaxConfig = {
-    loader: { load: ["[tex]/ams", "[tex]/html", "[mhchem]/mhchem"] },
+    loader: { load: ["[tex]/ams", "[tex]/html", "[tex]/mhchem"] },
     tex: {
       packages: { "[+]": ["ams", "html", "mhchem"] },
       inlineMath: [

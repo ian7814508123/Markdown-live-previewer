@@ -96,7 +96,8 @@ const Header: React.FC<HeaderProps> = ({
     const menuItem = (onClick: () => void, icon: React.ReactNode, label: string, sub: string) => (
         <button
             onClick={onClick}
-            className="md-ripple-root w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-700 dark:text-slate-200 rounded-2xl hover:bg-slate-100 dark:hover:bg-white/10 border border-transparent hover:border-slate-200 dark:hover:border-white/15 transition-all [&_.md-ripple-wave]:text-slate-700/10"
+            style={{ position: 'relative', overflow: 'hidden' }}
+            className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-700 dark:text-slate-200 rounded-2xl hover:bg-slate-100 dark:hover:bg-white/10 border border-transparent hover:border-slate-200 dark:hover:border-white/15 transition-all"
         >
             {icon}
             <div className="flex flex-col items-start">
@@ -157,7 +158,8 @@ const Header: React.FC<HeaderProps> = ({
                         {/* 觸發按鈕 */}
                         <button
                             onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
-                            className="md-ripple-root inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 transition-all select-none [&_.md-ripple-wave]:text-slate-700/15"
+                            style={{ position: 'relative', overflow: 'hidden' }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 transition-all select-none"
                         >
                             <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">主題</span>
                             <span>{currentTheme.emoji} {currentTheme.label}</span>
@@ -171,11 +173,11 @@ const Header: React.FC<HeaderProps> = ({
                                     <button
                                         key={t.value}
                                         onClick={() => { setTheme(t.value); setIsThemeMenuOpen(false); }}
-                                        className={`md-ripple-root w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-all border
+                                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-all border
                                             ${t.value === theme
                                                 ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800 font-semibold'
                                                 : 'text-slate-700 dark:text-slate-200 border-transparent hover:bg-slate-100 dark:hover:bg-white/10 hover:border-slate-200 dark:hover:border-white/15 font-medium'
-                                            } [&_.md-ripple-wave]:text-slate-700/10`}
+                                            }`}
                                     >
                                         <span>{t.emoji}</span>
                                         <span>{t.label}</span>
@@ -196,10 +198,11 @@ const Header: React.FC<HeaderProps> = ({
                         <button
                             onClick={() => setIsSyncScroll(!isSyncScroll)}
                             title="同步滾動"
-                            className={`md-ripple-root inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-semibold transition-all select-none
+                            style={{ position: 'relative', overflow: 'hidden' }}
+                            className={`inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-semibold transition-all select-none
                                 ${isSyncScroll
-                                    ? 'bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 hover:bg-slate-200 dark:hover:bg-white/10 [&_.md-ripple-wave]:text-indigo-600/15'
-                                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-slate-200 [&_.md-ripple-wave]:text-slate-700/15'
+                                    ? 'bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 hover:bg-slate-200 dark:hover:bg-white/10'
+                                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-slate-200'
                                 }`}
                         >
                             <span className={`w-2 h-2 rounded-full shrink-0 transition-colors ${isSyncScroll ? 'bg-indigo-500 animate-pulse' : 'bg-slate-300 dark:bg-slate-600'
@@ -213,7 +216,8 @@ const Header: React.FC<HeaderProps> = ({
                         <button
                             onClick={() => fileInputRef.current?.click()}
                             title="進口檔案 (.md, .txt, .xlsx, .csv)"
-                            className="md-ripple-root inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-slate-200 transition-all select-none [&_.md-ripple-wave]:text-slate-700/15"
+                            style={{ position: 'relative', overflow: 'hidden' }}
+                            className="inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-slate-200 transition-all select-none"
                         >
                             <FileUp size={14} />
                             進口檔案

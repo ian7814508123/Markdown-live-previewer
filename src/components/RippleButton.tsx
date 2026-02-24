@@ -4,7 +4,7 @@ type ButtonVariant = 'filled' | 'tonal' | 'outlined' | 'text' | 'icon';
 
 interface RippleButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: ButtonVariant;
-    /** 覆蓋 ripple 波紋顏色，預設由 variant 決定 */
+    /** 覆蓋 ripple 波紋顏色（CSS color string），預設由 variant 決定 */
     rippleColor?: string;
     children: React.ReactNode;
 }
@@ -19,6 +19,18 @@ interface RippleButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement
  *  - text     : 純文字
  *  - icon     : 純圖示，正方形
  */
+
+/** 每個 variant 預設的 ripple 顏色 */
+const RIPPLE_COLORS: Record<string, string> = {
+    filled: 'rgba(255,255,255,0.28)',
+    tonal: 'rgba(99,102,241,0.18)',
+    outlined: 'rgba(100,116,139,0.14)',
+    text: 'rgba(100,116,139,0.14)',
+    icon: 'rgba(100,116,139,0.18)',
+};
+
+const ANIMATION_DURATION = 550; // ms，與 @keyframes md-ripple 一致
+
 const RippleButton: React.FC<RippleButtonProps> = ({
     variant = 'text',
     rippleColor,
@@ -38,39 +50,58 @@ const RippleButton: React.FC<RippleButtonProps> = ({
         const x = e.clientX - rect.left - size / 2;
         const y = e.clientY - rect.top - size / 2;
 
+        const color = rippleColor ?? RIPPLE_COLORS[variant] ?? 'rgba(100,116,139,0.16)';
+
         const wave = document.createElement('span');
-        wave.className = 'md-ripple-wave';
-        wave.style.width = `${size}px`;
-        wave.style.height = `${size}px`;
-        wave.style.left = `${x}px`;
-        wave.style.top = `${y}px`;
-        if (rippleColor) wave.style.color = rippleColor;
+
+        // ── 直接用 inline style，不依賴外部 CSS class ────────
+        Object.assign(wave.style, {
+            position: 'absolute',
+            borderRadius: '50%',
+            pointerEvents: 'none',
+            width: `${size}px`,
+            height: `${size}px`,
+            left: `${x}px`,
+            top: `${y}px`,
+            backgroundColor: color,
+            transform: 'scale(0)',
+            opacity: '0.9',
+            animation: `md-ripple ${ANIMATION_DURATION}ms cubic-bezier(0.4,0,0.2,1) forwards`,
+        });
 
         btn.appendChild(wave);
-        wave.addEventListener('animationend', () => wave.remove(), { once: true });
+
+        // 雙重清理：animationend + setTimeout 保底（production 中 animationend 可能不觸發）
+        const cleanup = () => {
+            if (wave.parentNode === btn) btn.removeChild(wave);
+        };
+        wave.addEventListener('animationend', cleanup, { once: true });
+        setTimeout(cleanup, ANIMATION_DURATION + 100);
 
         onMouseDown?.(e);
-    }, [onMouseDown, rippleColor]);
+    }, [onMouseDown, rippleColor, variant]);
 
     // ── Variant 對應的 Tailwind class ──────────────────────
-    const BASE = 'md-ripple-root inline-flex items-center justify-center gap-2 font-semibold transition-colors duration-150 select-none disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/70';
+    const BASE = 'inline-flex items-center justify-center gap-2 font-semibold transition-colors duration-150 select-none disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/70';
 
     const VARIANTS: Record<ButtonVariant, string> = {
         filled:
-            'rounded-full px-5 py-2.5 text-sm bg-indigo-600 text-white hover:bg-indigo-500 dark:hover:bg-indigo-500 active:bg-indigo-700 shadow-sm hover:shadow-md [&_.md-ripple-wave]:text-white/30',
+            'rounded-full px-5 py-2.5 text-sm bg-indigo-600 text-white hover:bg-indigo-500 dark:hover:bg-indigo-500 active:bg-indigo-700 shadow-sm hover:shadow-md',
         tonal:
-            'rounded-full px-5 py-2.5 text-sm bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-white/10 active:bg-indigo-200 [&_.md-ripple-wave]:text-indigo-600/20',
+            'rounded-full px-5 py-2.5 text-sm bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-white/10 active:bg-indigo-200',
         outlined:
-            'rounded-full px-5 py-2.5 text-sm border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 active:bg-slate-200 [&_.md-ripple-wave]:text-slate-700/15',
+            'rounded-full px-5 py-2.5 text-sm border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 active:bg-slate-200',
         text:
-            'rounded-xl px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 active:bg-slate-200 [&_.md-ripple-wave]:text-slate-700/15',
+            'rounded-xl px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 active:bg-slate-200',
         icon:
-            'rounded-full w-10 h-10 p-0 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 active:bg-slate-200 [&_.md-ripple-wave]:text-slate-700/20',
+            'rounded-full w-10 h-10 p-0 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 active:bg-slate-200',
     };
 
     return (
         <button
             ref={ref}
+            // position:relative + overflow:hidden 直接 inline，不依賴外部 .md-ripple-root CSS
+            style={{ position: 'relative', overflow: 'hidden' }}
             className={`${BASE} ${VARIANTS[variant]} ${className}`}
             onMouseDown={createRipple}
             {...rest}

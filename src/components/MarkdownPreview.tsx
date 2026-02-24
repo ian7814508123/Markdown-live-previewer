@@ -8,6 +8,7 @@ import mermaid from 'mermaid';
 import embed from 'vega-embed';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import SmilesDrawer from 'smiles-drawer';
 
 interface MarkdownPreviewProps {
     content: string;
@@ -142,6 +143,118 @@ const VegaBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(({
     );
 });
 
+// ─── SMILES Block ──────────────────────────────────────────────────────────────
+// 渲染 SMILES 化學結構式為 SVG 分子骨架圖
+// 使用 SvgDrawer（非 Canvas Drawer）以避免 smiles-drawer v2.x 的 canvas 更新問題
+const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(({ code, isDarkMode }) => {
+    const svgRef = useRef<HTMLDivElement>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [isPending, setIsPending] = useState(false);
+
+    useEffect(() => {
+        setIsPending(true);
+        const timer = setTimeout(() => {
+            if (!svgRef.current) return;
+
+            try {
+                // 清空上一次渲染結果
+                svgRef.current.innerHTML = '';
+
+                const options = {
+                    width: 500,
+                    height: 300,
+                    bondThickness: 1.0,
+                    bondLength: 15,
+                    shortBondLength: 0.85,
+                    bondSpacing: 4,
+                    atomVisualization: 'default',
+                    themes: {
+                        custom: {
+                            C: isDarkMode ? '#e2e8f0' : '#1e293b',
+                            N: isDarkMode ? '#93c5fd' : '#3b82f6',
+                            O: isDarkMode ? '#fca5a5' : '#ef4444',
+                            S: isDarkMode ? '#fde68a' : '#f59e0b',
+                            BACKGROUND: isDarkMode ? '#1e293b' : '#ffffff',
+                        }
+                    },
+                    theme: 'custom',
+                    isometric: false,
+                    debug: false,
+                    terminalCarbons: false,
+                    explicitHydrogens: false,
+                    overlapSensitivity: 0.42,
+                    overlapResolutionIterations: 1,
+                    compactDrawing: true,
+                    fontFamily: 'Inter, Arial, sans-serif',
+                    fontSizeLarge: 6,
+                    fontSizeSmall: 4,
+                    padding: 20,
+                    experimentalSSSR: true,
+                    kkThreshold: 0.1,
+                    kkInnerThreshold: 0.1,
+                    kkMaxIteration: 20000,
+                    kkMaxInnerIteration: 50,
+                    kkMaxEnergy: 1e9,
+                    weights: { ringOverlap: 10, overlap: 10, bondLength: 1 },
+                };
+
+                const drawer = new SmilesDrawer.SvgDrawer(options);
+                SmilesDrawer.parse(
+                    code.trim(),
+                    (tree: any) => {
+                        // 建立 SVG 元素並渲染
+                        const svgEl = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                        svgEl.setAttribute('width', '100%');
+                        svgEl.setAttribute('height', '300');
+                        svgRef.current?.appendChild(svgEl);
+                        drawer.draw(tree, svgEl, isDarkMode ? 'dark' : 'light', false);
+                        setError(null);
+                    },
+                    (err: any) => {
+                        console.error('SMILES parse error:', err);
+                        setError(typeof err === 'string' ? err : (err?.message || 'SMILES 解析失敗'));
+                    }
+                );
+            } catch (err: any) {
+                console.error('SMILES render error:', err)
+                setError(err?.message || '渲染失敗');
+            } finally {
+                setIsPending(false);
+            }
+        }, 400);
+
+        return () => clearTimeout(timer);
+    }, [code, isDarkMode]);
+
+    if (error) {
+        return (
+            <div className="my-6 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-xs font-mono whitespace-pre-wrap">
+                <div className="font-bold mb-2">⚗️ SMILES 語法錯誤</div>
+                {error}
+            </div>
+        );
+    }
+
+    return (
+        <div className="my-6 relative group">
+            <div
+                ref={svgRef}
+                className={`flex justify-center items-center min-h-[200px] bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200/50 dark:border-slate-700/50 overflow-auto transition-opacity duration-300 ${isPending ? 'opacity-50' : 'opacity-100'}`}
+            />
+            {/* SMILES 標籤 */}
+            <div className="absolute bottom-2 right-3 text-[10px] text-slate-400 dark:text-slate-600 font-mono select-none">
+                SMILES
+            </div>
+            {/* 讀取指示器 */}
+            {isPending && (
+                <div className="absolute top-2 right-2">
+                    <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+            )}
+        </div>
+    );
+});
+
 const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDarkMode }) => {
     const isDark = isDarkMode;
 
@@ -188,12 +301,15 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
             const codeString = String(children).replace(/\n$/, '');
 
             if (!inline) {
-                // Special renderers for Mermaid and Vega
+                // Special renderers for Mermaid, Vega, and SMILES
                 if (language === 'mermaid') {
                     return <MermaidBlock code={codeString} isDarkMode={isDark} />;
                 }
                 if (language === 'vega' || language === 'vega-lite') {
                     return <VegaBlock code={codeString} isDarkMode={isDark} />;
+                }
+                if (language === 'smiles') {
+                    return <SmilesBlock code={codeString} isDarkMode={isDark} />;
                 }
 
                 // Syntax highlighting for all other code blocks

@@ -2,6 +2,13 @@ import { useState, useCallback, useEffect } from 'react';
 import { DocumentRecord, AppState } from '../types';
 
 const STORAGE_KEY = 'mermaid-lens-documents';
+/**
+ * 每次更新 default-markdown.md / default-mermaid.md 時，
+ * 請遞增此版本號，讓既有使用者的快取預設文件自動刷新。
+ * 使用者自訂的文件不受影響。
+ */
+const DEFAULT_VERSION = '2';
+const VERSION_KEY = 'mermaid-lens-default-version';
 const MAX_DOCUMENTS = 50; // 防止儲存過多文檔
 
 /**
@@ -20,7 +27,25 @@ function loadFromStorage(): AppState {
         if (!stored) {
             return { currentDocId: null, documents: [] };
         }
-        return JSON.parse(stored) as AppState;
+
+        const parsed = JSON.parse(stored) as AppState;
+
+        // 版本對比：若預設文件版本過舊，清除內建預設文件，讓 App.tsx 重新建立
+        const storedVersion = localStorage.getItem(VERSION_KEY);
+        if (storedVersion !== DEFAULT_VERSION) {
+            localStorage.setItem(VERSION_KEY, DEFAULT_VERSION);
+            // 僅刪除兩個內建的預設文件（以固定名稱識別），保留使用者自訂文件
+            const DEFAULT_NAMES = ['預設 標記掉落 文檔', '預設 美人魚 文檔'];
+            const filtered = parsed.documents.filter(
+                doc => !DEFAULT_NAMES.includes(doc.name)
+            );
+            return {
+                currentDocId: filtered.length > 0 ? filtered[0].id : null,
+                documents: filtered,
+            };
+        }
+
+        return parsed;
     } catch (error) {
         console.error('載入文檔失敗:', error);
         return { currentDocId: null, documents: [] };

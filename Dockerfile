@@ -9,8 +9,8 @@ WORKDIR /app
 # 複製 package 檔案
 COPY package*.json ./
 
-# 安裝依賴（使用 ci 以確保一致性）
-RUN npm ci --only=production=false
+# 安裝所有依賴（包含 devDependencies，vite build 需要）
+RUN npm ci
 
 # 複製所有原始碼
 COPY . .

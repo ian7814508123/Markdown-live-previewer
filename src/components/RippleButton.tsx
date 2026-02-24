@@ -82,7 +82,7 @@ const RippleButton: React.FC<RippleButtonProps> = ({
     }, [onMouseDown, rippleColor, variant]);
 
     // ── Variant 對應的 Tailwind class ──────────────────────
-    const BASE = 'inline-flex items-center justify-center gap-2 font-semibold transition-colors duration-150 select-none disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/70';
+    const BASE = 'inline-flex items-center justify-center gap-2 font-semibold transition-all duration-200 select-none disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/70 [transition-timing-function:var(--m3-easing-standard)]';
 
     const VARIANTS: Record<ButtonVariant, string> = {
         filled:

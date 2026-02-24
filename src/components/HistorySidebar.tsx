@@ -10,6 +10,9 @@ interface HistorySidebarProps {
     onClose: () => void;
     documents: DocumentRecord[];
     currentDocId: string | null;
+    currentDocContent: string;
+    currentDocMode: 'markdown' | 'mermaid';
+    onInsertIntoDoc: (text: string) => void;
     onSelectDocument: (docId: string) => void;
     onCreateDocument: (mode: 'markdown' | 'mermaid') => void;
     onDeleteDocument: (docId: string) => void;
@@ -22,6 +25,9 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
     onClose,
     documents,
     currentDocId,
+    currentDocContent,
+    currentDocMode,
+    onInsertIntoDoc,
     onSelectDocument,
     onCreateDocument,
     onDeleteDocument,
@@ -44,14 +50,16 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
             {/* 側邊欄 */}
             <aside
                 className={`
-          h-full
+          fixed lg:relative
+          inset-y-0 left-0
+          z-40 h-full
           w-[280px]
           bg-white dark:bg-slate-900
           border-r border-slate-200 dark:border-slate-800
-          shadow-xl lg:shadow-none
-          transition-all duration-300 ease-in-out
-          ${isOpen ? 'flex' : 'hidden'}
-          flex-col
+          shadow-2xl lg:shadow-none
+          flex flex-col
+          transition-transform duration-300 [transition-timing-function:var(--m3-easing-standard)]
+          ${isOpen ? 'translate-x-0' : '-translate-x-full lg:hidden'}
           shrink-0
         `}
             >
@@ -176,7 +184,13 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
             </aside>
 
             {/* 更多工具 Modal */}
-            <ToolsModal isOpen={isToolsOpen} onClose={() => setIsToolsOpen(false)} />
+            <ToolsModal
+                isOpen={isToolsOpen}
+                onClose={() => setIsToolsOpen(false)}
+                currentDocContent={currentDocContent}
+                currentDocMode={currentDocMode}
+                onInsertIntoDoc={onInsertIntoDoc}
+            />
         </>
     );
 };

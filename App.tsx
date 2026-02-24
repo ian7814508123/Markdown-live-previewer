@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { flushSync } from 'react-dom';
 import { MathJaxContext } from 'better-react-mathjax';
 import mermaid from 'mermaid';
 
@@ -90,6 +91,8 @@ const App: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isSyncScroll, setIsSyncScroll] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  /** 文檔切換淡入動畫用的 key，每次文檔 id 變化時更新就能重新觸發 animation */
+  const [docFadeKey, setDocFadeKey] = useState(0);
 
   const { settings, updateMacros, restoreDefaults } = useAppSettings();
 
@@ -97,7 +100,42 @@ const App: React.FC = () => {
   const mode = currentDocument?.mode || 'markdown';
   const code = currentDocument?.content || '';
 
-  // Toggle Dark Mode
+  // Toggle Dark Mode with View Transitions
+  const handleToggleDarkMode = (event?: React.MouseEvent) => {
+    const isSupported = typeof document !== 'undefined' && 'startViewTransition' in document;
+
+    if (!isSupported) {
+      setIsDarkMode(!isDarkMode);
+      return;
+    }
+
+    // 獲取點擊位置，以便動畫從按鈕處擴散
+    const x = event?.clientX ?? window.innerWidth / 2;
+    const y = event?.clientY ?? 0;
+
+    // 將座標傳給 CSS 變數
+    document.documentElement.style.setProperty('--reveal-center-x', `${x}px`);
+    document.documentElement.style.setProperty('--reveal-center-y', `${y}px`);
+
+    // 開始過渡
+    const transition = (document as any).startViewTransition(() => {
+      // 必須使用 flushSync 確保 React 狀態更新同步反映到 DOM
+      flushSync(() => {
+        setIsDarkMode(!isDarkMode);
+      });
+    });
+
+    transition.ready.then(() => {
+      // 在動畫開始前標記 class
+      document.documentElement.classList.add('dark-transition-active');
+    });
+
+    transition.finished.then(() => {
+      document.documentElement.classList.remove('dark-transition-active');
+    });
+  };
+
+  // Toggle Dark Mode Update to DOM (Legacy fallback and state sync)
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -105,6 +143,11 @@ const App: React.FC = () => {
       document.documentElement.classList.remove('dark');
     }
   }, [isDarkMode]);
+
+  // 文檔切換淡入：currentDocId 變化時更新 key 觸發 .doc-fade-in 動畫
+  useEffect(() => {
+    setDocFadeKey(k => k + 1);
+  }, [currentDocId]);
 
   // 初始化：如果沒有文檔，建立預設文檔
   useEffect(() => {
@@ -479,6 +522,22 @@ const App: React.FC = () => {
     handleCodeChange('');
   };
 
+  /**
+   * 將文字插入編輯器游標位置。
+   * 若無游標位置資訊（例如 Modal 開啟後 focus 已移走），則附加至文件末尾。
+   */
+  const handleInsertIntoDoc = (text: string) => {
+    if (!editorRef.current) return;
+    const el = editorRef.current;
+    const pos = el.selectionStart ?? code.length;
+    const before = code.slice(0, pos);
+    const after = code.slice(pos);
+    // 確保插入的表格前後各有一個空行
+    const prefix = before.length > 0 && !before.endsWith('\n\n') ? (before.endsWith('\n') ? '\n' : '\n\n') : '';
+    const suffix = after.length > 0 && !after.startsWith('\n') ? '\n\n' : '\n';
+    handleCodeChange(before + prefix + text + suffix + after);
+  };
+
   // 處理全檔案匯入
   const handleImportFullFile = (file: File, content: string) => {
     const extension = file.name.split('.').pop()?.toLowerCase();
@@ -544,7 +603,7 @@ const App: React.FC = () => {
           theme={theme}
           setTheme={(t) => setTheme(t as Theme)}
           isDarkMode={isDarkMode}
-          toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+          toggleDarkMode={handleToggleDarkMode}
           onDownloadMarkdown={downloadMarkdown}
           onExportImage={exportAsImage}
           isSyncScroll={isSyncScroll}
@@ -561,52 +620,57 @@ const App: React.FC = () => {
             onClose={() => setIsSidebarOpen(false)}
             documents={documents}
             currentDocId={currentDocId}
+            currentDocContent={code}
+            currentDocMode={mode}
+            onInsertIntoDoc={handleInsertIntoDoc}
             onSelectDocument={handleDocumentSwitch}
             onCreateDocument={handleCreateDocument}
             onDeleteDocument={deleteDocument}
             onRenameDocument={renameDocument}
             storageUsage={storageUsage}
           />
+          {/* Editor + Preview 共同包裹容器，文檔切換時觸發 fade-in 動畫 */}
+          <div key={docFadeKey} className="doc-fade-in flex flex-1 overflow-hidden print:block">
+            <Editor
+              ref={editorRef}
+              mode={mode}
+              code={code}
+              setCode={handleCodeChange}
+              onCopy={handleCopy}
+              onReset={handleReset}
+              onClear={handleClear}
+              copied={copied}
+              onScroll={handleEditorScroll}
+              isDarkMode={isDarkMode}
+              onMouseEnter={() => { isHoveringEditor.current = true; }}
+              onMouseLeave={() => { isHoveringEditor.current = false; }}
+              onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+            />
 
-          <Editor
-            ref={editorRef}
-            mode={mode}
-            code={code}
-            setCode={handleCodeChange}
-            onCopy={handleCopy}
-            onReset={handleReset}
-            onClear={handleClear}
-            copied={copied}
-            onScroll={handleEditorScroll}
-            isDarkMode={isDarkMode}
-            onMouseEnter={() => { isHoveringEditor.current = true; }}
-            onMouseLeave={() => { isHoveringEditor.current = false; }}
-            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-          />
-
-          <PreviewPanel
-            ref={previewRef}
-            mode={mode}
-            error={error}
-            setError={setError}
-            svgContent={svgContent}
-            zoom={zoom}
-            position={position}
-            isDragging={isDragging}
-            onZoom={handleZoom}
-            onSetZoom={setZoom}
-            onResetNav={resetNavigation}
-            onMouseDown={onMouseDown}
-            onMouseMove={onMouseMove}
-            onMouseUp={onMouseUp}
-            onWheel={handleWheel}
-            onScroll={handlePreviewScroll}
-            code={code}
-            theme={theme}
-            isDarkMode={isDarkMode}
-            onMouseEnter={() => { isHoveringPreview.current = true; }}
-            onMouseLeave={() => { isHoveringPreview.current = false; }}
-          />
+            <PreviewPanel
+              ref={previewRef}
+              mode={mode}
+              error={error}
+              setError={setError}
+              svgContent={svgContent}
+              zoom={zoom}
+              position={position}
+              isDragging={isDragging}
+              onZoom={handleZoom}
+              onSetZoom={setZoom}
+              onResetNav={resetNavigation}
+              onMouseDown={onMouseDown}
+              onMouseMove={onMouseMove}
+              onMouseUp={onMouseUp}
+              onWheel={handleWheel}
+              onScroll={handlePreviewScroll}
+              code={code}
+              theme={theme}
+              isDarkMode={isDarkMode}
+              onMouseEnter={() => { isHoveringPreview.current = true; }}
+              onMouseLeave={() => { isHoveringPreview.current = false; }}
+            />
+          </div>
         </main>
 
         {/* Settings Modal */}

@@ -8,7 +8,7 @@ interface HeaderProps {
     theme: string;
     setTheme: (theme: string) => void;
     isDarkMode: boolean;
-    toggleDarkMode: () => void;
+    toggleDarkMode: (event?: React.MouseEvent) => void;
     onDownloadMarkdown: () => void;
     onExportImage: (format: 'png' | 'svg' | 'jpg') => void;
     isSyncScroll: boolean;
@@ -133,7 +133,7 @@ const Header: React.FC<HeaderProps> = ({
                 {/* 深色模式 */}
                 <RippleButton
                     variant="icon"
-                    onClick={toggleDarkMode}
+                    onClick={(e) => toggleDarkMode(e)}
                     title={isDarkMode ? "切換 到 亮色模式" : "切換 到 深色模式"}
                     className="text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400"
                 >

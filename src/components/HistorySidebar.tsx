@@ -59,7 +59,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
           shadow-2xl lg:shadow-none
           flex flex-col
           transition-transform duration-300 [transition-timing-function:var(--m3-easing-standard)]
-          ${isOpen ? 'translate-x-0' : '-translate-x-full lg:hidden'}
+          ${isOpen ? 'translate-x-0 animate-in slide-in-from-left duration-300' : '-translate-x-full lg:hidden'}
           shrink-0
         `}
             >

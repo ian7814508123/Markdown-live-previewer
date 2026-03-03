@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Plus, FolderOpen, FileText, Image as ImageIcon, Wrench } from 'lucide-react';
+import { X, Plus, FolderOpen, FileText, Wrench, ChevronDown, ChevronRight } from 'lucide-react';
 import { DocumentRecord } from '../types';
 import DocumentItem from './DocumentItem';
 import ToolsModal from './ToolsModal';
@@ -14,10 +14,16 @@ interface HistorySidebarProps {
     currentDocMode: 'markdown' | 'mermaid';
     onInsertIntoDoc: (text: string) => void;
     onSelectDocument: (docId: string) => void;
-    onCreateDocument: (mode: 'markdown' | 'mermaid') => void;
+    onCreateDocument: (folderId: string | null) => void;
     onDeleteDocument: (docId: string) => void;
     onRenameDocument: (docId: string, newName: string) => void;
     storageUsage: number;
+    getBacklinks: (docName: string) => DocumentRecord[];
+    folders: any[];
+    onCreateFolder: (name: string) => void;
+    onDeleteFolder: (folderId: string) => void;
+    onRenameFolder: (folderId: string, newName: string) => void;
+    onMoveDocument: (docId: string, folderId: string | null) => void;
 }
 
 const HistorySidebar: React.FC<HistorySidebarProps> = ({
@@ -33,9 +39,43 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
     onDeleteDocument,
     onRenameDocument,
     storageUsage,
+    getBacklinks,
+    folders,
+    onCreateFolder,
+    onDeleteFolder,
+    onRenameFolder,
+    onMoveDocument,
 }) => {
-    const [isCreating, setIsCreating] = useState(false);
     const [isToolsOpen, setIsToolsOpen] = useState(false);
+    const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+    const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
+    const [editFolderName, setEditFolderName] = useState('');
+
+    const toggleFolder = (folderId: string) => {
+        setExpandedFolders(prev => {
+            const next = new Set(prev);
+            if (next.has(folderId)) next.delete(folderId);
+            else next.add(folderId);
+            return next;
+        });
+    };
+
+    const handleFolderDoubleClick = (e: React.MouseEvent, folder: any) => {
+        e.stopPropagation();
+        setEditingFolderId(folder.id);
+        setEditFolderName(folder.name);
+    };
+
+    const handleFolderRenameSave = (folderId: string) => {
+        if (editFolderName.trim() && editFolderName !== folders.find(f => f.id === folderId)?.name) {
+            onRenameFolder(folderId, editFolderName.trim());
+        }
+        setEditingFolderId(null);
+    };
+
+    const currentDoc = documents.find(d => d.id === currentDocId);
+    const backlinks = currentDoc ? getBacklinks(currentDoc.name) : [];
+
 
     return (
         <>
@@ -63,120 +103,227 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
           shrink-0
         `}
             >
-                {/* 標題列 */}
-                <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
+                {/* 標題列 (高度與 Editor Tab Bar 貼齊) */}
+                <div className="flex items-center justify-between px-4 h-[42.5px] border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
                     <div className="flex items-center gap-2">
-                        <FolderOpen size={18} className="text-indigo-500" />
-                        <h2 className="text-sm font-bold text-slate-700 dark:text-slate-300">我的文檔</h2>
+                        <FolderOpen size={16} className="text-indigo-500 opacity-80" />
+                        <h2 className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">我的文檔</h2>
                     </div>
-                    <RippleButton
-                        variant="icon"
-                        onClick={onClose}
-                        className="w-8 h-8 text-slate-500 dark:text-slate-400"
-                        title="關閉側邊欄"
-                    >
-                        <X size={18} />
-                    </RippleButton>
-                </div>
-
-                {/* 新增按鈕 */}
-                <div className="p-3 border-b border-slate-100 dark:border-slate-800">
-                    {!isCreating ? (
+                    <div className="flex items-center gap-1">
                         <RippleButton
-                            variant="filled"
-                            onClick={() => setIsCreating(true)}
-                            className="w-full justify-center text-sm"
+                            variant="icon"
+                            onClick={() => {
+                                // 隱式判斷目標資料夾：
+                                // 1. 如果目前的文檔所在資料夾是展開的，優先使用
+                                // 2. 否則使用最後一個展開的資料夾
+                                // 3. 如果都沒有展開，則為 null (獨立文件)
+                                let targetFolderId: string | null = null;
+                                if (expandedFolders.size > 0) {
+                                    if (currentDoc?.folderId && expandedFolders.has(currentDoc.folderId)) {
+                                        targetFolderId = currentDoc.folderId;
+                                    } else {
+                                        targetFolderId = Array.from(expandedFolders).pop() || null;
+                                    }
+                                }
+                                onCreateDocument(targetFolderId);
+                            }}
+                            className="w-8 h-8 text-indigo-600 dark:text-indigo-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full"
+                            title="新建文檔"
                         >
-                            <Plus size={16} />
-                            <span>新增文檔</span>
+                            <FileText size={16} />
                         </RippleButton>
-                    ) : (
-                        <div className="flex flex-col gap-2 animate-in slide-in-from-top-2 duration-200">
-                            <RippleButton
-                                variant="tonal"
-                                onClick={() => { onCreateDocument('markdown'); setIsCreating(false); }}
-                                className="w-full justify-start text-sm text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700"
-                            >
-                                <div className="p-1.5 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-lg">
-                                    <FileText size={16} />
-                                </div>
-                                新增 標記掉落
-                            </RippleButton>
-                            <RippleButton
-                                variant="tonal"
-                                onClick={() => { onCreateDocument('mermaid'); setIsCreating(false); }}
-                                className="w-full justify-start text-sm text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700"
-                            >
-                                <div className="p-1.5 bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 rounded-lg">
-                                    <ImageIcon size={16} />
-                                </div>
-                                新增 美人魚
-                            </RippleButton>
-                            <button
-                                onClick={() => setIsCreating(false)}
-                                className="md-press w-full text-center text-xs text-slate-400 hover:text-slate-500 py-1 rounded-lg"
-                            >
-                                取消
-                            </button>
-                        </div>
-                    )}
+                        <RippleButton
+                            variant="icon"
+                            onClick={() => onCreateFolder('')}
+                            className="w-8 h-8 text-indigo-600 dark:text-indigo-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full"
+                            title="新建資料夾"
+                        >
+                            <Plus size={18} />
+                        </RippleButton>
+                    </div>
                 </div>
 
                 {/* 文檔列表 */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar">
-                    {documents.length === 0 ? (
+                    {documents.length === 0 && folders.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full px-4 text-center">
                             <FolderOpen size={48} className="text-slate-300 dark:text-slate-700 mb-3" />
-                            <p className="text-sm text-slate-400 dark:text-slate-600">尚無文檔</p>
-                            <p className="text-xs text-slate-400 dark:text-slate-600 mt-1">點擊上方按鈕建立新文檔</p>
+                            <p className="text-sm text-slate-400 dark:text-slate-600">尚無內容</p>
+                            <p className="text-xs text-slate-400 dark:text-slate-600 mt-1">建立檔案或資料夾開始</p>
                         </div>
                     ) : (
-                        <div className="py-2 space-y-1">
-                            {documents
-                                .sort((a, b) => b.updatedAt - a.updatedAt)
-                                .map(doc => (
-                                    <DocumentItem
-                                        key={doc.id}
-                                        document={doc}
-                                        isActive={doc.id === currentDocId}
-                                        onClick={() => onSelectDocument(doc.id)}
-                                        onDelete={() => onDeleteDocument(doc.id)}
-                                        onRename={(newName) => onRenameDocument(doc.id, newName)}
-                                    />
-                                ))}
+                        <div className="py-2 space-y-4">
+                            {/* 資料夾區域 (儲存庫) */}
+                            {folders.length > 0 && (
+                                <div className="space-y-1">
+                                    <div className="px-4 py-1">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">儲存庫 (Vaults)</span>
+                                    </div>
+                                    {folders.map(folder => {
+                                        const isExpanded = expandedFolders.has(folder.id);
+                                        const folderDocs = documents.filter(d => d.folderId === folder.id);
+                                        return (
+                                            <div
+                                                key={folder.id}
+                                                className="space-y-0.5"
+                                                onDragOver={(e) => {
+                                                    e.preventDefault();
+                                                    e.currentTarget.classList.add('bg-indigo-50/50', 'dark:bg-indigo-900/10');
+                                                }}
+                                                onDragLeave={(e) => {
+                                                    e.currentTarget.classList.remove('bg-indigo-50/50', 'dark:bg-indigo-900/10');
+                                                }}
+                                                onDrop={(e) => {
+                                                    e.preventDefault();
+                                                    e.currentTarget.classList.remove('bg-indigo-50/50', 'dark:bg-indigo-900/10');
+                                                    const docId = e.dataTransfer.getData('text/plain');
+                                                    if (docId) onMoveDocument(docId, folder.id);
+                                                }}
+                                            >
+                                                <div
+                                                    className="group flex items-center justify-between px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
+                                                    onClick={() => toggleFolder(folder.id)}
+                                                    onDoubleClick={(e) => handleFolderDoubleClick(e, folder)}
+                                                >
+                                                    <div className="flex items-center gap-2 overflow-hidden flex-1">
+                                                        {isExpanded ? <ChevronDown size={14} className="text-indigo-500 shrink-0" /> : <ChevronRight size={14} className="text-slate-400 shrink-0" />}
+                                                        <FolderOpen size={16} className={`${isExpanded ? 'text-indigo-500' : 'text-slate-400'} shrink-0`} />
+                                                        {editingFolderId === folder.id ? (
+                                                            <input
+                                                                type="text"
+                                                                value={editFolderName}
+                                                                onChange={(e) => setEditFolderName(e.target.value)}
+                                                                onBlur={() => handleFolderRenameSave(folder.id)}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === 'Enter') handleFolderRenameSave(folder.id);
+                                                                    if (e.key === 'Escape') setEditingFolderId(null);
+                                                                }}
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                className="flex-1 px-1 py-0 text-xs font-bold bg-white dark:bg-slate-700 border border-indigo-300 dark:border-indigo-700 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-800 dark:text-slate-200"
+                                                                autoFocus
+                                                            />
+                                                        ) : (
+                                                            <span className={`text-xs font-bold truncate ${isExpanded ? 'text-slate-900 dark:text-slate-100' : 'text-slate-500 dark:text-slate-400'}`}>
+                                                                {folder.name}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                if (confirm("建立在資料夾內的『點擊建檔』與『雙向連結』僅限於該資料夾內有效。\n確定要刪除整個資料夾嗎？")) {
+                                                                    onDeleteFolder(folder.id);
+                                                                }
+                                                            }}
+                                                            className="p-1 hover:text-red-500 text-slate-400"
+                                                            title="刪除"
+                                                        >
+                                                            <X size={12} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                {isExpanded && (
+                                                    <div className="pl-4 space-y-0.5 border-l-2 border-indigo-100/50 dark:border-indigo-900/30 ml-6 mb-2">
+                                                        {folderDocs.length === 0 ? (
+                                                            <p className="px-4 py-2 text-[10px] text-slate-400 dark:text-slate-600 italic">無文件</p>
+                                                        ) : (
+                                                            folderDocs.map(doc => (
+                                                                <DocumentItem
+                                                                    key={doc.id}
+                                                                    document={doc}
+                                                                    isActive={doc.id === currentDocId}
+                                                                    onClick={() => onSelectDocument(doc.id)}
+                                                                    onDelete={() => onDeleteDocument(doc.id)}
+                                                                    onRename={(newName) => onRenameDocument(doc.id, newName)}
+                                                                    onMove={(fId) => onMoveDocument(doc.id, fId)}
+                                                                    onSelectDocument={onSelectDocument}
+                                                                    folders={folders}
+                                                                    backlinks={getBacklinks(doc.name)}
+                                                                />
+                                                            ))
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
+                            {/* 獨立文件區域 */}
+                            <div
+                                className="space-y-1"
+                                onDragOver={(e) => {
+                                    e.preventDefault();
+                                    e.currentTarget.classList.add('bg-slate-100/50', 'dark:bg-slate-800/30');
+                                }}
+                                onDragLeave={(e) => {
+                                    e.currentTarget.classList.remove('bg-slate-100/50', 'dark:bg-slate-800/30');
+                                }}
+                                onDrop={(e) => {
+                                    e.preventDefault();
+                                    e.currentTarget.classList.remove('bg-slate-100/50', 'dark:bg-slate-800/30');
+                                    const docId = e.dataTransfer.getData('text/plain');
+                                    if (docId) onMoveDocument(docId, null);
+                                }}
+                            >
+                                <div className="px-4 py-1">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">獨立文件</span>
+                                </div>
+                                {documents.filter(d => !d.folderId).length === 0 ? (
+                                    <p className="px-8 py-2 text-[10px] text-slate-400 dark:text-slate-600 italic">尚無獨立文件</p>
+                                ) : (
+                                    documents.filter(d => !d.folderId).map(doc => (
+                                        <DocumentItem
+                                            key={doc.id}
+                                            document={doc}
+                                            isActive={doc.id === currentDocId}
+                                            onClick={() => onSelectDocument(doc.id)}
+                                            onDelete={() => onDeleteDocument(doc.id)}
+                                            onRename={(newName) => onRenameDocument(doc.id, newName)}
+                                            onMove={(fId) => onMoveDocument(doc.id, fId)}
+                                            onSelectDocument={onSelectDocument}
+                                            folders={folders}
+                                            backlinks={getBacklinks(doc.name)}
+                                        />
+                                    ))
+                                )}
+                            </div>
                         </div>
                     )}
+
                 </div>
 
-                {/* ── 更多工具按鈕（開啟 Modal） ── */}
-                <div className="border-t border-slate-200 dark:border-slate-800">
+                {/* 底部按鈕與統計區域 */}
+                <div className="mt-auto border-t border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800">
                     <button
                         onClick={() => setIsToolsOpen(true)}
-                        className="w-full flex items-center gap-2.5 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:text-violet-600 dark:hover:text-violet-400 transition-colors group"
+                        className="w-full flex items-center gap-2.5 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors group"
                     >
-                        <Wrench size={14} className="text-violet-400 group-hover:text-violet-500 transition-colors" />
+                        <Wrench size={14} className="text-slate-400 group-hover:text-indigo-500 transition-colors" />
                         <span className="text-xs font-bold tracking-wide">更多工具</span>
                     </button>
-                </div>
 
-                {/* 底部容量統計 */}
-                <div className="px-4 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="flex-1 text-center">
-                            <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold mb-0.5">文檔數</p>
-                            <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">{documents.length} / 50</p>
-                        </div>
-                        <div className="w-px h-6 bg-slate-200 dark:bg-slate-700" />
-                        <div className="flex-1 text-center">
-                            <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold mb-0.5">預存空間</p>
-                            <div className="flex flex-col items-center">
-                                <div className="w-full h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-1">
-                                    <div
-                                        className={`h-full transition-all duration-500 ${storageUsage > 80 ? 'bg-red-500' : storageUsage > 50 ? 'bg-amber-500' : 'bg-indigo-500'}`}
-                                        style={{ width: `${storageUsage}%` }}
-                                    />
+                    <div className="px-4 py-3 bg-slate-50/50 dark:bg-slate-800/50">
+                        <div className="flex items-center justify-between gap-4">
+                            <div className="flex-1 text-center">
+                                <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold mb-0.5">文檔數</p>
+                                <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">{documents.length} / 50</p>
+                            </div>
+                            <div className="w-px h-6 bg-slate-200 dark:bg-slate-700" />
+                            <div className="flex-1 text-center">
+                                <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold mb-0.5">預存空間</p>
+                                <div className="flex flex-col items-center">
+                                    <div className="w-full h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-1">
+                                        <div
+                                            className={`h-full transition-all duration-500 ${storageUsage > 80 ? 'bg-red-500' : storageUsage > 50 ? 'bg-amber-500' : 'bg-indigo-500'}`}
+                                            style={{ width: `${storageUsage}%` }}
+                                        />
+                                    </div>
+                                    <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium">{storageUsage}%</p>
                                 </div>
-                                <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium">{storageUsage}%</p>
                             </div>
                         </div>
                     </div>

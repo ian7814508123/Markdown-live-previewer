@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { DocumentRecord, AppState } from '../types';
+import { DocumentRecord, AppState, FolderRecord } from '../types';
 
 const STORAGE_KEY = 'mermaid-lens-documents';
 /**
@@ -25,10 +25,11 @@ function loadFromStorage(): AppState {
     try {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (!stored) {
-            return { currentDocId: null, documents: [] };
+            return { currentDocId: null, documents: [], folders: [] };
         }
 
         const parsed = JSON.parse(stored) as AppState;
+        if (!parsed.folders) parsed.folders = []; // Migration for existing users
 
         // 版本對比：若預設文件版本過舊，清除內建預設文件，讓 App.tsx 重新建立
         const storedVersion = localStorage.getItem(VERSION_KEY);
@@ -42,13 +43,14 @@ function loadFromStorage(): AppState {
             return {
                 currentDocId: filtered.length > 0 ? filtered[0].id : null,
                 documents: filtered,
+                folders: parsed.folders || [],
             };
         }
 
         return parsed;
     } catch (error) {
         console.error('載入文檔失敗:', error);
-        return { currentDocId: null, documents: [] };
+        return { currentDocId: null, documents: [], folders: [] };
     }
 }
 
@@ -91,29 +93,51 @@ export function useDocumentStorage() {
     /**
      * 建立新文檔
      */
-    const createDocument = useCallback((mode: 'markdown' | 'mermaid', content: string = '', name?: string) => {
+    const createDocument = useCallback((mode: 'markdown' | 'mermaid', content: string = '', name?: string, folderId: string | null = null) => {
         if (state.documents.length >= MAX_DOCUMENTS) {
             alert(`最多只能建立 ${MAX_DOCUMENTS} 個文檔，請刪除部分舊文檔`);
             return null;
         }
 
         const now = Date.now();
+        const base = "未命名文檔";
+        let finalName = name?.trim(); // 使用 trim() 避免只有空格的名稱
+
+        if (!finalName) {
+            const existingSet = new Set(state.documents.map(d => d.name));
+
+            // 檢查第一個預設名稱「未命名文檔」是否已存在
+            if (!existingSet.has(base)) {
+                finalName = base;
+            } else {
+                let n = 1;
+                // 從 (1) 開始遞增檢查
+                while (existingSet.has(`${base}(${n})`)) {
+                    n++;
+                }
+                finalName = `${base}(${n})`;
+            }
+        }
+
         const newDoc: DocumentRecord = {
             id: generateId(),
-            name: name || `未命名文檔 ${new Date().toLocaleString('zh-TW', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}`,
+            name: finalName,
             mode,
             content,
+            folderId,
             createdAt: now,
             updatedAt: now,
         };
 
         setState(prev => ({
+            ...prev,
             currentDocId: newDoc.id,
             documents: [...prev.documents, newDoc],
         }));
 
         return newDoc.id;
-    }, [state.documents.length]);
+    }, []); // Changed [state.documents.length] to [] to avoid unnecessary re-creations, using functional update in setState if needed or checking length internally. Actually, keep [] if using direct setState, but let's be safe.
+
 
     /**
      * 更新當前文檔內容
@@ -157,6 +181,7 @@ export function useDocumentStorage() {
             }
 
             return {
+                ...prev,
                 currentDocId: newCurrentId,
                 documents: newDocs,
             };
@@ -178,6 +203,90 @@ export function useDocumentStorage() {
     }, []);
 
     /**
+     * 建立重新資料夾
+     */
+    const createFolder = useCallback((name?: string) => {
+        const now = Date.now();
+        const base = "儲存庫";
+        let finalName = name?.trim();
+
+        if (!finalName) {
+            const existingSet = new Set(state.folders.map(f => f.name));
+            if (!existingSet.has(base)) {
+                finalName = base;
+            } else {
+                let n = 1;
+                while (existingSet.has(`${base}(${n})`)) {
+                    n++;
+                }
+                finalName = `${base}(${n})`;
+            }
+        }
+
+        const newFolder: FolderRecord = {
+            id: generateId(),
+            name: finalName,
+            createdAt: now,
+            updatedAt: now,
+        };
+
+        setState(prev => ({
+            ...prev,
+            folders: [...prev.folders, newFolder],
+        }));
+
+        return newFolder.id;
+    }, [state.folders]);
+
+    /**
+     * 刪除資料夾及其所有文檔
+     */
+    const deleteFolder = useCallback((folderId: string) => {
+        setState(prev => {
+            const newFolders = prev.folders.filter(f => f.id !== folderId);
+            const newDocs = prev.documents.filter(doc => doc.folderId !== folderId);
+
+            let newCurrentId = prev.currentDocId;
+            // 如果當前文檔在被刪除的資料夾中
+            const currentDoc = prev.documents.find(d => d.id === prev.currentDocId);
+            if (currentDoc && currentDoc.folderId === folderId) {
+                newCurrentId = newDocs.length > 0 ? newDocs[0].id : null;
+            }
+
+            return {
+                ...prev,
+                currentDocId: newCurrentId,
+                folders: newFolders,
+                documents: newDocs,
+            };
+        });
+    }, []);
+
+    /**
+     * 重命名資料夾
+     */
+    const renameFolder = useCallback((folderId: string, name: string) => {
+        setState(prev => ({
+            ...prev,
+            folders: prev.folders.map(f =>
+                f.id === folderId ? { ...f, name: name.trim() || f.name, updatedAt: Date.now() } : f
+            ),
+        }));
+    }, []);
+
+    /**
+     * 將文檔移入/移出資料夾
+     */
+    const moveDocument = useCallback((docId: string, folderId: string | null) => {
+        setState(prev => ({
+            ...prev,
+            documents: prev.documents.map(doc =>
+                doc.id === docId ? { ...doc, folderId, updatedAt: Date.now() } : doc
+            ),
+        }));
+    }, []);
+
+    /**
      * 取得當前文檔
      */
     const getCurrentDocument = useCallback((): DocumentRecord | null => {
@@ -190,14 +299,46 @@ export function useDocumentStorage() {
      */
     const getStorageStats = useCallback(() => {
         try {
-            const data = JSON.stringify(state);
-            const sizeInBytes = data.length * 2;
-            const maxSizeBytes = 5 * 1024 * 1024; // 保守估計 5MB
-            return Math.min(100, Math.round((sizeInBytes / maxSizeBytes) * 100));
+            // Calculate size of each document for future granular management
+            const docSizes = state.documents.map(doc => {
+                const docData = JSON.stringify(doc);
+                return docData.length * 2; // UTF-16 estimate
+            });
+
+            const totalSize = docSizes.reduce((acc, size) => acc + size, 0);
+            const appStateData = JSON.stringify(state);
+            const totalAppStateSize = appStateData.length * 2;
+
+            const maxSizeBytes = 5 * 1024 * 1024; // 5MB limit
+            const percentage = Math.min(100, Math.round((totalAppStateSize / maxSizeBytes) * 100));
+
+            return {
+                percentage,
+                totalSize,
+                docSizes
+            };
         } catch (e) {
-            return 0;
+            return { percentage: 0, totalSize: 0, docSizes: [] };
         }
     }, [state]);
+
+    /**
+     * 取得連結至當前文檔的所有文檔 (Backlinks) - 僅限同資料夾內
+     */
+    const getBacklinks = useCallback((docName: string) => {
+        if (!docName || !state.currentDocId) return [];
+
+        const currentDoc = state.documents.find(d => d.id === state.currentDocId);
+        if (!currentDoc || !currentDoc.folderId) return []; // 獨立檔案不支援反向連結
+
+        return state.documents.filter(doc => {
+            return doc.folderId === currentDoc.folderId &&
+                doc.id !== currentDoc.id &&
+                doc.content.includes(`[[${docName}]]`);
+        });
+    }, [state.documents, state.currentDocId]);
+
+    const stats = getStorageStats();
 
     return {
         documents: state.documents,
@@ -208,6 +349,13 @@ export function useDocumentStorage() {
         switchDocument,
         deleteDocument,
         renameDocument,
-        storageUsage: getStorageStats(), // 回傳容量百分比
+        storageUsage: stats.percentage, // Keeping field name for compatibility
+        storageStats: stats, // New documented field for granular info
+        getBacklinks,
+        folders: state.folders,
+        createFolder,
+        deleteFolder,
+        renameFolder,
+        moveDocument,
     };
 }

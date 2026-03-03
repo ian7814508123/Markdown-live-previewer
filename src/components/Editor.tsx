@@ -1,5 +1,6 @@
+
 import React, { forwardRef } from 'react';
-import { FileCode, Check, Copy, RefreshCw, Trash2, Menu } from 'lucide-react';
+import { FileCode, Check, Copy, RefreshCw, Trash2, Menu, X, FileText, FileSearch } from 'lucide-react';
 import RippleButton from './RippleButton';
 
 interface EditorProps {
@@ -14,7 +15,13 @@ interface EditorProps {
     isDarkMode: boolean;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
-    onToggleSidebar?: () => void;  // 新增漢堡選單回調
+    onToggleSidebar?: () => void;
+    // Tab 相關
+    openDocIds?: string[];
+    currentDocId?: string | null;
+    documents?: any[]; // 用來取得標題與模式
+    onSwitchTab?: (docId: string) => void;
+    onCloseTab?: (docId: string, e: React.MouseEvent) => void;
 }
 
 const Editor = forwardRef<HTMLTextAreaElement, EditorProps>(({
@@ -29,7 +36,12 @@ const Editor = forwardRef<HTMLTextAreaElement, EditorProps>(({
     isDarkMode,
     onMouseEnter,
     onMouseLeave,
-    onToggleSidebar
+    onToggleSidebar,
+    openDocIds = [],
+    currentDocId,
+    documents = [],
+    onSwitchTab,
+    onCloseTab,
 }, ref) => {
     const lineNumbersRef = React.useRef<HTMLDivElement>(null);
 
@@ -80,7 +92,6 @@ const Editor = forwardRef<HTMLTextAreaElement, EditorProps>(({
                 // We'll try to maintain relative position if possible, but resetting to end of range is safer to avoid glitches.
                 // For a proper implementation, we would calculate the exact delta.
 
-                // Calculate removed characters
                 let removedChars = 0;
                 for (let i = startLineIndex; i <= endLineIndex; i++) {
                     if (lines[i].startsWith('  ')) removedChars += 2;
@@ -128,55 +139,136 @@ const Editor = forwardRef<HTMLTextAreaElement, EditorProps>(({
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
         >
-            <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-slate-600 font-bold text-sm">
-                    {/* 漢堡選單按鈕 */}
-                    <RippleButton
-                        variant="icon"
-                        onClick={onToggleSidebar}
-                        title="文檔歷史"
-                        className="w-9 h-9 text-slate-500 dark:text-slate-400"
-                    >
-                        <Menu size={18} />
-                    </RippleButton>
-                    <FileCode size={18} className="text-indigo-500" />
-                    <span className="uppercase text-slate-600 dark:text-slate-400">{mode === 'mermaid' ? '美人魚 編輯者' : '標記掉落 編輯者'}</span>
+            {/* 整合後的 Tab Bar + 工具列 (精緻瀏覽器風格) */}
+            <div className="flex items-end border-b border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 pl-0 pr-1 pt-1.5 sticky top-0 z-30 select-none overflow-hidden">
+                {/* 左側漢堡選單 (圓角按鈕風格) - 稍微左移以與分頁對齊 */}
+                <div className="flex flex-nowrap items-end flex-1 min-w-0">
+                    {/* 使用 -mb-px 讓底部邊框與 header 對齊 */}
+                    <div className="flex items-center gap-1 px-2 mb-1">
+                        <RippleButton
+                            variant="icon"
+                            onClick={onToggleSidebar}
+                            title="我的文檔"
+                            className="w-8 h-8 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full"
+                        >
+                            <Menu size={18} />
+                        </RippleButton>
+                    </div>
+
+                    {/* 分頁區域 */}
+                    {openDocIds.map(id => {
+                        const doc = documents.find(d => d.id === id);
+                        if (!doc) return null;
+                        const isActive = id === currentDocId;
+                        return (
+                            <div
+                                key={id}
+                                onClick={() => onSwitchTab?.(id)}
+                                className={`
+                                    flex items-center gap-2 px-2.5 py-2 text-[10px] font-medium cursor-pointer transition-all relative group
+                                    ${isActive
+                                        ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 rounded-t-xl shadow-[0_-8px_20px_rgba(0,0,0,0.04)] dark:shadow-[0_-8px_20px_rgba(0,0,0,0.15)] z-10 flex-[2_2_0%]'
+                                        : 'text-slate-500 dark:text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 bg-slate-200/50 dark:bg-slate-800/30 rounded-t-lg mb-0.5 mx-0.5 flex-1'
+                                    }
+                                `}
+                                style={{ minWidth: isActive ? '120px' : '44px', maxWidth: '180px' }}
+                            >
+                                {doc.mode === 'mermaid' ? <FileCode size={12} className={isActive ? 'text-indigo-500' : 'opacity-60'} /> : <FileText size={12} className={isActive ? 'text-indigo-500' : 'opacity-60'} />}
+                                <span className={`truncate flex-1 ${isActive ? 'font-bold' : ''}`}>{doc.name}</span>
+                                <button
+                                    onClick={(e) => onCloseTab?.(id, e)}
+                                    className={`
+                                        p-0.5 rounded-full transition-all flex items-center justify-center
+                                        ${isActive
+                                            ? 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600'
+                                            : 'opacity-0 group-hover:opacity-100 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-500'
+                                        }
+                                    `}
+                                >
+                                    <X size={12} />
+                                </button>
+
+                                {/* 瀏覽器風格的側邊圓角過渡 (Active state only) */}
+                                {isActive && (
+                                    <>
+                                        {/* 瀏覽器風格的側邊圓角過渡 - 增加 z-index 並微調位置以消除渲染瑕疵 */}
+                                        <div className="absolute -left-2 bottom-0 w-2 h-2 bg-white dark:bg-slate-900 pointer-events-none z-20">
+                                            <div className="w-2 h-2 rounded-br-xl bg-slate-100 dark:bg-slate-950" />
+                                        </div>
+                                        <div className="absolute -right-2 bottom-0 w-2 h-2 bg-white dark:bg-slate-900 pointer-events-none z-20">
+                                            <div className="w-2 h-2 rounded-bl-xl bg-slate-100 dark:bg-slate-950" />
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
-                <div className="flex items-center gap-1">
-                    <RippleButton variant="icon" onClick={onCopy} title="複製" className="w-9 h-9 text-slate-500 dark:text-slate-400">
-                        {copied ? <Check size={16} className="text-green-600 dark:text-green-500" /> : <Copy size={16} />}
+
+                {/* 右側操作按鈕 */}
+                <div className="flex items-center gap-1 px-2 mb-1">
+                    <RippleButton variant="icon" onClick={onCopy} title="複製" className="w-8 h-8 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800">
+                        {copied ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
                     </RippleButton>
-                    <RippleButton variant="icon" onClick={onReset} title="重置" className="w-9 h-9 text-slate-500 dark:text-slate-400"><RefreshCw size={16} /></RippleButton>
-                    <RippleButton variant="icon" onClick={onClear} title="清除" className="w-9 h-9 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30"><Trash2 size={16} /></RippleButton>
+                    <RippleButton variant="icon" onClick={onReset} title="重置" className="w-8 h-8 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800">
+                        <RefreshCw size={14} />
+                    </RippleButton>
+                    <RippleButton variant="icon" onClick={onClear} title="清除" className="w-8 h-8 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
+                        <Trash2 size={14} />
+                    </RippleButton>
                 </div>
             </div>
 
-            <div className="flex-1 relative flex overflow-hidden">
-                {/* Line Numbers */}
-                <div
-                    ref={lineNumbersRef}
-                    className="h-full pt-6 pb-6 px-2 text-right bg-slate-50 dark:bg-slate-800 border-r border-slate-100 dark:border-slate-800 select-none overflow-hidden custom-scrollbar transition-colors duration-200"
-                    style={{ width: '3rem' }} // Fixed width
-                >
-                    {lines.map(line => (
-                        <div key={line} className="mono text-sm leading-relaxed text-slate-300 dark:text-slate-600">
-                            {line}
+            {/* 編輯區域 */}
+            <div className="flex-1 flex overflow-hidden bg-white dark:bg-slate-900 transition-colors duration-200 relative">
+                {openDocIds.length > 0 ? (
+                    <>
+                        {/* 行號 */}
+                        <div
+                            ref={lineNumbersRef}
+                            className="w-12 pt-4 flex flex-col items-center bg-slate-50 dark:bg-slate-800/30 border-r border-slate-200 dark:border-slate-800 text-slate-300 dark:text-slate-600 font-mono text-xs select-none transition-colors duration-200"
+                        >
+                            {lines.map((_, i) => (
+                                <div key={i} className="leading-6 h-6">{i + 1}</div>
+                            ))}
                         </div>
-                    ))}
-                </div>
 
-                {/* Textarea */}
-                <textarea
-                    ref={ref}
-                    onScroll={handleScroll}
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    className="flex-1 h-full p-6 mono text-sm leading-relaxed resize-none focus:outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 custom-scrollbar selection:bg-indigo-100 dark:selection:bg-indigo-900/50 placeholder:text-slate-300 dark:placeholder:text-slate-700 transition-colors duration-200"
-                    placeholder={mode === 'mermaid' ? "進入 美人魚 代碼 這裡... ..." : "進入 標記掉落 代碼 這裡......"}
-                    spellCheck={false}
-                    style={{ paddingLeft: '1.5rem' }} // Reduce padding slightly to fit with line numbers nicely
-                />
+                        <textarea
+                            ref={ref}
+                            value={code}
+                            onChange={(e) => setCode(e.target.value)}
+                            onScroll={handleScroll}
+                            onKeyDown={handleKeyDown}
+                            onMouseEnter={onMouseEnter}
+                            onMouseLeave={onMouseLeave}
+                            className="flex-1 p-4 bg-transparent resize-none outline-none font-mono text-sm leading-6 text-slate-700 dark:text-slate-300 custom-scrollbar transition-colors duration-200"
+                            placeholder={mode === 'mermaid' ? "Enter Mermaid code..." : "Enter Markdown content..."}
+                            spellCheck={false}
+                        />
+                    </>
+                ) : (
+                    <div className="flex-1 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 p-8 space-y-6">
+                        <div className="relative">
+                            <div className="absolute -inset-4 bg-indigo-500/10 dark:bg-indigo-400/5 rounded-full blur-2xl animate-pulse"></div>
+                            <div className="relative p-6 bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700">
+                                <FileSearch size={48} className="text-indigo-500 dark:text-indigo-400" />
+                            </div>
+                        </div>
+                        <div className="text-center space-y-2 max-w-xs">
+                            <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">尚未開啟任何文件</h3>
+                            <p className="text-sm leading-relaxed">
+                                請在左側工具欄點選文件圖示，從「我的文檔」中選擇文件開始編輯。
+                            </p>
+                        </div>
+                        <button
+                            onClick={onToggleSidebar}
+                            className="flex items-center gap-2 px-6 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-500/20 active:scale-95 transition-all"
+                        >
+                            <Menu size={18} />
+                            開啟側邊欄
+                        </button>
+                    </div>
+                )}
             </div>
         </section>
     );

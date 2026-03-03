@@ -1,4 +1,14 @@
 /**
+ * 資料夾 (儲存庫/Vault) 型別
+ */
+export interface FolderRecord {
+    id: string;                          // UUID
+    name: string;                        // 資料夾名稱
+    createdAt: number;                   // 建立時間戳
+    updatedAt: number;                   // 最後修改時間戳
+}
+
+/**
  * 文檔記錄型別
  */
 export interface DocumentRecord {
@@ -6,6 +16,7 @@ export interface DocumentRecord {
     name: string;                        // 使用者自訂名稱
     mode: 'markdown' | 'mermaid';        // 文檔類型
     content: string;                     // 編輯內容
+    folderId?: string | null;            // 所屬資料夾 ID (null 為獨立檔案)
     createdAt: number;                   // 建立時間戳
     updatedAt: number;                   // 最後修改時間戳
 }
@@ -15,5 +26,6 @@ export interface DocumentRecord {
  */
 export interface AppState {
     currentDocId: string | null;         // 當前編輯的文檔 ID
-    documents: DocumentRecord[];          // 所有文檔列表
+    documents: DocumentRecord[];         // 所有文檔列表
+    folders: FolderRecord[];             // 所有資料夾列表
 }

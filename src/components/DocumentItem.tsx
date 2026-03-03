@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, FileCode2, Trash2, Clock } from 'lucide-react';
+import { FileText, FileCode2, Trash2, Clock, Link as LinkIcon } from 'lucide-react';
 import { DocumentRecord } from '../types';
 
 interface DocumentItemProps {
@@ -8,6 +8,10 @@ interface DocumentItemProps {
     onClick: () => void;
     onDelete: () => void;
     onRename: (newName: string) => void;
+    onMove: (folderId: string | null) => void;
+    onSelectDocument: (docId: string) => void;
+    folders: any[];
+    backlinks?: DocumentRecord[];
 }
 
 const DocumentItem: React.FC<DocumentItemProps> = ({
@@ -16,9 +20,14 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
     onClick,
     onDelete,
     onRename,
+    onMove,
+    onSelectDocument,
+    folders,
+    backlinks = [],
 }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editName, setEditName] = useState(document.name);
+    const [isBacklinksOpen, setIsBacklinksOpen] = useState(false);
 
     const handleDoubleClick = () => {
         setIsEditing(true);
@@ -67,6 +76,11 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
         <div
             onClick={onClick}
             onDoubleClick={handleDoubleClick}
+            draggable="true"
+            onDragStart={(e) => {
+                e.dataTransfer.setData('text/plain', document.id);
+                e.dataTransfer.effectAllowed = 'move';
+            }}
             className={`
         group relative px-3 py-2.5 mx-2 rounded-2xl cursor-pointer transition-all
         ${isActive
@@ -106,31 +120,63 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
                         </div>
                     )}
 
-                    {/* 時間標記與模式標籤 */}
-                    <div className="flex items-center gap-1.5 mt-0.5 text-xs text-slate-400 dark:text-slate-600">
+                    <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400 dark:text-slate-500">
                         <div className="flex items-center gap-1">
                             <Clock size={10} />
                             <span>{formatTime(document.updatedAt)}</span>
                         </div>
-                        <span className="text-slate-300 dark:text-slate-700">·</span>
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase ${document.mode === 'mermaid'
-                            ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                            : 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                        <span className={`px-1 rounded text-[9px] font-bold uppercase ${document.mode === 'mermaid'
+                            ? 'bg-blue-50/50 dark:bg-blue-900/20 text-blue-500 dark:text-blue-400'
+                            : 'bg-green-50/50 dark:bg-green-900/20 text-green-500 dark:text-green-400'
                             }`}>
                             {document.mode === 'mermaid' ? '美人魚' : '標記掉落'}
                         </span>
                     </div>
                 </div>
 
-                {/* 刪除按鈕 */}
-                <button
-                    onClick={handleDeleteClick}
-                    className="md-ripple-root opacity-0 group-hover:opacity-100 shrink-0 p-1.5 rounded-full hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-all [&_.md-ripple-wave]:text-red-600/20"
-                    title="刪除文檔"
-                >
-                    <Trash2 size={14} />
-                </button>
+                {/* 操作按鈕組 */}
+                <div className="flex items-center gap-1 shrink-0">
+                    {backlinks.length > 0 && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsBacklinksOpen(!isBacklinksOpen);
+                            }}
+                            className={`p-1.5 rounded-full transition-all ${isBacklinksOpen ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400' : 'text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
+                            title={`反向連結 (${backlinks.length})`}
+                        >
+                            <LinkIcon size={14} />
+                        </button>
+                    )}
+                    <button
+                        onClick={handleDeleteClick}
+                        className="p-1.5 rounded-full opacity-0 group-hover:opacity-100 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-all"
+                        title="刪除文檔"
+                    >
+                        <Trash2 size={14} />
+                    </button>
+                </div>
             </div>
+
+            {/* 反向連結清單 */}
+            {isBacklinksOpen && backlinks.length > 0 && (
+                <div className="mt-2 ml-4 pl-4 border-l border-slate-200 dark:border-slate-800 space-y-0.5 animate-in m3-slide-down duration-200">
+                    {backlinks.map(linkDoc => (
+                        <button
+                            key={`link-${linkDoc.id}`}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onSelectDocument(linkDoc.id);
+                            }}
+                            className="w-full flex items-center gap-2 px-2 py-1 rounded-lg text-[11px] text-slate-400 hover:text-indigo-600 dark:text-slate-500 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800/50 transition-all text-left"
+                            title={`跳轉至 ${linkDoc.name}`}
+                        >
+                            <LinkIcon size={10} className="shrink-0 opacity-40" />
+                            <span className="truncate flex-1 font-medium">{linkDoc.name}</span>
+                        </button>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };

@@ -24,6 +24,10 @@ interface PreviewPanelProps {
     isDarkMode: boolean;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
+    documents?: any[];
+    onSelectDocument?: (docId: string) => void;
+    onCreateMissing?: (name: string) => void;
+    currentDocId?: string | null;
 }
 
 const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
@@ -46,7 +50,11 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
     onScroll,
     isDarkMode,
     onMouseEnter,
-    onMouseLeave
+    onMouseLeave,
+    documents,
+    onSelectDocument,
+    onCreateMissing,
+    currentDocId
 }, ref) => {
 
     // DIFFERENT LAYOUT STRATEGY BASED ON MODE
@@ -64,7 +72,15 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
                     className="flex-1 overflow-auto custom-scrollbar p-8 bg-white dark:bg-slate-900 print:p-0 print:overflow-visible"
                 >
                     <div className="max-w-4xl mx-auto min-h-full bg-white dark:bg-slate-900 p-8 shadow-sm transition-colors duration-200 print:max-w-none print:w-full print:shadow-none print:p-0">
-                        <MarkdownPreview content={code} theme={theme} isDarkMode={isDarkMode} />
+                        <MarkdownPreview
+                            content={code}
+                            theme={theme}
+                            isDarkMode={isDarkMode}
+                            documents={documents}
+                            onSelectDocument={onSelectDocument}
+                            onCreateMissing={onCreateMissing}
+                            currentDocId={currentDocId}
+                        />
                     </div>
                 </div>
 

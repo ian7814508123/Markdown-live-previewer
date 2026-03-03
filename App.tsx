@@ -7,6 +7,7 @@ import Header from './src/components/Header';
 import Editor from './src/components/Editor';
 import PreviewPanel from './src/components/PreviewPanel';
 import HistorySidebar from './src/components/HistorySidebar';
+import CreateDocModal from './src/components/CreateDocModal';
 import SettingsModal from './src/components/SettingsModal';
 import { usePanZoom } from './src/hooks/usePanZoom';
 import { useDocumentStorage } from './src/hooks/useDocumentStorage';
@@ -80,6 +81,12 @@ const App: React.FC = () => {
     deleteDocument,
     renameDocument,
     storageUsage,
+    getBacklinks,
+    folders,
+    createFolder,
+    deleteFolder,
+    renameFolder,
+    moveDocument,
   } = useDocumentStorage();
 
   // UI 狀態
@@ -90,7 +97,11 @@ const App: React.FC = () => {
   const [theme, setTheme] = useState<Theme>('neutral');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isSyncScroll, setIsSyncScroll] = useState(true);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [initialDocName, setInitialDocName] = useState('');
+  const [pendingFolderId, setPendingFolderId] = useState<string | null>(null);
+  const [openDocIds, setOpenDocIds] = useState<string[]>([]);
   /** 文檔切換淡入動畫用的 key，每次文檔 id 變化時更新就能重新觸發 animation */
   const [docFadeKey, setDocFadeKey] = useState(0);
 
@@ -144,6 +155,24 @@ const App: React.FC = () => {
     }
   }, [isDarkMode]);
 
+  // 同步 openDocIds：當 currentDocId 改變且不在 openDocIds 中時，加入它
+  useEffect(() => {
+    if (currentDocId && !openDocIds.includes(currentDocId)) {
+      setOpenDocIds(prev => {
+        if (!prev.includes(currentDocId)) {
+          return [...prev, currentDocId];
+        }
+        return prev;
+      });
+    }
+  }, [currentDocId]); // 移除 openDocIds 依賴，防止關閉分頁後又被加回
+
+  // 當 documents 改變時，確保 openDocIds 中只包含還存在的文檔
+  useEffect(() => {
+    const docIdSet = new Set(documents.map(d => d.id));
+    setOpenDocIds(prev => prev.filter(id => docIdSet.has(id)));
+  }, [documents]);
+
   // 文檔切換淡入：currentDocId 變化時更新 key 觸發 .doc-fade-in 動畫
   useEffect(() => {
     setDocFadeKey(k => k + 1);
@@ -157,16 +186,17 @@ const App: React.FC = () => {
     }
   }, [documents.length, createDocument, defaultContents, isLoadingDefaults]);
 
-  // 自動儲存當前文檔內容
+  // 自動儲存至 localStorage（僅在 code 變化時發生）
   useEffect(() => {
-    if (!currentDocument) return;
+    if (!currentDocId) return;
 
     const timer = setTimeout(() => {
+      // 這裡僅用於 useDocumentStorage 內部的持久化同步，不直接影響渲染流
       updateCurrentDocument(code);
-    }, 500); // debounce 500ms
+    }, 1000); // 延長儲存延遲，減少 IO
 
     return () => clearTimeout(timer);
-  }, [code, currentDocument, updateCurrentDocument]);
+  }, [code, currentDocId, updateCurrentDocument]);
 
   // Custom Hook for Navigation
   const {
@@ -262,7 +292,11 @@ const App: React.FC = () => {
   };
 
   // 處理文檔切換
-  const handleDocumentSwitch = (docId: string) => {
+  const handleDocumentSwitch = (docId: string | null) => {
+    if (!docId) {
+      switchDocument(""); // 或者調整 useDocumentStorage 支援 null
+      return;
+    }
     switchDocument(docId);
     // 只在手機版（小螢幕）自動關閉側邊欄，桌面版保持開啟以便雙擊重命名
     if (window.innerWidth < 1024) {
@@ -271,12 +305,41 @@ const App: React.FC = () => {
     resetNavigation();
   };
 
+  const handleCloseTab = (docId: string, event?: React.MouseEvent) => {
+    event?.stopPropagation();
+
+    const nextOpenIds = openDocIds.filter(id => id !== docId);
+    setOpenDocIds(nextOpenIds);
+
+    // 如果關閉的是當前分頁
+    if (currentDocId === docId) {
+      if (nextOpenIds.length > 0) {
+        // 切換到最右邊的分頁 (模仿 VS Code)
+        handleDocumentSwitch(nextOpenIds[nextOpenIds.length - 1]);
+      } else {
+        // 如果沒有分頁了，設定為 null
+        handleDocumentSwitch(null);
+      }
+    }
+  };
+
   // 處理新增文檔
-  const handleCreateDocument = (newMode?: EditorMode) => {
-    // If explicit mode provided (from sidebar), use it. Otherwise default to current mode.
-    const modeToUse = newMode || mode;
+  const handleCreateDocument = (newMode: 'markdown' | 'mermaid', name: string) => {
+    const modeToUse = newMode || (currentDocument?.mode || 'markdown');
     const defaultContent = modeToUse === 'mermaid' ? defaultContents.mermaid : defaultContents.markdown;
-    createDocument(modeToUse, defaultContent);
+
+    // 使用傳入的資料夾 ID (來自側邊欄偵測或是 Wikilink 偵測)
+    const folderId = pendingFolderId;
+
+    createDocument(modeToUse, defaultContent, name, folderId);
+    setInitialDocName(''); // Reset
+    setPendingFolderId(null); // Reset
+  };
+
+  const handleOpenCreateModal = (name: string = '', folderId: string | null = null) => {
+    setInitialDocName(name);
+    setPendingFolderId(folderId);
+    setIsCreateModalOpen(true);
   };
 
   // 處理模式切換（Header 中的切換）
@@ -355,7 +418,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       renderDiagram(code, theme);
-    }, 300);
+    }, 150); // 縮短 Mermaid 模式延遲 (300ms -> 150ms)
     return () => clearTimeout(timer);
   }, [code, theme, renderDiagram]);
 
@@ -624,13 +687,30 @@ const App: React.FC = () => {
             currentDocMode={mode}
             onInsertIntoDoc={handleInsertIntoDoc}
             onSelectDocument={handleDocumentSwitch}
-            onCreateDocument={handleCreateDocument}
+            onCreateDocument={(fId) => handleOpenCreateModal('', fId)}
             onDeleteDocument={deleteDocument}
             onRenameDocument={renameDocument}
             storageUsage={storageUsage}
+            getBacklinks={getBacklinks}
+            folders={folders}
+            onCreateFolder={createFolder}
+            onDeleteFolder={deleteFolder}
+            onRenameFolder={renameFolder}
+            onMoveDocument={moveDocument}
           />
-          {/* Editor + Preview 共同包裹容器，文檔切換時觸發 fade-in 動畫 */}
-          <div key={docFadeKey} className="doc-fade-in flex flex-1 overflow-hidden print:block">
+
+          {/* Create Document Modal */}
+          <CreateDocModal
+            isOpen={isCreateModalOpen}
+            onClose={() => {
+              setIsCreateModalOpen(false);
+              setPendingFolderId(null);
+            }}
+            onCreate={handleCreateDocument}
+            initialName={initialDocName}
+          />
+          {/* 移除 key={docFadeKey} 以防止全組件樹重掛造成的渲染跳動 */}
+          <div className="flex flex-1 overflow-hidden print:block">
             <Editor
               ref={editorRef}
               mode={mode}
@@ -645,6 +725,11 @@ const App: React.FC = () => {
               onMouseEnter={() => { isHoveringEditor.current = true; }}
               onMouseLeave={() => { isHoveringEditor.current = false; }}
               onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+              openDocIds={openDocIds}
+              currentDocId={currentDocId}
+              documents={documents}
+              onSwitchTab={handleDocumentSwitch}
+              onCloseTab={handleCloseTab}
             />
 
             <PreviewPanel
@@ -669,6 +754,10 @@ const App: React.FC = () => {
               isDarkMode={isDarkMode}
               onMouseEnter={() => { isHoveringPreview.current = true; }}
               onMouseLeave={() => { isHoveringPreview.current = false; }}
+              documents={documents}
+              onSelectDocument={handleDocumentSwitch}
+              onCreateMissing={handleOpenCreateModal}
+              currentDocId={currentDocId}
             />
           </div>
         </main>

@@ -14,6 +14,10 @@ interface MarkdownPreviewProps {
     content: string;
     theme?: 'default' | 'neutral' | 'dark' | 'forest';
     isDarkMode: boolean;
+    documents?: any[];
+    onSelectDocument?: (docId: string) => void;
+    onCreateMissing?: (name: string) => void;
+    currentDocId?: string | null;
 }
 
 const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(({ code, isDarkMode }) => {
@@ -42,7 +46,7 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo
             } finally {
                 setIsPending(false);
             }
-        }, 500); // 500ms debounce to stabilize typing
+        }, 250); // 縮短 Mermaid 延遲 (500ms -> 250ms)
         return () => clearTimeout(timer);
     }, [code, isDarkMode]);
 
@@ -124,7 +128,7 @@ const VegaBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(({
             } finally {
                 setIsPending(false);
             }
-        }, 500);
+        }, 250); // 縮短 Vega 延遲 (500ms -> 250ms)
         return () => clearTimeout(timer);
     }, [code, isDarkMode]);
 
@@ -236,7 +240,7 @@ const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(
     );
 });
 
-const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDarkMode }) => {
+const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDarkMode, documents = [], onSelectDocument, onCreateMissing, currentDocId }) => {
     const isDark = isDarkMode;
 
     // Add debounce for content to reduce re-rendering during typing
@@ -244,11 +248,53 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            setDebouncedContent(content);
-        }, 300); // 300ms debounce for markdown/math rendering
+            // Pre-process wikilinks [[Link]] -> [Link](#wikilink-Link)
+            const processed = content.replace(/\[\[(.*?)\]\]/g, '[$1](#wikilink-$1)');
+            setDebouncedContent(processed);
+        }, 150); // 縮短 Markdown 延遲 (300ms -> 150ms)
 
         return () => clearTimeout(timer);
     }, [content]);
+
+    // WikiLink Component
+    const WikiLink: React.FC<{ name: string; children: React.ReactNode }> = ({ name, children }) => {
+        const decodedName = decodeURIComponent(name);
+
+        const currentDoc = documents.find(d => d.id === currentDocId);
+        const isInVault = !!currentDoc?.folderId;
+
+        // 如果不在儲存庫（資料夾）內，渲染為普通括號文字
+        if (!isInVault) {
+            return <span>[[{children}]]</span>;
+        }
+
+        const targetDoc = documents.find(doc => doc.name === decodedName && doc.folderId === currentDoc.folderId);
+        const exists = !!targetDoc;
+
+        return (
+            <a
+                href={`#${name}`}
+                onClick={(e) => {
+                    e.preventDefault();
+                    if (exists && onSelectDocument && targetDoc) {
+                        onSelectDocument(targetDoc.id);
+                    } else if (!exists && onCreateMissing) {
+                        onCreateMissing(name);
+                    }
+                }}
+                className={`
+                    px-1 py-0.5 rounded-md transition-all duration-200
+                    ${exists
+                        ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border-b border-indigo-300 dark:border-indigo-700'
+                        : 'text-slate-400 dark:text-slate-500 bg-slate-100/50 dark:bg-slate-800/20 hover:bg-slate-200 dark:hover:bg-slate-800 border-b border-dashed border-slate-300 dark:border-slate-700 italic cursor-help'
+                    }
+                `}
+                title={exists ? `跳轉至: ${name}` : `文件不存在: ${name} (在目前資料夾中)`}
+            >
+                {children}
+            </a>
+        );
+    };
 
     // Customize how remark-math nodes are converted to HAST (HTML)
     // This ensures that 'math' nodes become 'div.math-display' and 'inlineMath' become 'span.math-inline'
@@ -340,8 +386,15 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
                 );
             }
             return <span className={className} {...props}>{children}</span>;
+        },
+        a: ({ node, href, children, ...props }: any) => {
+            if (href?.startsWith('#wikilink-')) {
+                const name = decodeURIComponent(href.replace('#wikilink-', ''));
+                return <WikiLink name={name}>{children}</WikiLink>;
+            }
+            return <a href={href} {...props} target="_blank" rel="noopener noreferrer">{children}</a>;
         }
-    }), [isDark]);
+    }), [isDark, documents, onSelectDocument, onCreateMissing, currentDocId]);
 
     return (
         <div className={`prose max-w-none p-8 select-text ${isDark ? 'prose-invert' : 'prose-slate'} prose-headings:font-bold prose-a:text-indigo-600 prose-img:rounded-xl prose-table:border-collapse prose-th:border prose-th:border-slate-300 dark:prose-th:border-slate-700 prose-th:p-2 prose-td:border prose-td:border-slate-300 dark:prose-td:border-slate-700 prose-td:p-2 print:p-0 print:max-w-none`}>

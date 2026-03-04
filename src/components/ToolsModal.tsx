@@ -64,7 +64,7 @@ const ToolsModal: React.FC<ToolsModalProps> = ({ isOpen, onClose, currentDocCont
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
+                <div className="flex items-center justify-between px-6 py-2.5 border-b border-slate-200 dark:border-slate-800 shrink-0">
                     <div className="flex items-center gap-2.5">
                         <div className="w-8 h-8 bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 rounded-xl flex items-center justify-center">
                             <Wrench size={16} />

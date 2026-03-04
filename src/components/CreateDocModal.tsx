@@ -51,7 +51,7 @@ const CreateDocModal: React.FC<CreateDocModalProps> = ({ isOpen, onClose, onCrea
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-between px-6 py-2.5 border-b border-slate-100 dark:border-slate-800">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center shadow-sm">
                             <Plus size={20} />
@@ -120,7 +120,7 @@ const CreateDocModal: React.FC<CreateDocModalProps> = ({ isOpen, onClose, onCrea
                 </div>
 
                 {/* Footer Tip */}
-                <div className="px-6 py-4 bg-slate-50/50 dark:bg-slate-800/30 rounded-b-3xl border-t border-slate-100 dark:border-slate-800/50">
+                <div className="px-6 py-1 bg-slate-50/50 dark:bg-slate-800/30 rounded-b-3xl border-t border-slate-100 dark:border-slate-800/50">
                     <p className="text-[10px] text-center text-slate-400 dark:text-slate-500">
                         提示：按下 <kbd className="font-sans px-1.5 py-0.5 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded shadow-sm">Enter</kbd> 可快速建立 Markdown 文檔
                     </p>

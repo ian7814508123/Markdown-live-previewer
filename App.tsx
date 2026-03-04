@@ -758,6 +758,7 @@ const App: React.FC = () => {
               onSelectDocument={handleDocumentSwitch}
               onCreateMissing={handleOpenCreateModal}
               currentDocId={currentDocId}
+              openDocIds={openDocIds}
             />
           </div>
         </main>

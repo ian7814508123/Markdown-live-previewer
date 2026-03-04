@@ -373,7 +373,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
         const timer = setTimeout(() => {
             const processed = content.replace(/\[\[(.*?)\]\]/g, '[$1](#wikilink-$1)');
             setDebouncedContent(processed);
-        }, 150);
+        }, 200);
         return () => clearTimeout(timer);
     }, [content]);
 

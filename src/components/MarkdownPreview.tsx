@@ -20,61 +20,154 @@ interface MarkdownPreviewProps {
     currentDocId?: string | null;
 }
 
+// ─── 輔助函式：簡單的字串雜湊 ──────────────────────────────────────────────────
+// 用於生成基於內容的穩定 Key，防止 React 在內容未變時重新掛載組件
+const hashString = (str: string) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash).toString(36);
+};
+
+// ─── 輔助組件：可調整寬度與高度的容器 ────────────────────────────────────────────────
+const ResizableWrapper: React.FC<{
+    children: React.ReactNode;
+    width: string;
+    height: string;
+    scale: number;
+    onWidthChange: (width: string) => void;
+    onHeightChange: (height: string) => void;
+    onScaleChange: (scale: number) => void;
+    onReset: () => void;
+    isDarkMode: boolean;
+}> = ({ children, width, height, scale, onWidthChange, onHeightChange, onScaleChange, onReset, isDarkMode }) => {
+    return (
+        <div className="relative group/resizable my-8 print:my-4 print:p-0">
+            <div
+                className="mx-auto transition-all duration-300 ease-in-out relative flex justify-center print:!max-h-none print:!overflow-visible"
+                style={{
+                    width,
+                    maxHeight: height === 'auto' ? 'none' : height,
+                    overflow: height === 'auto' ? 'visible' : 'auto'
+                }}
+            >
+                <div
+                    className="print:![transform:none] print:![zoom:var(--print-scale)]"
+                    style={{
+                        transform: `scale(${scale})`,
+                        transformOrigin: 'top center',
+                        width: '100%',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        '--print-scale': scale
+                    } as any}
+                >
+                    {children}
+                </div>
+            </div>
+
+            {/* 調整大小的 UI 面板 - 懸浮於上方 (列印時隱藏) */}
+            <div className={`absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover/resizable:opacity-100 transition-all duration-300 z-30 pointer-events-none group-hover/resizable:translate-y-0 translate-y-2 print:hidden`}>
+                <div className={`pointer-events-auto flex items-center gap-2.5 px-3.5 py-1.5 rounded-full border shadow-2xl backdrop-blur-xl ${isDarkMode
+                    ? 'bg-slate-800/95 border-slate-700 text-slate-200'
+                    : 'bg-white/95 border-slate-200 text-slate-600'
+                    }`}>
+                    {/* Width Control */}
+                    <div className="flex items-center gap-1.5 border-r border-slate-200/20 pr-2.5">
+                        <span className="text-[10px] font-bold uppercase tracking-wider select-none opacity-50">W</span>
+                        <input
+                            type="range" min="30" max="100" step="5"
+                            value={parseInt(width)}
+                            onChange={(e) => onWidthChange(`${e.target.value}%`)}
+                            className={`w-16 h-1 rounded-lg appearance-none cursor-pointer accent-indigo-500`}
+                        />
+                        <span className="text-[10px] font-mono min-w-[2.2rem] opacity-70">{width}</span>
+                    </div>
+
+                    {/* Height Control */}
+                    <div className="flex items-center gap-1.5 border-r border-slate-200/20 pr-2.5">
+                        <span className="text-[10px] font-bold uppercase tracking-wider select-none opacity-50">H</span>
+                        <input
+                            type="range" min="150" max="800" step="10"
+                            value={height === 'auto' ? 800 : parseInt(height)}
+                            onChange={(e) => onHeightChange(`${e.target.value}px`)}
+                            className={`w-16 h-1 rounded-lg appearance-none cursor-pointer accent-teal-500`}
+                        />
+                        <span className="text-[10px] font-mono min-w-[2.2rem] opacity-70">{height === 'auto' ? 'Auto' : height}</span>
+                    </div>
+
+                    {/* Scale Control */}
+                    <div className="flex items-center gap-1.5 border-r border-slate-200/20 pr-2.5">
+                        <span className="text-[10px] font-bold uppercase tracking-wider select-none opacity-50">S</span>
+                        <input
+                            type="range" min="0.5" max="2" step="0.1"
+                            value={scale}
+                            onChange={(e) => onScaleChange(parseFloat(e.target.value))}
+                            className={`w-16 h-1 rounded-lg appearance-none cursor-pointer accent-amber-500`}
+                        />
+                        <span className="text-[10px] font-mono min-w-[2.2rem] opacity-70">{scale.toFixed(1)}x</span>
+                    </div>
+
+                    {/* Reset Button */}
+                    <button
+                        onClick={onReset}
+                        className={`text-[9px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-indigo-500 hover:text-white transition-colors duration-200`}
+                    >
+                        RESET
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(({ code, isDarkMode }) => {
     const [svg, setSvg] = useState('');
     const [isPending, setIsPending] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // 從程式碼註解中讀取初始設定
+    const initialWidth = useMemo(() => {
+        const widthMatch = code.match(/%%\s*width:\s*(\d+)%/i);
+        return widthMatch ? `${widthMatch[1]}%` : '100%';
+    }, [code]);
+
+    const initialScale = useMemo(() => {
+        const scaleMatch = code.match(/%%\s*scale:\s*([\d.]+)/i);
+        return scaleMatch ? parseFloat(scaleMatch[1]) : 1;
+    }, [code]);
+
+    const [width, setWidth] = useState(initialWidth);
+    const [height, setHeight] = useState('auto');
+    const [scale, setScale] = useState(initialScale);
+
     useEffect(() => {
         setIsPending(true);
         const timer = setTimeout(async () => {
             try {
-                // 1. Validate syntax first directly
-                // This prevents mermaid.render from injecting error artifacts into the DOM
                 await mermaid.parse(code);
-
-                // 2. Only render if valid
-                const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
+                const id = `mermaid-${hashString(code)}`;
                 const { svg: renderedSvg } = await mermaid.render(id, code);
-
                 setSvg(renderedSvg);
-                setError(null); // Clear error on success
+                setError(null);
             } catch (err: any) {
                 console.error('Mermaid render error:', err);
                 setError(err.message || 'Syntax Error');
-                // We do NOT clear setSvg here, preserving the last good render
             } finally {
                 setIsPending(false);
             }
-        }, 250); // 縮短 Mermaid 延遲 (500ms -> 250ms)
+        }, 200);
         return () => clearTimeout(timer);
     }, [code, isDarkMode]);
 
-    // Extract custom size directives (%% width: ... or %% scale: ...)
-    // This allows users to override SVG sizing behavior directly from the markdown
-    const containerStyle = useMemo(() => {
-        const style: React.CSSProperties = {};
-
-        // Match %% width: 50% or 500px
-        const widthMatch = code.match(/%%\s*width:\s*([^\n]+)/i);
-        if (widthMatch) {
-            style.width = widthMatch[1].trim();
-            style.maxWidth = 'none'; // Override default constraints
-        }
-
-        // Match %% scale: 0.8
-        const scaleMatch = code.match(/%%\s*scale:\s*([\d.]+)/i);
-        if (scaleMatch) {
-            const scale = parseFloat(scaleMatch[1]);
-            if (!isNaN(scale)) {
-                style.transform = `scale(${scale})`;
-                style.transformOrigin = 'top center';
-                style.width = `${100 / scale}%`; // Compensate width if scaling down to prevent empty space
-            }
-        }
-
-        return style;
-    }, [code]);
+    const handleReset = () => {
+        setWidth(initialWidth);
+        setHeight('auto');
+        setScale(initialScale);
+    };
 
     if (!svg && error) {
         return (
@@ -86,20 +179,26 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo
     }
 
     return (
-        <div className="my-6 relative group" style={containerStyle}>
+        <ResizableWrapper
+            width={width}
+            height={height}
+            scale={scale}
+            onWidthChange={setWidth}
+            onHeightChange={setHeight}
+            onScaleChange={setScale}
+            onReset={handleReset}
+            isDarkMode={isDarkMode}
+        >
             <div
                 className={`flex justify-center bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200/50 dark:border-slate-700/50 overflow-auto transition-opacity duration-300 ${isPending ? 'opacity-50' : 'opacity-100'}`}
+                style={{ width: '100%', height: 'auto' }}
                 dangerouslySetInnerHTML={{ __html: svg }}
             />
-
-            {/* Loading Indicator */}
             {isPending && !error && (
                 <div className="absolute top-2 right-2">
                     <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
                 </div>
             )}
-
-            {/* Error Overlay (Lightweight hint) */}
             {error && (
                 <div className="absolute top-0 left-0 right-0 -mt-3 flex justify-center z-10 pointer-events-none">
                     <div className="bg-red-100 dark:bg-red-900/80 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-200 text-[10px] font-bold px-3 py-1 rounded-full shadow-sm flex items-center gap-2 backdrop-blur-sm">
@@ -108,13 +207,16 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo
                     </div>
                 </div>
             )}
-        </div>
+        </ResizableWrapper>
     );
 });
 
 const VegaBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(({ code, isDarkMode }) => {
     const ref = useRef<HTMLDivElement>(null);
     const [isPending, setIsPending] = useState(false);
+    const [width, setWidth] = useState('100%');
+    const [height, setHeight] = useState('auto');
+    const [scale, setScale] = useState(1);
 
     useEffect(() => {
         setIsPending(true);
@@ -128,48 +230,59 @@ const VegaBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(({
             } finally {
                 setIsPending(false);
             }
-        }, 250); // 縮短 Vega 延遲 (500ms -> 250ms)
+        }, 250);
         return () => clearTimeout(timer);
     }, [code, isDarkMode]);
 
+    const handleReset = () => {
+        setWidth('100%');
+        setHeight('auto');
+        setScale(1);
+    };
+
     return (
-        <div className="my-6 relative group">
+        <ResizableWrapper
+            width={width}
+            height={height}
+            scale={scale}
+            onWidthChange={setWidth}
+            onHeightChange={setHeight}
+            onScaleChange={setScale}
+            onReset={handleReset}
+            isDarkMode={isDarkMode}
+        >
             <div
                 ref={ref}
                 className={`overflow-auto bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200/50 dark:border-slate-700/50 transition-opacity duration-300 ${isPending ? 'opacity-50' : 'opacity-100'}`}
+                style={{ width: '100%', height: 'auto' }}
             />
             {isPending && (
                 <div className="absolute top-2 right-2">
                     <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
                 </div>
             )}
-        </div>
+        </ResizableWrapper>
     );
 });
 
-// ─── SMILES Block ──────────────────────────────────────────────────────────────
-// 渲染 SMILES 化學結構式為 SVG 分子骨架圖
-// 使用 SvgDrawer（非 Canvas Drawer）以避免 smiles-drawer v2.x 的 canvas 更新問題
 const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(({ code, isDarkMode }) => {
     const svgRef = useRef<HTMLDivElement>(null);
     const [error, setError] = useState<string | null>(null);
     const [isPending, setIsPending] = useState(false);
+    const [width, setWidth] = useState('100%');
+    const [height, setHeight] = useState('auto');
+    const [scale, setScale] = useState(1);
 
     useEffect(() => {
         setIsPending(true);
         setError(null);
         const timer = setTimeout(() => {
             if (!svgRef.current) return;
-
             try {
-                // 清空上一次渲染結果
                 svgRef.current.innerHTML = '';
-
-                // ⚠️ 只傳入官方文件明確支援的選項，
-                // 自訂 themes / weights 物件會讓內部迭代器崩潰（c.every is not a function）
                 const drawer = new SmilesDrawer.SvgDrawer({
-                    width: 500,
-                    height: 300,
+                    width: 200,
+                    height: 100,
                     padding: 20,
                     bondThickness: 1.0,
                     bondLength: 15,
@@ -185,13 +298,12 @@ const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(
                     code.trim(),
                     (tree: any) => {
                         if (!svgRef.current) return;
-                        // 建立 SVG 元素並掛入容器後再渲染
                         const svgEl = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
                         svgEl.setAttribute('width', '100%');
-                        svgEl.setAttribute('height', '300');
+                        svgEl.setAttribute('height', 'auto');
+                        svgEl.setAttribute('viewBox', '0 0 200 100');
+                        svgEl.style.maxHeight = '100%';
                         svgRef.current.appendChild(svgEl);
-                        // 正確的參數順序：draw(data, target, themeName, weights, infoOnly)
-                        // weights 預設為 null，infoOnly 預設為 false，不需傳入
                         drawer.draw(tree, svgEl, isDarkMode ? 'dark' : 'light');
                         setError(null);
                     },
@@ -207,9 +319,14 @@ const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(
                 setIsPending(false);
             }
         }, 400);
-
         return () => clearTimeout(timer);
     }, [code, isDarkMode]);
+
+    const handleReset = () => {
+        setWidth('100%');
+        setHeight('auto');
+        setScale(1);
+    };
 
     if (error) {
         return (
@@ -221,52 +338,50 @@ const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(
     }
 
     return (
-        <div className="my-6 relative group">
+        <ResizableWrapper
+            width={width}
+            height={height}
+            scale={scale}
+            onWidthChange={setWidth}
+            onHeightChange={setHeight}
+            onScaleChange={setScale}
+            onReset={handleReset}
+            isDarkMode={isDarkMode}
+        >
             <div
                 ref={svgRef}
                 className={`flex justify-center items-center min-h-[200px] bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200/50 dark:border-slate-700/50 overflow-auto transition-opacity duration-300 ${isPending ? 'opacity-50' : 'opacity-100'}`}
+                style={{ width: '100%', height: 'auto' }}
             />
-            {/* SMILES 標籤 */}
             <div className="absolute bottom-2 right-3 text-[10px] text-slate-400 dark:text-slate-600 font-mono select-none">
                 SMILES
             </div>
-            {/* 讀取指示器 */}
             {isPending && (
                 <div className="absolute top-2 right-2">
                     <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
                 </div>
             )}
-        </div>
+        </ResizableWrapper>
     );
 });
 
 const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDarkMode, documents = [], onSelectDocument, onCreateMissing, currentDocId }) => {
     const isDark = isDarkMode;
-
-    // Add debounce for content to reduce re-rendering during typing
     const [debouncedContent, setDebouncedContent] = useState(content);
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            // Pre-process wikilinks [[Link]] -> [Link](#wikilink-Link)
             const processed = content.replace(/\[\[(.*?)\]\]/g, '[$1](#wikilink-$1)');
             setDebouncedContent(processed);
-        }, 150); // 縮短 Markdown 延遲 (300ms -> 150ms)
-
+        }, 150);
         return () => clearTimeout(timer);
     }, [content]);
 
-    // WikiLink Component
-    const WikiLink: React.FC<{ name: string; children: React.ReactNode }> = ({ name, children }) => {
+    const WikiLink: React.FC<{ name: string; children: React.ReactNode }> = React.memo(({ name, children }) => {
         const decodedName = decodeURIComponent(name);
-
         const currentDoc = documents.find(d => d.id === currentDocId);
         const isInVault = !!currentDoc?.folderId;
-
-        // 如果不在儲存庫（資料夾）內，渲染為普通括號文字
-        if (!isInVault) {
-            return <span>[[{children}]]</span>;
-        }
+        if (!isInVault) return <span>[[{children}]]</span>;
 
         const targetDoc = documents.find(doc => doc.name === decodedName && doc.folderId === currentDoc.folderId);
         const exists = !!targetDoc;
@@ -282,42 +397,28 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
                         onCreateMissing(name);
                     }
                 }}
-                className={`
-                    px-1 py-0.5 rounded-md transition-all duration-200
-                    ${exists
-                        ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border-b border-indigo-300 dark:border-indigo-700'
-                        : 'text-slate-400 dark:text-slate-500 bg-slate-100/50 dark:bg-slate-800/20 hover:bg-slate-200 dark:hover:bg-slate-800 border-b border-dashed border-slate-300 dark:border-slate-700 italic cursor-help'
-                    }
-                `}
+                className={`px-1 py-0.5 rounded-md transition-all duration-200 ${exists ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border-b border-indigo-300 dark:border-indigo-700' : 'text-slate-400 dark:text-slate-500 bg-slate-100/50 dark:bg-slate-800/20 hover:bg-slate-200 dark:hover:bg-slate-800 border-b border-dashed border-slate-300 dark:border-slate-700 italic cursor-help'}`}
                 title={exists ? `跳轉至: ${name}` : `文件不存在: ${name} (在目前資料夾中)`}
             >
                 {children}
             </a>
         );
-    };
+    });
 
-    // Customize how remark-math nodes are converted to HAST (HTML)
-    // This ensures that 'math' nodes become 'div.math-display' and 'inlineMath' become 'span.math-inline'
-    // containing the raw LaTeX, which our custom components will then render using MathJax.
     const remarkRehypeOptions = useMemo(() => ({
         handlers: {
-            math: (h: any, node: any) => {
-                // Return HAST element directly
-                return {
-                    type: 'element' as const,
-                    tagName: 'div',
-                    properties: { className: ['math-display'] },
-                    children: [{ type: 'text' as const, value: node.value }]
-                };
-            },
-            inlineMath: (h: any, node: any) => {
-                return {
-                    type: 'element' as const,
-                    tagName: 'span',
-                    properties: { className: ['math-inline'] },
-                    children: [{ type: 'text' as const, value: node.value }]
-                };
-            }
+            math: (h: any, node: any) => ({
+                type: 'element' as const,
+                tagName: 'div',
+                properties: { className: ['math-display'] },
+                children: [{ type: 'text' as const, value: node.value }]
+            }),
+            inlineMath: (h: any, node: any) => ({
+                type: 'element' as const,
+                tagName: 'span',
+                properties: { className: ['math-inline'] },
+                children: [{ type: 'text' as const, value: node.value }]
+            })
         }
     }), []);
 
@@ -326,32 +427,19 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
             const match = /language-(\w+)/.exec(className || '');
             const language = match ? match[1] : '';
             const codeString = String(children).replace(/\n$/, '');
+            const stableKey = hashString(codeString);
 
             if (!inline) {
-                // Special renderers for Mermaid, Vega, and SMILES
-                if (language === 'mermaid') {
-                    return <MermaidBlock code={codeString} isDarkMode={isDark} />;
-                }
-                if (language === 'vega' || language === 'vega-lite') {
-                    return <VegaBlock code={codeString} isDarkMode={isDark} />;
-                }
-                if (language === 'smiles') {
-                    return <SmilesBlock code={codeString} isDarkMode={isDark} />;
-                }
+                if (language === 'mermaid') return <MermaidBlock key={stableKey} code={codeString} isDarkMode={isDark} />;
+                if (language === 'vega' || language === 'vega-lite') return <VegaBlock key={stableKey} code={codeString} isDarkMode={isDark} />;
+                if (language === 'smiles') return <SmilesBlock key={stableKey} code={codeString} isDarkMode={isDark} />;
 
-                // Syntax highlighting for all other code blocks
                 return (
                     <SyntaxHighlighter
+                        key={stableKey}
                         language={language || 'text'}
                         style={isDark ? vscDarkPlus : vs}
-                        customStyle={{
-                            borderRadius: '0.75rem',
-                            padding: '1rem',
-                            marginTop: '1.5rem',
-                            marginBottom: '1.5rem',
-                            fontSize: '0.875rem',
-                            lineHeight: '1.5',
-                        }}
+                        customStyle={{ borderRadius: '0.75rem', padding: '1rem', marginTop: '1.5rem', marginBottom: '1.5rem', fontSize: '0.875rem', lineHeight: '1.5' }}
                         showLineNumbers={true}
                         wrapLines={true}
                     >
@@ -359,18 +447,13 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
                     </SyntaxHighlighter>
                 );
             }
-
-            return (
-                <code className={className} {...props}>
-                    {children}
-                </code>
-            );
+            return <code className={className} {...props}>{children}</code>;
         },
-        // Custom handlers for our protected math blocks
         div: ({ node, className, children, ...props }: any) => {
             if (className?.includes('math-display')) {
+                const stableKey = hashString(String(children));
                 return (
-                    <div className="my-4 overflow-x-auto" style={{ whiteSpace: 'nowrap' }}>
+                    <div key={stableKey} className="my-4 overflow-x-auto" style={{ whiteSpace: 'nowrap' }}>
                         <MathJax dynamic>{`$$${children}$$`}</MathJax>
                     </div>
                 );
@@ -379,8 +462,9 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
         },
         span: ({ node, className, children, ...props }: any) => {
             if (className?.includes('math-inline')) {
+                const stableKey = hashString(String(children));
                 return (
-                    <span className="math-inline" style={{ whiteSpace: 'nowrap' }}>
+                    <span key={stableKey} className="math-inline" style={{ whiteSpace: 'nowrap' }}>
                         <MathJax dynamic inline>{`$${children}$`}</MathJax>
                     </span>
                 );

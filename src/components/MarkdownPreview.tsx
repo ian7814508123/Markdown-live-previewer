@@ -365,6 +365,44 @@ const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(
     );
 });
 
+// ─── WikiLink 元件（模組層級，確保 React.memo 真正生效）───────────────────────────
+interface WikiLinkProps {
+    name: string;
+    children: React.ReactNode;
+    documents: any[];
+    currentDocId?: string | null;
+    onSelectDocument?: (docId: string) => void;
+    onCreateMissing?: (name: string) => void;
+}
+
+const WikiLink: React.FC<WikiLinkProps> = React.memo(({ name, children, documents, currentDocId, onSelectDocument, onCreateMissing }) => {
+    const decodedName = decodeURIComponent(name);
+    const currentDoc = documents.find((d: any) => d.id === currentDocId);
+    const isInVault = !!currentDoc?.folderId;
+    if (!isInVault) return <span>[[{children}]]</span>;
+
+    const targetDoc = documents.find((doc: any) => doc.name === decodedName && doc.folderId === currentDoc.folderId);
+    const exists = !!targetDoc;
+
+    return (
+        <a
+            href={`#${name}`}
+            onClick={(e) => {
+                e.preventDefault();
+                if (exists && onSelectDocument && targetDoc) {
+                    onSelectDocument(targetDoc.id);
+                } else if (!exists && onCreateMissing) {
+                    onCreateMissing(name);
+                }
+            }}
+            className={`px-1 py-0.5 rounded-md transition-all duration-200 ${exists ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border-b border-indigo-300 dark:border-indigo-700' : 'text-slate-400 dark:text-slate-500 bg-slate-100/50 dark:bg-slate-800/20 hover:bg-slate-200 dark:hover:bg-slate-800 border-b border-dashed border-slate-300 dark:border-slate-700 italic cursor-help'}`}
+            title={exists ? `跳轉至: ${name}` : `文件不存在: ${name} (在目前資料夾中)`}
+        >
+            {children}
+        </a>
+    );
+});
+
 const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDarkMode, documents = [], onSelectDocument, onCreateMissing, currentDocId }) => {
     const isDark = isDarkMode;
     const [debouncedContent, setDebouncedContent] = useState(content);
@@ -377,33 +415,6 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
         return () => clearTimeout(timer);
     }, [content]);
 
-    const WikiLink: React.FC<{ name: string; children: React.ReactNode }> = React.memo(({ name, children }) => {
-        const decodedName = decodeURIComponent(name);
-        const currentDoc = documents.find(d => d.id === currentDocId);
-        const isInVault = !!currentDoc?.folderId;
-        if (!isInVault) return <span>[[{children}]]</span>;
-
-        const targetDoc = documents.find(doc => doc.name === decodedName && doc.folderId === currentDoc.folderId);
-        const exists = !!targetDoc;
-
-        return (
-            <a
-                href={`#${name}`}
-                onClick={(e) => {
-                    e.preventDefault();
-                    if (exists && onSelectDocument && targetDoc) {
-                        onSelectDocument(targetDoc.id);
-                    } else if (!exists && onCreateMissing) {
-                        onCreateMissing(name);
-                    }
-                }}
-                className={`px-1 py-0.5 rounded-md transition-all duration-200 ${exists ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border-b border-indigo-300 dark:border-indigo-700' : 'text-slate-400 dark:text-slate-500 bg-slate-100/50 dark:bg-slate-800/20 hover:bg-slate-200 dark:hover:bg-slate-800 border-b border-dashed border-slate-300 dark:border-slate-700 italic cursor-help'}`}
-                title={exists ? `跳轉至: ${name}` : `文件不存在: ${name} (在目前資料夾中)`}
-            >
-                {children}
-            </a>
-        );
-    });
 
     const remarkRehypeOptions = useMemo(() => ({
         handlers: {
@@ -474,7 +485,17 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
         a: ({ node, href, children, ...props }: any) => {
             if (href?.startsWith('#wikilink-')) {
                 const name = decodeURIComponent(href.replace('#wikilink-', ''));
-                return <WikiLink name={name}>{children}</WikiLink>;
+                return (
+                    <WikiLink
+                        name={name}
+                        documents={documents}
+                        currentDocId={currentDocId}
+                        onSelectDocument={onSelectDocument}
+                        onCreateMissing={onCreateMissing}
+                    >
+                        {children}
+                    </WikiLink>
+                );
             }
             return <a href={href} {...props} target="_blank" rel="noopener noreferrer">{children}</a>;
         }

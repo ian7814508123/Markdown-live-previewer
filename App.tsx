@@ -102,10 +102,8 @@ const App: React.FC = () => {
   const [initialDocName, setInitialDocName] = useState('');
   const [pendingFolderId, setPendingFolderId] = useState<string | null>(null);
   const [openDocIds, setOpenDocIds] = useState<string[]>([]);
-  /** 文檔切換淡入動畫用的 key，每次文檔 id 變化時更新就能重新觸發 animation */
-  const [docFadeKey, setDocFadeKey] = useState(0);
 
-  const { settings, updateMacros, restoreDefaults } = useAppSettings();
+  const { settings, updateMacros, updatePrintSettings, restoreDefaults } = useAppSettings();
 
   // 從當前文檔取得 mode 和 code
   const mode = currentDocument?.mode || 'markdown';
@@ -173,11 +171,6 @@ const App: React.FC = () => {
     setOpenDocIds(prev => prev.filter(id => docIdSet.has(id)));
   }, [documents]);
 
-  // 文檔切換淡入：currentDocId 變化時更新 key 觸發 .doc-fade-in 動畫
-  useEffect(() => {
-    setDocFadeKey(k => k + 1);
-  }, [currentDocId]);
-
   // 初始化：如果沒有文檔，建立預設文檔
   useEffect(() => {
     if (documents.length === 0 && defaultContents && !isLoadingDefaults) {
@@ -185,18 +178,6 @@ const App: React.FC = () => {
       createDocument('mermaid', defaultContents.mermaid, '預設 美人魚 文檔');
     }
   }, [documents.length, createDocument, defaultContents, isLoadingDefaults]);
-
-  // 自動儲存至 localStorage（僅在 code 變化時發生）
-  useEffect(() => {
-    if (!currentDocId) return;
-
-    const timer = setTimeout(() => {
-      // 這裡僅用於 useDocumentStorage 內部的持久化同步，不直接影響渲染流
-      updateCurrentDocument(code);
-    }, 1000); // 延長儲存延遲，減少 IO
-
-    return () => clearTimeout(timer);
-  }, [code, currentDocId, updateCurrentDocument]);
 
   // Custom Hook for Navigation
   const {
@@ -342,14 +323,6 @@ const App: React.FC = () => {
     setIsCreateModalOpen(true);
   };
 
-  // 處理模式切換（Header 中的切換）
-  // 處理模式切換（Header 中的切換） - OLD, now removed from Header UI, but kept logic just in case
-  const handleModeSwitch = (newMode: EditorMode) => {
-    // Legacy support or if we add a switch back later
-    if (!currentDocument || newMode === currentDocument.mode) return;
-    // ... logic preserved or removed if unused
-  };
-
   // Render Mermaid code to SVG
   const renderDiagram = useCallback(async (mermaidCode: string, currentTheme: string) => {
     if (mode !== 'mermaid') return;
@@ -427,6 +400,29 @@ const App: React.FC = () => {
   const sanitizeFileName = (name: string): string => {
     // Windows 和多數系統禁止的字元：< > : " / \ | ? *
     return name.replace(/[<>:"/\\|?*]/g, '-').trim();
+  };
+
+  /** Mermaid PDF 匹出：注入 @page CSS 後呼叫 window.print()，完全繞開 canvas 安全限制 */
+  const handleMermaidPrint = () => {
+    const { paperSize, orientation, scale, margin } = settings.printSettings;
+    const marginMap: Record<string, string> = { normal: '1.5cm', narrow: '0.5cm', none: '0' };
+    const scaleCSS = scale === 'fit'
+      ? 'svg { max-width: 100% !important; width: 100% !important; height: auto !important; }'
+      : scale === 'actual' ? ''
+        : `svg { zoom: ${scale}%; }`;
+
+    const style = document.createElement('style');
+    style.id = 'mermaid-print-override';
+    style.textContent = `
+      @page { size: ${paperSize} ${orientation}; margin: ${marginMap[margin] ?? '1.5cm'}; }
+      header, aside, .editor-panel, .tab-bar { display: none !important; }
+      ${scaleCSS}
+    `;
+    document.head.appendChild(style);
+    window.print();
+    window.addEventListener('afterprint', () => {
+      document.getElementById('mermaid-print-override')?.remove();
+    }, { once: true });
   };
 
   const downloadMarkdown = () => {
@@ -674,6 +670,7 @@ const App: React.FC = () => {
           onInsertCode={(newCode) => handleCodeChange(code + '\n\n' + newCode)}
           onImportFullFile={handleImportFullFile}
           onOpenSettings={() => setIsSettingsOpen(true)}
+          onMermaidPrint={handleMermaidPrint}
         />
 
         <main className="flex-1 flex overflow-hidden print:block print:overflow-visible">
@@ -767,9 +764,12 @@ const App: React.FC = () => {
         <SettingsModal
           isOpen={isSettingsOpen}
           onClose={() => setIsSettingsOpen(false)}
+          mode={mode}
           currentMacros={settings.customMacros}
           onSaveMacros={updateMacros}
           onRestoreDefaults={restoreDefaults}
+          currentPrintSettings={settings.printSettings}
+          onSavePrintSettings={updatePrintSettings}
         />
       </div>
     </MathJaxContext>

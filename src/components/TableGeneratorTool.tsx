@@ -153,7 +153,7 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                 </div>
                 <div>
                     <p className="text-xs font-bold text-slate-700 dark:text-slate-200">Markdown 表格產生器</p>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500">視覺化編輯，直接插入文件或複製語法</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-300">視覺化編輯，直接插入文件或複製語法</p>
                 </div>
             </div>
 
@@ -164,10 +164,10 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                         <AlertTriangle size={20} />
                     </div>
                     <div className="text-center">
-                        <p className="text-sm font-bold text-amber-700 dark:text-amber-300 mb-1">
+                        <p className="text-sm font-bold text-amber-700 dark:text-amber-500 mb-1">
                             Mermaid 模式不支援 Markdown 表格
                         </p>
-                        <p className="text-[11px] text-amber-600/80 dark:text-amber-400/70 leading-relaxed">
+                        <p className="text-[11px] text-amber-600/80 dark:text-amber-300/70 leading-relaxed">
                             目前文檔為 <span className="font-semibold">Mermaid 圖表</span> 模式。<br />
                             請切換到 <span className="font-semibold">Markdown</span> 文檔後再使用表格產生器。
                         </p>
@@ -287,8 +287,8 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                                     variant="filled"
                                     onClick={handleInsert}
                                     className={`text-[11px] h-7 px-2.5 gap-1 transition-all ${inserted
-                                            ? 'bg-emerald-500 hover:bg-emerald-500'
-                                            : 'bg-indigo-600 hover:bg-indigo-700'
+                                        ? 'bg-emerald-500 hover:bg-emerald-500'
+                                        : 'bg-indigo-600 hover:bg-indigo-700'
                                         }`}
                                 >
                                     {inserted
@@ -301,8 +301,8 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                                     variant="tonal"
                                     onClick={handleCopy}
                                     className={`text-[11px] h-7 px-2.5 gap-1 transition-all ${copied
-                                            ? 'text-emerald-600 dark:text-emerald-400'
-                                            : 'text-slate-600 dark:text-slate-300'
+                                        ? 'text-emerald-600 dark:text-emerald-400'
+                                        : 'text-slate-600 dark:text-slate-300'
                                         }`}
                                 >
                                     {copied

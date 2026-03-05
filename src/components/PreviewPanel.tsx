@@ -1,6 +1,96 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useState, useEffect, useRef } from 'react';
 import { AlertCircle, Trash2, RefreshCw, Sparkles, ZoomIn, ZoomOut, Maximize, Hand } from 'lucide-react';
 import MarkdownPreview from './MarkdownPreview';
+
+// ── MarkdownPreviewSection ──────────────────────────────────────────────────
+// 導入独立元件避免在 forwardRef 內部的條件分支中呼叫 hooks（違反 Rules of Hooks）
+// activatedDocIds 追蹤「已被用戶訪問過的 tab」，尚未訪問的 tab 不會在背景被渲染
+// 這就消除了 MathJax 在 display:none 容器中渲染時發生的 null DOM 錯誤
+interface MarkdownPreviewSectionProps {
+    markdownDocIds: string[];
+    currentDocId?: string | null;
+    documents?: any[];
+    theme: any;
+    isDarkMode: boolean;
+    code: string;
+    onSelectDocument?: (docId: string) => void;
+    onCreateMissing?: (name: string) => void;
+    onScroll?: (e: React.UIEvent<HTMLDivElement>) => void;
+    onMouseEnter?: () => void;
+    onMouseLeave?: () => void;
+    scrollRef: React.Ref<HTMLDivElement>;
+}
+
+const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
+    markdownDocIds,
+    currentDocId,
+    documents,
+    theme,
+    isDarkMode,
+    code,
+    onSelectDocument,
+    onCreateMissing,
+    onScroll,
+    onMouseEnter,
+    onMouseLeave,
+    scrollRef,
+}) => {
+    // 「已啟動 docId」：記錄曾被訪問過的 tab，只為它們渲染 MarkdownPreview
+    const [activatedDocIds, setActivatedDocIds] = useState<Set<string>>(() => {
+        const init = new Set<string>();
+        if (currentDocId) init.add(currentDocId);
+        return init;
+    });
+
+    useEffect(() => {
+        if (!currentDocId) return;
+        setActivatedDocIds(prev => {
+            if (prev.has(currentDocId)) return prev;
+            const next = new Set(prev);
+            next.add(currentDocId);
+            return next;
+        });
+    }, [currentDocId]);
+
+    const docsToRender = markdownDocIds.filter(id => activatedDocIds.has(id));
+
+    return (
+        <section
+            className="flex-1 flex flex-col bg-slate-100 dark:bg-slate-950 relative overflow-hidden group/preview transition-colors duration-200"
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+        >
+            <div className="flex-1 relative overflow-hidden">
+                {docsToRender.map(docId => {
+                    const doc = documents?.find((d: any) => d.id === docId);
+                    const docContent = doc?.content ?? '';
+                    const isActive = docId === currentDocId;
+                    return (
+                        <div
+                            key={docId}
+                            ref={isActive ? (scrollRef as React.Ref<HTMLDivElement>) : undefined}
+                            onScroll={isActive ? onScroll : undefined}
+                            className={`absolute inset-0 overflow-auto custom-scrollbar p-8 bg-white dark:bg-slate-900 print:p-0 print:overflow-visible${isActive ? '' : ' tab-inactive'}`}
+                            style={{ display: isActive ? 'block' : 'none' }}
+                        >
+                            <div className="max-w-4xl mx-auto min-h-full bg-white dark:bg-slate-900 p-8 shadow-sm transition-colors duration-200 print:max-w-none print:w-full print:shadow-none print:p-0">
+                                <MarkdownPreview
+                                    content={docContent}
+                                    theme={theme}
+                                    isDarkMode={isDarkMode}
+                                    documents={documents}
+                                    onSelectDocument={onSelectDocument}
+                                    onCreateMissing={onCreateMissing}
+                                    currentDocId={docId}
+                                />
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        </section>
+    );
+};
 
 interface PreviewPanelProps {
     mode: 'mermaid' | 'markdown';
@@ -62,8 +152,6 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
 
     // DIFFERENT LAYOUT STRATEGY BASED ON MODE
     if (mode === 'markdown') {
-        // 取出所有已開啟的 markdown 文件（含當前），各自渲染一個 MarkdownPreview
-        // 切換分頁時只切換 CSS display，不重新掛載組件，保留渲染結果
         const markdownDocIds = (openDocIds ?? [currentDocId].filter(Boolean) as string[])
             .filter(id => {
                 const doc = documents?.find((d: any) => d.id === id);
@@ -71,47 +159,20 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
             });
 
         return (
-            <section
-                className="flex-1 flex flex-col bg-slate-100 dark:bg-slate-950 relative overflow-hidden group/preview transition-colors duration-200"
+            <MarkdownPreviewSection
+                markdownDocIds={markdownDocIds}
+                currentDocId={currentDocId}
+                documents={documents}
+                theme={theme}
+                isDarkMode={isDarkMode}
+                code={code}
+                onSelectDocument={onSelectDocument}
+                onCreateMissing={onCreateMissing}
+                onScroll={onScroll}
                 onMouseEnter={onMouseEnter}
                 onMouseLeave={onMouseLeave}
-            >
-                {/* 所有 markdown 分頁的捲動容器，以 display 切換顯示 */}
-                <div className="flex-1 relative overflow-hidden">
-                    {markdownDocIds.map(docId => {
-                        const doc = documents?.find((d: any) => d.id === docId);
-                        const docContent = doc?.content ?? '';
-                        const isActive = docId === currentDocId;
-                        return (
-                            <div
-                                key={docId}
-                                ref={isActive ? ref : undefined}
-                                onScroll={isActive ? onScroll : undefined}
-                                className="absolute inset-0 overflow-auto custom-scrollbar p-8 bg-white dark:bg-slate-900 print:p-0 print:overflow-visible"
-                                style={{ display: isActive ? 'block' : 'none' }}
-                            >
-                                <div className="max-w-4xl mx-auto min-h-full bg-white dark:bg-slate-900 p-8 shadow-sm transition-colors duration-200 print:max-w-none print:w-full print:shadow-none print:p-0">
-                                    <MarkdownPreview
-                                        content={docContent}
-                                        theme={theme}
-                                        isDarkMode={isDarkMode}
-                                        documents={documents}
-                                        onSelectDocument={onSelectDocument}
-                                        onCreateMissing={onCreateMissing}
-                                        currentDocId={docId}
-                                    />
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-
-                {/* Minimal Status Bar for Markdown */}
-                <div className="h-10 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between px-6 text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-[0.2em] shrink-0 z-30 transition-colors duration-200">
-                    <span>標記掉落 預習</span>
-                    <span>{code.length} 字元</span>
-                </div>
-            </section>
+                scrollRef={ref}
+            />
         );
     }
 
@@ -214,7 +275,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
                         <span className="opacity-50">位置</span>
                         <span className="text-slate-600 tabular-nums">{Math.round(position.x)}, {Math.round(position.y)}</span>
                     </div>
-                    <span>{code.length} 字元</span>
+
                 </div>
             </div>
         </section>

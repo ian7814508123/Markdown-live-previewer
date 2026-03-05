@@ -84,8 +84,9 @@ const ToolsModal: React.FC<ToolsModalProps> = ({ isOpen, onClose, currentDocCont
                     </RippleButton>
                 </div>
 
-                {/* Body：左側工具導覽 + 右側內容（overflow-hidden 確保子內容受外層圓角裁切） */}
-                <div className="flex flex-1 min-h-0 overflow-hidden rounded-b-3xl">
+                {/* Body：左側工具導覽 + 右側內容 */}
+                {/* min-h-[440px] 穩定高度：防止切換工具時模態框跳動 */}
+                <div className="flex min-h-[440px] flex-1 overflow-hidden rounded-b-3xl">
 
                     {/* ── 左側工具導覽側欄 ── */}
                     <nav className="w-32 shrink-0 border-r border-slate-100 dark:border-slate-800 py-3 px-2 flex flex-col gap-0.5 overflow-y-auto custom-scrollbar pb-3">
@@ -101,30 +102,32 @@ const ToolsModal: React.FC<ToolsModalProps> = ({ isOpen, onClose, currentDocCont
                                         '[&_.md-ripple-wave]:text-violet-600/15',
                                         isActive
                                             ? 'bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300'
-                                            : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/8',
+                                            : 'text-slate-500 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-white/8',
                                     ].join(' ')}
                                 >
                                     <div className={`mb-1 p-1.5 rounded-xl ${isActive ? 'bg-violet-200/70 dark:bg-violet-800/50' : 'bg-slate-100 dark:bg-slate-800'}`}>
                                         {tool.icon}
                                     </div>
                                     <span className="text-[11px] font-semibold leading-tight">{tool.label}</span>
-                                    <span className="text-[9px] text-slate-400 dark:text-slate-500 leading-tight mt-0.5">{tool.desc}</span>
+                                    <span className="text-[9px] text-slate-400 dark:text-slate-350 leading-tight mt-0.5">{tool.desc}</span>
                                 </button>
                             );
                         })}
                     </nav>
 
-                    {/* ── 右側工具內容區（點選後滑入） ── */}
-                    {/*
-                     * key={activeTool} 讓 React 在切換工具時重新掛載元素，
-                     * 觸發 animate-in slide-in-from-right，實現滑入效果。
-                     * 使用 M3 緩動與 300ms 持續時間。
-                     */}
-                    <div
-                        key={activeTool}
-                        className="flex-1 overflow-y-auto custom-scrollbar animate-in slide-in-from-right-4 fade-in duration-300 pb-3"
-                    >
-                        {renderToolPanel(activeTool, currentDocContent, currentDocMode, onInsertIntoDoc)}
+                    {/* ── 右側工具內容區 ── */}
+                    {/* 使用獨立 wrapper 保持 DOM 穩定，內容切換以 CSS 動畫處理 */}
+                    {/* transform-origin: center → 縮放從中央往上下展開，而非從頂部 */}
+                    <div className="flex-1 relative overflow-hidden">
+                        <div
+                            key={activeTool}
+                            className="absolute inset-0 overflow-y-auto custom-scrollbar pb-3"
+                            style={{
+                                animation: 'toolPanelIn 0.28s cubic-bezier(0.2, 0, 0, 1) both',
+                            }}
+                        >
+                            {renderToolPanel(activeTool, currentDocContent, currentDocMode, onInsertIntoDoc)}
+                        </div>
                     </div>
                 </div>
             </div>

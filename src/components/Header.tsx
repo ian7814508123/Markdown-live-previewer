@@ -16,6 +16,8 @@ interface HeaderProps {
     onInsertCode: (code: string) => void;
     onImportFullFile: (file: File, content: string) => void;
     onOpenSettings: () => void;
+    /** Mermaid PDF 匹出：注入 @page CSS 後列印，繞開 canvas 安全限制 */
+    onMermaidPrint: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -30,7 +32,8 @@ const Header: React.FC<HeaderProps> = ({
     setIsSyncScroll,
     onInsertCode,
     onImportFullFile,
-    onOpenSettings
+    onOpenSettings,
+    onMermaidPrint,
 }) => {
     const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState(false);
     const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
@@ -130,150 +133,176 @@ const Header: React.FC<HeaderProps> = ({
 
             {/* 右側工具列 */}
             <div className="flex items-center gap-1">
-                {/* 深色模式 */}
-                <RippleButton
-                    variant="icon"
-                    onClick={(e) => toggleDarkMode(e)}
-                    title={isDarkMode ? "切換 到 亮色模式" : "切換 到 深色模式"}
-                    className="text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400"
-                >
-                    {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-                </RippleButton>
 
-                <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
+                {/* 分隔線元件（共用） */}
+                {/* const Sep = () => <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1" /> */}
 
-                {/* 設定 */}
-                <RippleButton
-                    variant="icon"
-                    onClick={onOpenSettings}
-                    title="設定"
-                    className="text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400"
-                >
-                    <Settings size={20} />
-                </RippleButton>
+                {/* ── Mermaid 模式工具列 ─────────────────────────────────────── */}
+                {mode === 'mermaid' && (<>
 
-                {/* Mermaid 主題選擇器（自訂下拉） */}
-                {mode === 'mermaid' && (
+                    {/* 深色模式 */}
+                    <RippleButton variant="icon" onClick={(e) => toggleDarkMode(e)}
+                        title={isDarkMode ? '切換 到 亮色模式' : '切換 到 深色模式'}
+                        className="text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400">
+                        {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+                    </RippleButton>
+
+                    <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
+
+                    {/* 設定（Mermaid → PDF 版面設定） */}
+                    <RippleButton variant="icon" onClick={onOpenSettings} title="PDF 版面設定"
+                        className="text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400">
+                        <Settings size={20} />
+                    </RippleButton>
+
+                    <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
+
+                    {/* 主題選擇器 */}
                     <div className="relative ml-1" ref={themeMenuRef}>
-                        {/* 觸發按鈕 */}
-                        <button
-                            onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
+                        <button onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
                             style={{ position: 'relative', overflow: 'hidden' }}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 transition-all select-none"
-                        >
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 transition-all select-none">
                             <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">主題</span>
                             <span>{currentTheme.emoji} {currentTheme.label}</span>
                             <ChevronDown size={12} className={`transition-transform duration-200 ${isThemeMenuOpen ? 'rotate-180' : ''}`} />
                         </button>
-
-                        {/* 下拉面板 */}
-                        {isThemeMenuOpen && (
-                            <div className="absolute left-0 mt-2 w-44 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl py-2 px-2 z-50 animate-in fade-in zoom-in-95 duration-150 origin-top-left ring-1 ring-black/5">
-                                {THEMES.map(t => (
-                                    <button
-                                        key={t.value}
-                                        onClick={() => { setTheme(t.value); setIsThemeMenuOpen(false); }}
-                                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-all border
-                                            ${t.value === theme
-                                                ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800 font-semibold'
-                                                : 'text-slate-700 dark:text-slate-200 border-transparent hover:bg-slate-100 dark:hover:bg-white/10 hover:border-slate-200 dark:hover:border-white/15 font-medium'
-                                            }`}
-                                    >
-                                        <span>{t.emoji}</span>
-                                        <span>{t.label}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        )}
+                        <div style={{
+                            position: 'absolute', left: 0, marginTop: '0.5rem', width: '11rem',
+                            opacity: isThemeMenuOpen ? 1 : 0,
+                            transform: isThemeMenuOpen ? 'translateY(0) scale(1)' : 'translateY(-8px) scale(0.96)',
+                            pointerEvents: isThemeMenuOpen ? 'auto' : 'none',
+                            transition: 'opacity 0.25s cubic-bezier(0.4,0,0.2,1), transform 0.25s cubic-bezier(0.4,0,0.2,1)',
+                            transformOrigin: 'top left',
+                        }} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl py-2 px-2 z-50 ring-1 ring-black/5">
+                            {THEMES.map(t => (
+                                <button key={t.value} onClick={() => { setTheme(t.value); setIsThemeMenuOpen(false); }}
+                                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-all border
+                                        ${t.value === theme
+                                            ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800 font-semibold'
+                                            : 'text-slate-700 dark:text-slate-200 border-transparent hover:bg-slate-100 dark:hover:bg-white/10 hover:border-slate-200 dark:hover:border-white/15 font-medium'
+                                        }`}>
+                                    <span>{t.emoji}</span><span>{t.label}</span>
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                )}
 
-                <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-2" />
+                    <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
 
-                {/* 同步滾動（markdown only） */}
-                {mode === 'markdown' && (
-                    <>
-                        {/* 同步滾動：狀態切換按鈕 */}
-                        {/* OFF → 純文字灰色；ON → 灰底 + indigo 字 + pulse 點，不用藍色填滿避免喧賓奪主 */}
-                        <button
-                            onClick={() => setIsSyncScroll(!isSyncScroll)}
-                            title="同步滾動"
-                            style={{ position: 'relative', overflow: 'hidden' }}
-                            className={`inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-semibold transition-all select-none
-                                ${isSyncScroll
-                                    ? 'bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 hover:bg-slate-200 dark:hover:bg-white/10'
-                                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-slate-200'
-                                }`}
-                        >
-                            <span className={`w-2 h-2 rounded-full shrink-0 transition-colors ${isSyncScroll ? 'bg-indigo-500 animate-pulse' : 'bg-slate-300 dark:bg-slate-600'
-                                }`} />
-                            同步滾動
-                        </button>
+                    {/* 下載選單（Mermaid） */}
+                    <div className="relative" ref={downloadMenuRef}>
+                        <RippleButton variant="filled" onClick={() => setIsDownloadMenuOpen(!isDownloadMenuOpen)} className="text-sm pr-3">
+                            <Download size={16} />
+                            <span>下載</span>
+                            <ChevronDown size={14} className={`transition-transform duration-200 ${isDownloadMenuOpen ? 'rotate-180' : ''}`} />
+                        </RippleButton>
+                        <div style={{
+                            position: 'absolute', right: 0, marginTop: '0.5rem', width: '18rem',
+                            opacity: isDownloadMenuOpen ? 1 : 0,
+                            transform: isDownloadMenuOpen ? 'translateY(0) scale(1)' : 'translateY(-8px) scale(0.96)',
+                            pointerEvents: isDownloadMenuOpen ? 'auto' : 'none',
+                            transition: 'opacity 0.25s cubic-bezier(0.4,0,0.2,1), transform 0.25s cubic-bezier(0.4,0,0.2,1)',
+                            transformOrigin: 'top right',
+                        }} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl py-2 px-2 z-50 ring-1 ring-black/5">
+                            {menuItem(() => handleExport(() => onExportImage('png')),
+                                <div className="w-9 h-9 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center"><ImageIcon size={18} /></div>,
+                                'PNG 圖片', '高保真')}
+                            {menuItem(() => handleExport(() => onExportImage('jpg')),
+                                <div className="w-9 h-9 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center"><FileImage size={18} /></div>,
+                                'JPG 圖片', '壓縮')}
+                            <div className="mx-4 my-1 border-t border-slate-100 dark:border-slate-700" />
+                            {menuItem(() => handleExport(() => onExportImage('svg')),
+                                <div className="w-9 h-9 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center"><FileJson size={18} /></div>,
+                                'SVG 向量', '解析度獨立')}
+                            <div className="mx-4 my-1 border-t border-slate-100 dark:border-slate-700" />
+                            {menuItem(() => handleExport(onDownloadMarkdown),
+                                <div className="w-9 h-9 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl flex items-center justify-center"><FileText size={18} /></div>,
+                                'Mermaid 原始碼', '.md 源碼')}
+                            <div className="mx-4 my-1 border-t border-slate-100 dark:border-slate-700" />
+                            {menuItem(() => handleExport(onMermaidPrint),
+                                <div className="w-9 h-9 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-xl flex items-center justify-center"><Printer size={18} /></div>,
+                                '列印 / PDF', '套用 PDF 版面設定')}
+                        </div>
+                    </div>
 
-                        <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-2" />
+                </>)}
 
-                        {/* 進口檔案：無狀態動作按鈕，純文字樣式不帶底色 */}
-                        <button
-                            onClick={() => fileInputRef.current?.click()}
-                            title="進口檔案 (.md, .txt, .xlsx, .csv)"
-                            style={{ position: 'relative', overflow: 'hidden' }}
-                            className="inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-slate-200 transition-all select-none"
-                        >
-                            <FileUp size={14} />
-                            進口檔案
-                        </button>
-                        <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-2" />
-                    </>
-                )}
+                {/* ── Markdown 模式工具列 ────────────────────────────────────── */}
+                {mode === 'markdown' && (<>
 
-                {/* 下載下拉選單 */}
-                <div className="relative" ref={downloadMenuRef}>
-                    <RippleButton
-                        variant="filled"
-                        onClick={() => setIsDownloadMenuOpen(!isDownloadMenuOpen)}
-                        className="text-sm pr-3"
-                    >
-                        <Download size={16} />
-                        <span>下載</span>
-                        <ChevronDown size={14} className={`transition-transform duration-200 ${isDownloadMenuOpen ? 'rotate-180' : ''}`} />
+                    {/* 深色模式 */}
+                    <RippleButton variant="icon" onClick={(e) => toggleDarkMode(e)}
+                        title={isDarkMode ? '切換 到 亮色模式' : '切換 到 深色模式'}
+                        className="text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400">
+                        {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
                     </RippleButton>
 
-                    {isDownloadMenuOpen && (
-                        <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl py-2 px-2 z-50 animate-in fade-in zoom-in-95 duration-150 origin-top-right ring-1 ring-black/5">
-                            {mode === 'mermaid' ? (
-                                <>
-                                    {menuItem(() => handleExport(() => onExportImage('png')),
-                                        <div className="w-9 h-9 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center"><ImageIcon size={18} /></div>,
-                                        'PNG 圖片', '高保真')}
-                                    {menuItem(() => handleExport(() => onExportImage('jpg')),
-                                        <div className="w-9 h-9 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center"><FileImage size={18} /></div>,
-                                        'JPG 圖片', '壓縮')}
-                                    <div className="mx-4 my-1 border-t border-slate-100 dark:border-slate-700" />
-                                    {menuItem(() => handleExport(() => onExportImage('svg')),
-                                        <div className="w-9 h-9 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center"><FileJson size={18} /></div>,
-                                        'SVG 向量', '解析度獨立')}
-                                    <div className="mx-4 my-1 border-t border-slate-100 dark:border-slate-700" />
-                                    {menuItem(() => handleExport(() => window.print()),
-                                        <div className="w-9 h-9 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-xl flex items-center justify-center"><Printer size={18} /></div>,
-                                        '列印 / PDF', '瀏覽器原生')}
-                                </>
-                            ) : (
-                                <>
-                                    {menuItem(() => handleExport(onDownloadMarkdown),
-                                        <div className="w-9 h-9 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl flex items-center justify-center"><FileText size={18} /></div>,
-                                        'Markdown 檔案', '.md 源碼')}
-                                    <div className="mx-4 my-1 border-t border-slate-100 dark:border-slate-700" />
-                                    {menuItem(() => handleExport(() => window.print()),
-                                        <div className="w-9 h-9 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-xl flex items-center justify-center"><Printer size={18} /></div>,
-                                        '列印 / PDF', '瀏覽器原生')}
-                                </>
-                            )}
+                    <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
+
+                    {/* 設定（Markdown → MathJax 巨集） */}
+                    <RippleButton variant="icon" onClick={onOpenSettings} title="MathJax 巨集設定"
+                        className="text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400">
+                        <Settings size={20} />
+                    </RippleButton>
+
+                    <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
+
+                    {/* 同步滾動 */}
+                    <button onClick={() => setIsSyncScroll(!isSyncScroll)} title="同步滾動"
+                        style={{ position: 'relative', overflow: 'hidden' }}
+                        className={`inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-semibold transition-all select-none
+                            ${isSyncScroll
+                                ? 'bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 hover:bg-slate-200 dark:hover:bg-white/10'
+                                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-slate-200'
+                            }`}>
+                        <span className={`w-2 h-2 rounded-full shrink-0 transition-colors ${isSyncScroll ? 'bg-indigo-500 animate-pulse' : 'bg-slate-300 dark:bg-slate-600'}`} />
+                        同步滾動
+                    </button>
+
+                    <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
+
+                    {/* 進口檔案 */}
+                    <button onClick={() => fileInputRef.current?.click()}
+                        title="進口檔案 (.md, .txt, .xlsx, .csv)"
+                        style={{ position: 'relative', overflow: 'hidden' }}
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-slate-200 transition-all select-none">
+                        <FileUp size={14} />
+                        進口檔案
+                    </button>
+
+                    <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
+
+                    {/* 下載選單（Markdown） */}
+                    <div className="relative" ref={downloadMenuRef}>
+                        <RippleButton variant="filled" onClick={() => setIsDownloadMenuOpen(!isDownloadMenuOpen)} className="text-sm pr-3">
+                            <Download size={16} />
+                            <span>下載</span>
+                            <ChevronDown size={14} className={`transition-transform duration-200 ${isDownloadMenuOpen ? 'rotate-180' : ''}`} />
+                        </RippleButton>
+                        <div style={{
+                            position: 'absolute', right: 0, marginTop: '0.5rem', width: '18rem',
+                            opacity: isDownloadMenuOpen ? 1 : 0,
+                            transform: isDownloadMenuOpen ? 'translateY(0) scale(1)' : 'translateY(-8px) scale(0.96)',
+                            pointerEvents: isDownloadMenuOpen ? 'auto' : 'none',
+                            transition: 'opacity 0.25s cubic-bezier(0.4,0,0.2,1), transform 0.25s cubic-bezier(0.4,0,0.2,1)',
+                            transformOrigin: 'top right',
+                        }} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl py-2 px-2 z-50 ring-1 ring-black/5">
+                            {menuItem(() => handleExport(onDownloadMarkdown),
+                                <div className="w-9 h-9 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl flex items-center justify-center"><FileText size={18} /></div>,
+                                'Markdown 檔案', '.md 源碼')}
+                            <div className="mx-4 my-1 border-t border-slate-100 dark:border-slate-700" />
+                            {menuItem(() => handleExport(() => window.print()),
+                                <div className="w-9 h-9 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-xl flex items-center justify-center"><Printer size={18} /></div>,
+                                '列印 / PDF', '瀏覽器原生')}
                         </div>
-                    )}
-                </div>
+                    </div>
+
+                </>)}
+
             </div>
         </header>
     );
 };
 
 export default Header;
+

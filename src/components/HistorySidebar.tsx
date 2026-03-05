@@ -224,28 +224,43 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                                                     </div>
                                                 </div>
 
-                                                {isExpanded && (
-                                                    <div className="pl-4 space-y-0.5 border-l-2 border-indigo-100/50 dark:border-indigo-900/30 ml-6 mb-2">
-                                                        {folderDocs.length === 0 ? (
-                                                            <p className="px-4 py-2 text-[10px] text-slate-400 dark:text-slate-600 italic">無文件</p>
-                                                        ) : (
-                                                            folderDocs.map(doc => (
-                                                                <DocumentItem
-                                                                    key={doc.id}
-                                                                    document={doc}
-                                                                    isActive={doc.id === currentDocId}
-                                                                    onClick={() => onSelectDocument(doc.id)}
-                                                                    onDelete={() => onDeleteDocument(doc.id)}
-                                                                    onRename={(newName) => onRenameDocument(doc.id, newName)}
-                                                                    onMove={(fId) => onMoveDocument(doc.id, fId)}
-                                                                    onSelectDocument={onSelectDocument}
-                                                                    folders={folders}
-                                                                    backlinks={getBacklinks(doc.name)}
-                                                                />
-                                                            ))
-                                                        )}
+                                                {/* CSS Grid 彈性展開動畫：內容常駐提高渲染額費，不再条件淡入 */}
+                                                <div style={{
+                                                    display: 'grid',
+                                                    gridTemplateRows: isExpanded ? '1fr' : '0fr',
+                                                    transition: 'grid-template-rows 0.35s cubic-bezier(0.4,0,0.2,1)',
+                                                    overflow: 'hidden',
+                                                }}>
+                                                    <div style={{
+                                                        minHeight: 0,
+                                                        opacity: isExpanded ? 1 : 0,
+                                                        transform: isExpanded ? 'translateY(0)' : 'translateY(-8px)',
+                                                        transition: isExpanded
+                                                            ? 'opacity 0.3s ease 0.05s, transform 0.3s ease 0.05s'
+                                                            : 'opacity 0.18s ease, transform 0.18s ease',
+                                                    }}>
+                                                        <div className="pl-4 space-y-0.5 border-l-2 border-indigo-100/50 dark:border-indigo-900/30 ml-6 mb-2">
+                                                            {folderDocs.length === 0 ? (
+                                                                <p className="px-4 py-2 text-[10px] text-slate-400 dark:text-slate-600 italic">無文件</p>
+                                                            ) : (
+                                                                folderDocs.map(doc => (
+                                                                    <DocumentItem
+                                                                        key={doc.id}
+                                                                        document={doc}
+                                                                        isActive={doc.id === currentDocId}
+                                                                        onClick={() => onSelectDocument(doc.id)}
+                                                                        onDelete={() => onDeleteDocument(doc.id)}
+                                                                        onRename={(newName) => onRenameDocument(doc.id, newName)}
+                                                                        onMove={(fId) => onMoveDocument(doc.id, fId)}
+                                                                        onSelectDocument={onSelectDocument}
+                                                                        folders={folders}
+                                                                        backlinks={getBacklinks(doc.name)}
+                                                                    />
+                                                                ))
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                )}
+                                                </div>
                                             </div>
                                         );
                                     })}

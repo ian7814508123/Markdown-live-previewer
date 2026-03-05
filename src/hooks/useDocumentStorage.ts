@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { DocumentRecord, AppState, FolderRecord } from '../types';
 
 const STORAGE_KEY = 'mermaid-lens-documents';
@@ -85,9 +85,12 @@ function saveToStorage(state: AppState): boolean {
 export function useDocumentStorage() {
     const [state, setState] = useState<AppState>(loadFromStorage);
 
-    // 同步到 localStorage
+    // 同步到 localStorage（加入 debounce 避免快速輸入時每次按鍵都觸發序列化）
     useEffect(() => {
-        saveToStorage(state);
+        const timer = setTimeout(() => {
+            saveToStorage(state);
+        }, 300);
+        return () => clearTimeout(timer);
     }, [state]);
 
     /**
@@ -287,40 +290,25 @@ export function useDocumentStorage() {
     }, []);
 
     /**
-     * 取得當前文檔
+     * 當前文檔（僅在 currentDocId 或 documents 改變時重新計算）
      */
-    const getCurrentDocument = useCallback((): DocumentRecord | null => {
+    const currentDocument = useMemo((): DocumentRecord | null => {
         if (!state.currentDocId) return null;
-        return state.documents.find(doc => doc.id === state.currentDocId) || null;
+        return state.documents.find(doc => doc.id === state.currentDocId) ?? null;
     }, [state.currentDocId, state.documents]);
 
     /**
-     * 計算儲存容量百分比
+     * 儲存空間使用率（僅在 documents 改變時重新序列化計算）
      */
-    const getStorageStats = useCallback(() => {
+    const storageUsage = useMemo(() => {
         try {
-            // Calculate size of each document for future granular management
-            const docSizes = state.documents.map(doc => {
-                const docData = JSON.stringify(doc);
-                return docData.length * 2; // UTF-16 estimate
-            });
-
-            const totalSize = docSizes.reduce((acc, size) => acc + size, 0);
             const appStateData = JSON.stringify(state);
-            const totalAppStateSize = appStateData.length * 2;
-
             const maxSizeBytes = 5 * 1024 * 1024; // 5MB limit
-            const percentage = Math.min(100, Math.round((totalAppStateSize / maxSizeBytes) * 100));
-
-            return {
-                percentage,
-                totalSize,
-                docSizes
-            };
+            return Math.min(100, Math.round((appStateData.length * 2 / maxSizeBytes) * 100));
         } catch (e) {
-            return { percentage: 0, totalSize: 0, docSizes: [] };
+            return 0;
         }
-    }, [state]);
+    }, [state.documents]);
 
     /**
      * 取得連結至當前文檔的所有文檔 (Backlinks) - 僅限同資料夾內
@@ -338,19 +326,16 @@ export function useDocumentStorage() {
         });
     }, [state.documents, state.currentDocId]);
 
-    const stats = getStorageStats();
-
     return {
         documents: state.documents,
         currentDocId: state.currentDocId,
-        currentDocument: getCurrentDocument(),
+        currentDocument,
         createDocument,
         updateCurrentDocument,
         switchDocument,
         deleteDocument,
         renameDocument,
-        storageUsage: stats.percentage, // Keeping field name for compatibility
-        storageStats: stats, // New documented field for granular info
+        storageUsage,
         getBacklinks,
         folders: state.folders,
         createFolder,

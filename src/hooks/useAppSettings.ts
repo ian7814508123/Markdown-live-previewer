@@ -2,9 +2,26 @@ import { useState, useEffect } from 'react';
 
 const SETTINGS_KEY = 'mermaid-lens-settings';
 
+/** Mermaid PDF 列印設定 */
+export interface PrintSettings {
+    paperSize: 'A4' | 'A3' | 'Letter';
+    orientation: 'portrait' | 'landscape';
+    /** 'fit' = 符合頁面, 'actual' = 實際大小, number = 自訂百分比 (10–200) */
+    scale: 'fit' | 'actual' | number;
+    margin: 'normal' | 'narrow' | 'none';
+}
+
 export interface AppSettings {
     customMacros: Record<string, string | [string, number]>;
+    printSettings: PrintSettings;
 }
+
+const DEFAULT_PRINT_SETTINGS: PrintSettings = {
+    paperSize: 'A4',
+    orientation: 'landscape',
+    scale: 'fit',
+    margin: 'normal',
+};
 
 const DEFAULT_SETTINGS: AppSettings = {
     customMacros: {
@@ -34,8 +51,10 @@ const DEFAULT_SETTINGS: AppSettings = {
         // 向量與矩陣
         "vect": ["{\\mathbf{#1}}", 1],               // 向量粗體
         "mat": ["{\\mathbf{#1}}", 1],                // 矩陣粗體
-    }
+    },
+    printSettings: DEFAULT_PRINT_SETTINGS,
 };
+
 
 export function useAppSettings() {
     const [settings, setSettings] = useState<AppSettings>(() => {
@@ -57,11 +76,16 @@ export function useAppSettings() {
                         }
                     });
 
-                    if (hasChanges) {
-                        return { ...DEFAULT_SETTINGS, ...parsed, customMacros: newMacros };
-                    }
+                    return {
+                        ...DEFAULT_SETTINGS,
+                        ...parsed,
+                        customMacros: hasChanges ? newMacros : parsed.customMacros,
+                        // 旧用戶沒有 printSettings時补上預設就
+                        printSettings: parsed.printSettings ?? DEFAULT_PRINT_SETTINGS,
+                    };
                 }
-                return { ...DEFAULT_SETTINGS, ...parsed };
+                // stored 存在但沒有 customMacros，補上預設後回傳
+                return { ...DEFAULT_SETTINGS, ...parsed, printSettings: parsed.printSettings ?? DEFAULT_PRINT_SETTINGS };
             }
             return DEFAULT_SETTINGS;
         } catch (error) {
@@ -82,6 +106,10 @@ export function useAppSettings() {
         setSettings(prev => ({ ...prev, customMacros: newMacros }));
     };
 
+    const updatePrintSettings = (patch: Partial<PrintSettings>) => {
+        setSettings(prev => ({ ...prev, printSettings: { ...prev.printSettings, ...patch } }));
+    };
+
     const restoreDefaults = () => {
         setSettings(DEFAULT_SETTINGS);
     };
@@ -89,6 +117,7 @@ export function useAppSettings() {
     return {
         settings,
         updateMacros,
+        updatePrintSettings,
         restoreDefaults
     };
 }

@@ -158,25 +158,39 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
                 </div>
             </div>
 
-            {/* 反向連結清單 */}
-            {isBacklinksOpen && backlinks.length > 0 && (
-                <div className="mt-2 ml-4 pl-4 border-l border-slate-200 dark:border-slate-800 space-y-0.5 animate-in m3-slide-down duration-200">
-                    {backlinks.map(linkDoc => (
-                        <button
-                            key={`link-${linkDoc.id}`}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onSelectDocument(linkDoc.id);
-                            }}
-                            className="w-full flex items-center gap-2 px-2 py-1 rounded-lg text-[11px] text-slate-400 hover:text-indigo-600 dark:text-slate-500 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800/50 transition-all text-left"
-                            title={`跳轉至 ${linkDoc.name}`}
-                        >
-                            <LinkIcon size={10} className="shrink-0 opacity-40" />
-                            <span className="truncate flex-1 font-medium">{linkDoc.name}</span>
-                        </button>
-                    ))}
+            {/* 反向連結清單：CCS Grid 彈性展開 */}
+            <div style={{
+                display: 'grid',
+                gridTemplateRows: isBacklinksOpen && backlinks.length > 0 ? '1fr' : '0fr',
+                transition: 'grid-template-rows 0.35s cubic-bezier(0.4,0,0.2,1)',
+                overflow: 'hidden',
+            }}>
+                <div style={{
+                    minHeight: 0,
+                    opacity: isBacklinksOpen && backlinks.length > 0 ? 1 : 0,
+                    transform: isBacklinksOpen && backlinks.length > 0 ? 'translateY(0)' : 'translateY(-8px)',
+                    transition: isBacklinksOpen && backlinks.length > 0
+                        ? 'opacity 0.3s ease 0.05s, transform 0.3s ease 0.05s'
+                        : 'opacity 0.18s ease, transform 0.18s ease',
+                }}>
+                    <div className="mt-2 ml-4 pl-4 border-l border-slate-200 dark:border-slate-800 space-y-0.5">
+                        {backlinks.map(linkDoc => (
+                            <button
+                                key={`link-${linkDoc.id}`}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onSelectDocument(linkDoc.id);
+                                }}
+                                className="w-full flex items-center gap-2 px-2 py-1 rounded-lg text-[11px] text-slate-400 hover:text-indigo-600 dark:text-slate-500 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800/50 transition-all text-left"
+                                title={`跳轉至 ${linkDoc.name}`}
+                            >
+                                <LinkIcon size={10} className="shrink-0 opacity-40" />
+                                <span className="truncate flex-1 font-medium">{linkDoc.name}</span>
+                            </button>
+                        ))}
+                    </div>
                 </div>
-            )}
+            </div>
         </div>
     );
 };

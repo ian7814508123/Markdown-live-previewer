@@ -81,6 +81,26 @@ body {
     animation: m3-slide-up 400ms var(--m3-easing-standard) both;
 }
 
+/* ── 工具面板切換：從中心往上下浮現 ──────────────────────────────────────
+ * 設計原則：transform-origin: center 讓縮放從元素中央展開，
+ * 配合 opacity 消除閃爍感，cubic-bezier(0.4,0,0.2,1) 達到先快後慢的物理感。
+ * 適用場景：任何需要「上下撐開」或「左右撐開」的面板元素。
+ * 左右展開：改用 scaleX(0.94)→scaleX(1) 即可，transform-origin 同樣為 center。
+ * ─────────────────────────────────────────────────────────────────────── */
+@keyframes toolPanelIn {
+    from {
+        opacity: 0;
+        transform: scaleY(0.94);
+        transform-origin: center;
+    }
+
+    to {
+        opacity: 1;
+        transform: scaleY(1);
+        transform-origin: center;
+    }
+}
+
 /* ── 側邊欄與工具切換 (Slide-in) ─────────────────────────────────────── */
 @keyframes slide-in-from-right {
     from {
@@ -251,4 +271,14 @@ mjx-container[display="true"] {
 mjx-container:not([display="true"]) {
     display: inline-block !important;
     vertical-align: middle;
+}
+
+/* ── 列印 / PDF：只列印當前啟用的分頁 ────────────────────────────────────
+ * 配合 MarkdownPreviewSection 中為非當前 tab 添加的 .tab-inactive class
+ * 確保多分頁情境下 window.print() 只輸出當前文件，而非所有開啟的分頁
+ * ─────────────────────────────────────────────────────────────────────── */
+@media print {
+    .tab-inactive {
+        display: none !important;
+    }
 }

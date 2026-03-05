@@ -226,7 +226,7 @@ const Editor = forwardRef<HTMLTextAreaElement, EditorProps>(({
                         {/* 行號 */}
                         <div
                             ref={lineNumbersRef}
-                            className="w-12 pt-4 flex flex-col items-center bg-slate-50 dark:bg-slate-800/30 border-r border-slate-200 dark:border-slate-800 text-slate-300 dark:text-slate-600 font-mono text-xs select-none transition-colors duration-200"
+                            className="w-12 pt-4 flex flex-col items-center bg-slate-50 dark:bg-slate-800/30 border-r border-slate-200 dark:border-slate-800 text-slate-300 dark:text-slate-600 font-mono text-xs select-none transition-colors duration-200 overflow-hidden"
                         >
                             {lines.map((_, i) => (
                                 <div key={i} className="leading-6 h-6">{i + 1}</div>

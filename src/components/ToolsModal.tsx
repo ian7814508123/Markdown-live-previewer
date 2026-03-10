@@ -4,6 +4,7 @@ import PdfMergeTool from './PdfMergeTool';
 import TableGeneratorTool from './TableGeneratorTool';
 import WordCountTool from './WordCountTool';
 import RippleButton from './RippleButton';
+
 interface ToolsModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -58,9 +59,19 @@ const ToolsModal: React.FC<ToolsModalProps> = ({ isOpen, onClose, currentDocCont
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in m3-fade-in duration-300"
             onClick={onClose}
         >
+            {/* Left Skyscraper Ad (Wide screen only) */}
+            <div className="hidden xl:flex absolute left-8 w-40 h-[600px] bg-white/5 border border-white/10 rounded-2xl items-center justify-center overflow-hidden">
+                <ins className="adsbygoogle"
+                    style={{ display: 'block' }}
+                    data-ad-client="ca-pub-8170892352848798"
+                    data-ad-slot="1864612249"
+                    data-ad-format="vertical"
+                    data-full-width-responsive="true"></ins>
+            </div>
+
             {/* Modal 本體 */}
             <div
-                className="relative flex flex-col w-full max-w-lg h-[min(640px,94vh)] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl ring-1 ring-black/10 dark:ring-white/10 animate-in m3-slide-up duration-400"
+                className="relative flex flex-col w-full max-w-lg h-[min(640px,94vh)] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl ring-1 ring-black/10 dark:ring-white/10 animate-in m3-slide-up duration-400 overflow-hidden"
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
@@ -85,10 +96,8 @@ const ToolsModal: React.FC<ToolsModalProps> = ({ isOpen, onClose, currentDocCont
                 </div>
 
                 {/* Body：左側工具導覽 + 右側內容 */}
-                {/* min-h-[440px] 穩定高度：防止切換工具時模態框跳動 */}
                 <div className="flex min-h-[440px] flex-1 overflow-hidden rounded-b-3xl">
-
-                    {/* ── 左側工具導覽側欄 ── */}
+                    {/* 左側導覽 */}
                     <nav className="w-32 shrink-0 border-r border-slate-100 dark:border-slate-800 py-3 px-2 flex flex-col gap-0.5 overflow-y-auto custom-scrollbar pb-3">
                         {TOOLS.map(tool => {
                             const isActive = activeTool === tool.id;
@@ -115,9 +124,7 @@ const ToolsModal: React.FC<ToolsModalProps> = ({ isOpen, onClose, currentDocCont
                         })}
                     </nav>
 
-                    {/* ── 右側工具內容區 ── */}
-                    {/* 使用獨立 wrapper 保持 DOM 穩定，內容切換以 CSS 動畫處理 */}
-                    {/* transform-origin: center → 縮放從中央往上下展開，而非從頂部 */}
+                    {/* 右側內容 */}
                     <div className="flex-1 relative overflow-hidden bg-white dark:bg-slate-900">
                         <div
                             key={activeTool}
@@ -130,6 +137,16 @@ const ToolsModal: React.FC<ToolsModalProps> = ({ isOpen, onClose, currentDocCont
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* Right Skyscraper Ad (Wide screen only) */}
+            <div className="hidden xl:flex absolute right-8 w-40 h-[600px] bg-white/5 border border-white/10 rounded-2xl items-center justify-center overflow-hidden">
+                <ins className="adsbygoogle"
+                    style={{ display: 'block' }}
+                    data-ad-client="ca-pub-8170892352848798"
+                    data-ad-slot="1864612249"
+                    data-ad-format="vertical"
+                    data-full-width-responsive="true"></ins>
             </div>
         </div>
     );

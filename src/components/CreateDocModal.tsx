@@ -75,6 +75,16 @@ const CreateDocModal: React.FC<CreateDocModalProps> = ({ isOpen, onClose, onCrea
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in m3-fade-in duration-300"
             onClick={onClose}
         >
+            {/* Left Skyscraper Ad (Wide screen only) */}
+            <div className="hidden xl:flex absolute left-8 w-40 h-[600px] bg-white/5 border border-white/10 rounded-2xl items-center justify-center overflow-hidden">
+                <ins className="adsbygoogle"
+                    style={{ display: 'block' }}
+                    data-ad-client="ca-pub-8170892352848798"
+                    data-ad-slot="1864612249"
+                    data-ad-format="vertical"
+                    data-full-width-responsive="true"></ins>
+            </div>
+
             <div
                 className="relative flex flex-col w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl ring-1 ring-black/10 dark:ring-white/10 animate-in m3-slide-up duration-400 overflow-hidden"
                 onClick={e => e.stopPropagation()}
@@ -191,6 +201,16 @@ const CreateDocModal: React.FC<CreateDocModalProps> = ({ isOpen, onClose, onCrea
                         提示：{step === 'type' ? '選擇類別後展開範本' : '點擊任一範本即可快速建立'}
                     </p>
                 </div>
+            </div>
+
+            {/* Right Skyscraper Ad (Wide screen only) */}
+            <div className="hidden xl:flex absolute right-8 w-40 h-[600px] bg-white/5 border border-white/10 rounded-2xl items-center justify-center overflow-hidden">
+                <ins className="adsbygoogle"
+                    style={{ display: 'block' }}
+                    data-ad-client="ca-pub-8170892352848798"
+                    data-ad-slot="1864612249"
+                    data-ad-format="vertical"
+                    data-full-width-responsive="true"></ins>
             </div>
         </div>
     );

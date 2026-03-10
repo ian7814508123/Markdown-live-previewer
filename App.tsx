@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { flushSync } from 'react-dom';
 import { MathJaxContext } from 'better-react-mathjax';
 import mermaid from 'mermaid';
@@ -12,6 +12,8 @@ import SettingsModal from './src/components/SettingsModal';
 import { usePanZoom } from './src/hooks/usePanZoom';
 import { useDocumentStorage } from './src/hooks/useDocumentStorage';
 import { useAppSettings } from './src/hooks/useAppSettings';
+import { useAdWall } from './src/hooks/useAdWall';
+import AdWall from './src/components/AdWall';
 
 type Theme = 'default' | 'neutral' | 'dark' | 'forest';
 
@@ -130,6 +132,7 @@ const App: React.FC = () => {
   const [openDocIds, setOpenDocIds] = useState<string[]>([]);
 
   const { settings, updateMacros, updatePrintSettings, restoreDefaults } = useAppSettings();
+  const { isLocked, unlock } = useAdWall();
 
   // 從當前文檔取得 mode 和 code
   const mode = currentDocument?.mode || 'markdown';
@@ -692,6 +695,7 @@ const App: React.FC = () => {
   return (
     <MathJaxContext config={mathJaxConfig}>
       <div className="flex flex-col h-screen max-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
+        {isLocked && <AdWall onUnlock={unlock} />}
         <Header
           mode={mode}
           // setMode={handleModeSwitch} // Removed from UI

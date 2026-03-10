@@ -222,6 +222,17 @@ const Header: React.FC<HeaderProps> = ({
                             {menuItem(() => handleExport(onMermaidPrint),
                                 <div className="w-9 h-9 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-xl flex items-center justify-center"><Printer size={18} /></div>,
                                 '列印 / PDF', '套用 PDF 版面設定')}
+
+                            {/* AdSense In-Menu Ad */}
+                            <div className="mx-2 mt-4 p-2 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 min-h-[100px] flex items-center justify-center relative overflow-hidden">
+                                <ins className="adsbygoogle"
+                                    style={{ display: 'block' }}
+                                    data-ad-client="ca-pub-8170892352848798"
+                                    data-ad-slot="1864612249"
+                                    data-ad-format="horizontal"
+                                    data-full-width-responsive="true"></ins>
+                                <span className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-10 text-[8px] font-bold uppercase tracking-widest">贊助廣告</span>
+                            </div>
                         </div>
                     </div>
 
@@ -294,6 +305,17 @@ const Header: React.FC<HeaderProps> = ({
                             {menuItem(() => handleExport(() => window.print()),
                                 <div className="w-9 h-9 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-xl flex items-center justify-center"><Printer size={18} /></div>,
                                 '列印 / PDF', '瀏覽器原生')}
+
+                            {/* AdSense In-Menu Ad */}
+                            <div className="mx-2 mt-4 p-2 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 min-h-[100px] flex items-center justify-center relative overflow-hidden">
+                                <ins className="adsbygoogle"
+                                    style={{ display: 'block' }}
+                                    data-ad-client="ca-pub-8170892352848798"
+                                    data-ad-slot="1864612249"
+                                    data-ad-format="horizontal"
+                                    data-full-width-responsive="true"></ins>
+                                <span className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-10 text-[8px] font-bold uppercase tracking-widest">贊助廣告</span>
+                            </div>
                         </div>
                     </div>
 

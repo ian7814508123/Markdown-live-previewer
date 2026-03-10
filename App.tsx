@@ -31,8 +31,8 @@ type EditorMode = 'mermaid' | 'markdown';
 const App: React.FC = () => {
   // State for loading default contents from external .md files
   const [defaultContents, setDefaultContents] = useState<{
-    markdown: string;
-    mermaid: string;
+    markdown: Record<string, string>;
+    mermaid: Record<string, string>;
   } | null>(null);
   const [isLoadingDefaults, setIsLoadingDefaults] = useState(true);
 
@@ -40,27 +40,53 @@ const App: React.FC = () => {
   useEffect(() => {
     const loadDefaults = async () => {
       try {
-        // Use Vite's BASE_URL for GitHub Pages support
-        const baseUrl = import.meta.env.BASE_URL;
-        const [markdownRes, mermaidRes] = await Promise.all([
-          fetch(`${baseUrl}defaults/default-markdown.md`),
-          fetch(`${baseUrl}defaults/default-mermaid.md`),
+        const rawBaseUrl = import.meta.env.BASE_URL || '/';
+        // Ensure baseUrl ends with a slash for consistent joining
+        const normalizedBaseUrl = rawBaseUrl.endsWith('/') ? rawBaseUrl : `${rawBaseUrl}/`;
+
+        // Define templates to load
+        const mdTemplates = [
+          { id: 'markdown-standard', path: 'defaults/default-markdown.md' },
+          { id: 'basic', path: 'defaults/markdown-basic.md' },
+          { id: 'math', path: 'defaults/markdown-math.md' },
+          { id: 'charts', path: 'defaults/markdown-charts.md' },
+          { id: 'mermaid', path: 'defaults/markdown-mermaid.md' },
+        ];
+
+        const mermaidTemplates = [
+          { id: 'mermaid-standard', path: 'defaults/default-mermaid.md' },
+          { id: 'flowchart', path: 'defaults/mermaid-flowchart.md' },
+          { id: 'sequence', path: 'defaults/mermaid-sequence.md' },
+          { id: 'gantt', path: 'defaults/mermaid-gantt.md' },
+          { id: 'class', path: 'defaults/mermaid-class.md' },
+          { id: 'state', path: 'defaults/mermaid-state.md' },
+        ];
+
+        // Fetch everything
+        const [mdResponses, mmdResponses] = await Promise.all([
+          Promise.all(mdTemplates.map(t => fetch(`${normalizedBaseUrl}${t.path}`))),
+          Promise.all(mermaidTemplates.map(t => fetch(`${normalizedBaseUrl}${t.path}`)))
         ]);
 
-        if (!markdownRes.ok || !mermaidRes.ok) {
-          throw new Error('Failed to fetch default content files');
+        const markdownMap: Record<string, string> = {};
+        const mermaidMap: Record<string, string> = {};
+
+        for (let i = 0; i < mdTemplates.length; i++) {
+          const res = mdResponses[i];
+          markdownMap[mdTemplates[i].id] = res.ok ? await res.text() : `# ${mdTemplates[i].id}\n\n無法載入內容。`;
         }
 
-        const markdown = await markdownRes.text();
-        const mermaid = await mermaidRes.text();
+        for (let i = 0; i < mermaidTemplates.length; i++) {
+          const res = mmdResponses[i];
+          mermaidMap[mermaidTemplates[i].id] = res.ok ? await res.text() : `graph TD\n  A[${mermaidTemplates[i].id}] --> B[Fail]`;
+        }
 
-        setDefaultContents({ markdown, mermaid });
+        setDefaultContents({ markdown: markdownMap, mermaid: mermaidMap });
       } catch (error) {
         console.error('Failed to load default contents:', error);
-        // Fallback content
         setDefaultContents({
-          markdown: '# Markdown Editor\n\n無法載入預設內容。',
-          mermaid: 'graph TD\n  A[開始] --> B[結束]'
+          markdown: { 'markdown-standard': '# Markdown Editor\n\n無法載入預設內容。' },
+          mermaid: { 'mermaid-standard': 'graph TD\n  A[開始] --> B[結束]' }
         });
       } finally {
         setIsLoadingDefaults(false);
@@ -174,8 +200,8 @@ const App: React.FC = () => {
   // 初始化：如果沒有文檔，建立預設文檔
   useEffect(() => {
     if (documents.length === 0 && defaultContents && !isLoadingDefaults) {
-      createDocument('markdown', defaultContents.markdown, '預設 標記掉落 文檔');
-      createDocument('mermaid', defaultContents.mermaid, '預設 美人魚 文檔');
+      createDocument('markdown', defaultContents.markdown['markdown-standard'], '預設 標記掉落 文檔');
+      createDocument('mermaid', defaultContents.mermaid['mermaid-standard'], '預設 美人魚 文檔');
     }
   }, [documents.length, createDocument, defaultContents, isLoadingDefaults]);
 
@@ -305,9 +331,19 @@ const App: React.FC = () => {
   };
 
   // 處理新增文檔
-  const handleCreateDocument = (newMode: 'markdown' | 'mermaid', name: string) => {
+  const handleCreateDocument = (newMode: 'markdown' | 'mermaid', name: string, templateId: string = '') => {
+    if (!defaultContents) return;
+
     const modeToUse = newMode || (currentDocument?.mode || 'markdown');
-    const defaultContent = modeToUse === 'mermaid' ? defaultContents.mermaid : defaultContents.markdown;
+    let defaultContent = '';
+
+    if (modeToUse === 'mermaid') {
+      const tid = templateId || 'mermaid-standard';
+      defaultContent = defaultContents.mermaid[tid] || defaultContents.mermaid['mermaid-standard'];
+    } else {
+      const tid = templateId || 'markdown-standard';
+      defaultContent = defaultContents.markdown[tid] || defaultContents.markdown['markdown-standard'];
+    }
 
     // 使用傳入的資料夾 ID (來自側邊欄偵測或是 Wikilink 偵測)
     const folderId = pendingFolderId;
@@ -571,8 +607,8 @@ const App: React.FC = () => {
 
   const handleReset = () => {
     if (confirm("重置當前的工作到預設?")) {
-      const defaultCode = mode === 'mermaid' ? defaultContents.mermaid : defaultContents.markdown;
-      handleCodeChange(defaultCode);
+      const defaultCode = mode === 'mermaid' ? defaultContents?.mermaid['mermaid-standard'] : defaultContents?.markdown['markdown-standard'];
+      handleCodeChange(defaultCode || '');
       resetNavigation();
     }
   };

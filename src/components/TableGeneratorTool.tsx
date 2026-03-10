@@ -144,7 +144,7 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
     };
 
     return (
-        <div className="flex flex-col gap-3 p-3 min-h-0">
+        <div className="flex flex-col gap-2 p-3 min-h-0 h-full">
 
             {/* ── 標題 ── */}
             <div className="flex items-center gap-2 shrink-0">
@@ -221,62 +221,64 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                     </div>
 
                     {/* ── 視覺化表格編輯區 ── */}
-                    <div className="shrink-0 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
-                        <table className="w-full border-collapse text-[11px]" style={{ minWidth: `${cols * 90}px` }}>
-                            {/* 對齊按鈕列 */}
-                            <thead>
-                                <tr className="bg-slate-50 dark:bg-slate-800/60">
-                                    {aligns.map((align, ci) => (
-                                        <th key={ci} className="border-b border-slate-200 dark:border-slate-700 px-0 py-1 font-normal">
-                                            <button
-                                                onClick={() => cycleAlign(ci)}
-                                                title={`切換對齊（目前：${align}）`}
-                                                className="flex items-center justify-center gap-1 mx-auto px-2 py-0.5 rounded-md text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-colors"
-                                            >
-                                                <AlignIcon align={align} />
-                                                <span className="text-[9px] capitalize">{align}</span>
-                                            </button>
-                                        </th>
-                                    ))}
-                                </tr>
-                                {/* Header 列 */}
-                                <tr className="bg-violet-50/60 dark:bg-violet-900/10">
-                                    {grid[0].map((val, ci) => (
-                                        <th key={ci} className="border-b border-slate-200 dark:border-slate-700 p-0 font-normal">
-                                            <input
-                                                type="text"
-                                                value={val}
-                                                placeholder={`欄位 ${ci + 1}`}
-                                                onChange={e => handleCellChange(0, ci, e.target.value)}
-                                                className="w-full px-2 py-1.5 text-[11px] font-semibold text-violet-700 dark:text-violet-300 bg-transparent placeholder:text-slate-300 dark:placeholder:text-slate-600 focus:outline-none focus:bg-violet-100/40 dark:focus:bg-violet-900/20 transition-colors"
-                                            />
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            {/* 資料列 */}
-                            <tbody>
-                                {grid.slice(1).map((row, ri) => (
-                                    <tr key={ri} className="group hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                                        {row.map((val, ci) => (
-                                            <td key={ci} className={`p-0 ${ci < cols - 1 ? 'border-r border-slate-100 dark:border-slate-800' : ''} ${ri < rows - 1 ? 'border-b border-slate-100 dark:border-slate-800' : ''}`}>
+                    <div className="flex-1 min-h-[200px] max-h-[320px] rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden relative">
+                        <div className="absolute inset-0 overflow-auto custom-scrollbar">
+                            <table className="w-full border-collapse text-[11px]" style={{ minWidth: `${cols * 90}px` }}>
+                                {/* 對齊按鈕列 */}
+                                <thead className="sticky top-0 z-20 bg-white dark:bg-slate-900 shadow-[0_1px_0_0_rgba(0,0,0,0.05)] dark:shadow-[0_1px_0_0_rgba(255,255,255,0.05)]">
+                                    <tr className="bg-slate-50 dark:bg-slate-800/60">
+                                        {aligns.map((align, ci) => (
+                                            <th key={ci} className="border-b border-slate-200 dark:border-slate-700 px-0 py-1 font-normal">
+                                                <button
+                                                    onClick={() => cycleAlign(ci)}
+                                                    title={`切換對齊（目前：${align}）`}
+                                                    className="flex items-center justify-center gap-1 mx-auto px-2 py-0.5 rounded-md text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-colors"
+                                                >
+                                                    <AlignIcon align={align} />
+                                                    <span className="text-[9px] capitalize">{align}</span>
+                                                </button>
+                                            </th>
+                                        ))}
+                                    </tr>
+                                    {/* Header 列 */}
+                                    <tr className="bg-violet-50/60 dark:bg-violet-900/10 border-b border-slate-200 dark:border-slate-700">
+                                        {grid[0].map((val, ci) => (
+                                            <th key={ci} className="border-b border-slate-200 dark:border-slate-700 p-0 font-normal">
                                                 <input
                                                     type="text"
                                                     value={val}
-                                                    placeholder="—"
-                                                    onChange={e => handleCellChange(ri + 1, ci, e.target.value)}
-                                                    className="w-full px-2 py-1.5 text-[11px] text-slate-600 dark:text-slate-300 bg-transparent placeholder:text-slate-200 dark:placeholder:text-slate-700 focus:outline-none focus:bg-violet-50/40 dark:focus:bg-violet-900/10 transition-colors"
+                                                    placeholder={`欄位 ${ci + 1}`}
+                                                    onChange={e => handleCellChange(0, ci, e.target.value)}
+                                                    className="w-full px-2 py-1.5 text-[11px] font-semibold text-violet-700 dark:text-violet-300 bg-transparent placeholder:text-slate-300 dark:placeholder:text-slate-600 focus:outline-none focus:bg-violet-100/40 dark:focus:bg-violet-900/20 transition-colors"
                                                 />
-                                            </td>
+                                            </th>
                                         ))}
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                {/* 資料列 */}
+                                <tbody>
+                                    {grid.slice(1).map((row, ri) => (
+                                        <tr key={ri} className="group hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                                            {row.map((val, ci) => (
+                                                <td key={ci} className={`p-0 ${ci < cols - 1 ? 'border-r border-slate-100 dark:border-slate-800' : ''} ${ri < rows - 1 ? 'border-b border-slate-100 dark:border-slate-800' : ''}`}>
+                                                    <input
+                                                        type="text"
+                                                        value={val}
+                                                        placeholder="—"
+                                                        onChange={e => handleCellChange(ri + 1, ci, e.target.value)}
+                                                        className="w-full px-2 py-1.5 text-[11px] text-slate-600 dark:text-slate-300 bg-transparent placeholder:text-slate-200 dark:placeholder:text-slate-700 focus:outline-none focus:bg-violet-50/40 dark:focus:bg-violet-900/10 transition-colors"
+                                                    />
+                                                </td>
+                                            ))}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
                     {/* ── Markdown 輸出區 ── */}
-                    <div className="flex flex-col gap-1.5 shrink-0">
+                    <div className="flex flex-col gap-1.5 flex-1 min-h-0">
                         <div className="flex items-center justify-between">
                             <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
                                 Markdown 輸出
@@ -312,9 +314,11 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                                 </RippleButton>
                             </div>
                         </div>
-                        <pre className="text-[10.5px] leading-relaxed font-mono text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3 overflow-x-auto custom-scrollbar border border-slate-100 dark:border-slate-700 whitespace-pre">
-                            {markdown}
-                        </pre>
+                        <div className="flex-[1.2] min-h-[140px] max-h-[180px] rounded-xl border border-slate-100 dark:border-slate-700 overflow-hidden relative">
+                            <pre className="absolute inset-0 text-[10.5px] leading-relaxed font-mono text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 p-3 overflow-auto custom-scrollbar whitespace-pre">
+                                {markdown}
+                            </pre>
+                        </div>
                     </div>
                 </>
             )}

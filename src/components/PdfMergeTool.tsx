@@ -182,40 +182,42 @@ const PdfMergeTool: React.FC = () => {
                         </button>
                     </div>
 
-                    <div className="flex flex-col gap-1 max-h-48 overflow-y-auto custom-scrollbar">
-                        {items.map((item, idx) => (
-                            <div
-                                key={item.id}
-                                draggable
-                                onDragStart={() => handleItemDragStart(idx)}
-                                onDragEnter={() => handleItemDragEnter(idx)}
-                                onDragEnd={handleItemDragEnd}
-                                onDragOver={e => e.preventDefault()}
-                                className={`
-                                    flex items-center gap-2 px-2 py-1.5 rounded-xl
-                                    bg-slate-50 dark:bg-slate-800
-                                    border transition-all duration-150 cursor-grab active:cursor-grabbing
-                                    ${dragOverIdx === idx && draggedIdx !== idx
-                                        ? 'border-violet-400 dark:border-violet-600 bg-violet-50 dark:bg-violet-900/20'
-                                        : 'border-slate-200 dark:border-slate-700'}
-                                    ${draggedIdx === idx ? 'opacity-40' : 'opacity-100'}
-                                `}
-                            >
-                                <GripVertical size={13} className="text-slate-300 dark:text-slate-600 shrink-0" />
-                                <div className="flex items-center justify-center w-6 h-6 rounded-lg shrink-0 bg-violet-50 dark:bg-violet-900/40 text-violet-500 dark:text-violet-400">
-                                    {item.type === 'pdf' ? <FileText size={12} /> : <ImageIcon size={12} />}
-                                </div>
-                                <span className="text-[11px] text-slate-600 dark:text-slate-300 truncate flex-1 min-w-0">
-                                    {item.file.name}
-                                </span>
-                                <button
-                                    onClick={() => removeItem(item.id)}
-                                    className="md-ripple-root p-1 rounded-full text-slate-300 hover:text-red-500 dark:text-slate-600 dark:hover:text-red-400 transition-colors shrink-0"
+                    <div className="h-48 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden relative">
+                        <div className="absolute inset-0 overflow-y-auto custom-scrollbar p-1.5 flex flex-col gap-1">
+                            {items.map((item, idx) => (
+                                <div
+                                    key={item.id}
+                                    draggable
+                                    onDragStart={() => handleItemDragStart(idx)}
+                                    onDragEnter={() => handleItemDragEnter(idx)}
+                                    onDragEnd={handleItemDragEnd}
+                                    onDragOver={e => e.preventDefault()}
+                                    className={`
+                                        flex items-center gap-2 px-2 py-1.5 rounded-xl
+                                        bg-slate-50 dark:bg-slate-800
+                                        border transition-all duration-150 cursor-grab active:cursor-grabbing
+                                        ${dragOverIdx === idx && draggedIdx !== idx
+                                            ? 'border-violet-400 dark:border-violet-600 bg-violet-50 dark:bg-violet-900/20'
+                                            : 'border-slate-200 dark:border-slate-700'}
+                                        ${draggedIdx === idx ? 'opacity-40' : 'opacity-100'}
+                                    `}
                                 >
-                                    <X size={12} />
-                                </button>
-                            </div>
-                        ))}
+                                    <GripVertical size={13} className="text-slate-300 dark:text-slate-600 shrink-0" />
+                                    <div className="flex items-center justify-center w-6 h-6 rounded-lg shrink-0 bg-violet-50 dark:bg-violet-900/40 text-violet-500 dark:text-violet-400">
+                                        {item.type === 'pdf' ? <FileText size={12} /> : <ImageIcon size={12} />}
+                                    </div>
+                                    <span className="text-[11px] text-slate-600 dark:text-slate-300 truncate flex-1 min-w-0">
+                                        {item.file.name}
+                                    </span>
+                                    <button
+                                        onClick={() => removeItem(item.id)}
+                                        className="md-ripple-root p-1 rounded-full text-slate-300 hover:text-red-500 dark:text-slate-600 dark:hover:text-red-400 transition-colors shrink-0"
+                                    >
+                                        <X size={12} />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
                     </div>
 
                     {/* 合併按鈕 */}

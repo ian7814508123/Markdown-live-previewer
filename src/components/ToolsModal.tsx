@@ -60,7 +60,7 @@ const ToolsModal: React.FC<ToolsModalProps> = ({ isOpen, onClose, currentDocCont
         >
             {/* Modal 本體 */}
             <div
-                className="relative flex flex-col w-full max-w-lg max-h-[82vh] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl ring-1 ring-black/10 dark:ring-white/10 animate-in m3-slide-up duration-400"
+                className="relative flex flex-col w-full max-w-lg h-[min(640px,94vh)] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl ring-1 ring-black/10 dark:ring-white/10 animate-in m3-slide-up duration-400"
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
@@ -118,10 +118,10 @@ const ToolsModal: React.FC<ToolsModalProps> = ({ isOpen, onClose, currentDocCont
                     {/* ── 右側工具內容區 ── */}
                     {/* 使用獨立 wrapper 保持 DOM 穩定，內容切換以 CSS 動畫處理 */}
                     {/* transform-origin: center → 縮放從中央往上下展開，而非從頂部 */}
-                    <div className="flex-1 relative overflow-hidden">
+                    <div className="flex-1 relative overflow-hidden bg-white dark:bg-slate-900">
                         <div
                             key={activeTool}
-                            className="absolute inset-0 overflow-y-auto custom-scrollbar pb-3"
+                            className="absolute inset-0 flex flex-col"
                             style={{
                                 animation: 'toolPanelIn 0.28s cubic-bezier(0.2, 0, 0, 1) both',
                             }}

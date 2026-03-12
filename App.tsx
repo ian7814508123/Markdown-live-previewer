@@ -7,6 +7,7 @@ import Header from './src/components/Header';
 import Editor from './src/components/Editor';
 import PreviewPanel from './src/components/PreviewPanel';
 import HistorySidebar from './src/components/HistorySidebar';
+import { ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import CreateDocModal from './src/components/CreateDocModal';
 import SettingsModal from './src/components/SettingsModal';
 import { usePanZoom } from './src/hooks/usePanZoom';
@@ -224,7 +225,7 @@ const App: React.FC = () => {
   } = usePanZoom();
 
   const previewRef = useRef<HTMLDivElement>(null);
-  const editorRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<ReactCodeMirrorRef>(null);
 
   // Sync Scroll State
   const targetScrollTop = useRef(0);
@@ -234,9 +235,10 @@ const App: React.FC = () => {
   const rafId = useRef<number | null>(null);
 
   const syncLoop = useCallback(() => {
-    if (!previewRef.current || !editorRef.current) return;
+    if (!previewRef.current || !editorRef.current?.view) return;
 
-    const editorScrollTop = (editorRef.current as any).getScrollTop?.() || 0;
+    const editorView = editorRef.current.view;
+    const editorScrollTop = editorView.scrollDOM.scrollTop;
     const diff = targetScrollTop.current - currentScrollTop.current;
     
     if (Math.abs(diff) < 0.5) {
@@ -250,16 +252,16 @@ const App: React.FC = () => {
     if (isHoveringEditor.current) {
       previewRef.current.scrollTop = currentScrollTop.current;
     } else if (isHoveringPreview.current) {
-      (editorRef.current as any).setScrollTop?.(currentScrollTop.current);
+      editorView.scrollDOM.scrollTop = currentScrollTop.current;
     }
   }, []);
 
   const handleEditorScroll = (e: any) => {
     if (!isSyncScroll || mode !== 'markdown' || !isHoveringEditor.current) return;
 
-    // Use currentTarget which is manually passed from Editor.tsx
-    const target = e.currentTarget;
-    if (!target) return;
+    // CodeMirror 捲動事件可能來自不同的 target
+    const target = e.target || e.srcElement;
+    if (!target || !target.scrollHeight) return;
     
     const percentage = target.scrollTop / (target.scrollHeight - target.clientHeight || 1);
 
@@ -280,16 +282,16 @@ const App: React.FC = () => {
     const target = e.target as HTMLDivElement;
     const percentage = target.scrollTop / (target.scrollHeight - target.clientHeight || 1);
 
-    if (editorRef.current) {
-      const editor = editorRef.current as any;
-      const editorScrollHeight = editor.scrollHeight || 0;
-      const editorClientHeight = editor.clientHeight || 0;
+    if (editorRef.current?.view) {
+      const editorView = editorRef.current.view;
+      const editorScrollHeight = editorView.scrollDOM.scrollHeight || 0;
+      const editorClientHeight = editorView.scrollDOM.clientHeight || 0;
       
       targetScrollTop.current = percentage * (editorScrollHeight - editorClientHeight);
 
       if (!rafId.current) {
         // Sync starting point to avoid jump
-        currentScrollTop.current = editor.scrollTop || 0;
+        currentScrollTop.current = editorView.scrollDOM.scrollTop || 0;
         rafId.current = requestAnimationFrame(syncLoop);
       }
     }
@@ -649,15 +651,24 @@ const App: React.FC = () => {
    * 若無游標位置資訊（例如 Modal 開啟後 focus 已移走），則附加至文件末尾。
    */
   const handleInsertIntoDoc = (text: string) => {
-    if (!editorRef.current) return;
-    const el = editorRef.current;
-    const pos = el.selectionStart ?? code.length;
-    const before = code.slice(0, pos);
-    const after = code.slice(pos);
-    // 確保插入的表格前後各有一個空行
+    if (!editorRef.current?.view) return;
+    const view = editorRef.current.view;
+    const pos = view.state.selection.main.anchor;
+    
+    // 取得插入前的內容
+    const before = view.state.doc.sliceString(0, pos);
+    const after = view.state.doc.sliceString(pos);
+    
+    // 確保插入的內容前後有適當的換行
     const prefix = before.length > 0 && !before.endsWith('\n\n') ? (before.endsWith('\n') ? '\n' : '\n\n') : '';
     const suffix = after.length > 0 && !after.startsWith('\n') ? '\n\n' : '\n';
-    handleCodeChange(before + prefix + text + suffix + after);
+    
+    const insertText = prefix + text + suffix;
+    
+    view.dispatch({
+      changes: { from: pos, insert: insertText },
+      selection: { anchor: pos + insertText.length }
+    });
   };
 
   // 處理全檔案匯入

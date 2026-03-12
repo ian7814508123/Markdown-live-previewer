@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Plus, FolderOpen, FileText, Wrench, ChevronDown, ChevronRight } from 'lucide-react';
+import { X, Plus, FolderOpen, FileText, Wrench, ChevronDown, ChevronRight, Files, FolderPlus } from 'lucide-react';
 import { DocumentRecord } from '../types';
 import DocumentItem from './DocumentItem';
 import ToolsModal from './ToolsModal';
@@ -79,44 +79,38 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
 
     return (
         <>
-            {/* 背景遮罩（僅手機版） */}
-            {isOpen && (
-                <div
-                    className="fixed inset-0 bg-black/30 z-30 lg:hidden"
-                    onClick={onClose}
-                />
-            )}
+            {/* 背景遮罩 (Overlay) */}
+            <div
+                className={`fixed inset-0 bg-black/40 z-50 transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+                onClick={onClose}
+            />
 
             {/* 側邊欄 */}
             <aside
                 className={`
-          fixed lg:relative
-          inset-y-0 left-0
-          z-40 h-full
-          w-[280px]
-          bg-white dark:bg-slate-900
-          border-r border-slate-200 dark:border-slate-800
-          shadow-2xl lg:shadow-none
-          flex flex-col
-          transition-transform duration-300 [transition-timing-function:var(--m3-easing-standard)]
-          ${isOpen ? 'translate-x-0 animate-in slide-in-from-left duration-300' : '-translate-x-full lg:hidden'}
-          shrink-0
-        `}
+                    fixed inset-y-0 left-0
+                    z-[60] h-full
+                    w-[320px]
+                    bg-white dark:bg-slate-900
+                    border-r border-slate-200 dark:border-slate-800
+                    shadow-2xl
+                    flex flex-col
+                    transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]
+                    ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+                    shrink-0 print:hidden
+                    rounded-r-[2rem] overflow-hidden
+                `}
             >
-                {/* 標題列 (高度與 Editor Tab Bar 貼齊) */}
-                <div className="flex items-center justify-between px-4 h-[42.5px] border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
+                {/* 標題列 (高度與主 Header 貼齊) */}
+                <div className="flex items-center justify-between px-6 h-16 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
                     <div className="flex items-center gap-2">
-                        <FolderOpen size={16} className="text-indigo-500 opacity-80" />
+                        <Files size={18} className="text-indigo-500 opacity-80" />
                         <h2 className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">我的文檔</h2>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5 shrink-0">
                         <RippleButton
-                            variant="icon"
+                            variant="filled"
                             onClick={() => {
-                                // 隱式判斷目標資料夾：
-                                // 1. 如果目前的文檔所在資料夾是展開的，優先使用
-                                // 2. 否則使用最後一個展開的資料夾
-                                // 3. 如果都沒有展開，則為 null (獨立文件)
                                 let targetFolderId: string | null = null;
                                 if (expandedFolders.size > 0) {
                                     if (currentDoc?.folderId && expandedFolders.has(currentDoc.folderId)) {
@@ -127,18 +121,21 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                                 }
                                 onCreateDocument(targetFolderId);
                             }}
-                            className="w-8 h-8 text-indigo-600 dark:text-indigo-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full"
+                            className="text-[9px] h-[23px] px-0 justify-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white shadow-none rounded-full min-w-[60px]"
                             title="新建文檔"
                         >
-                            <FileText size={16} />
+                            <FileText size={12} />
+                            <span className="whitespace-nowrap">文檔</span>
                         </RippleButton>
+
                         <RippleButton
-                            variant="icon"
+                            variant="filled"
                             onClick={() => onCreateFolder('')}
-                            className="w-8 h-8 text-indigo-600 dark:text-indigo-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full"
+                            className="text-[9px] h-[23px] px-0 justify-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white shadow-none rounded-full min-w-[60px]"
                             title="新建資料夾"
                         >
-                            <Plus size={18} />
+                            <FolderPlus size={12} />
+                            <span className="whitespace-nowrap">資料夾</span>
                         </RippleButton>
                     </div>
                 </div>

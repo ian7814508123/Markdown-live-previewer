@@ -203,8 +203,8 @@ const App: React.FC = () => {
   // 初始化：如果沒有文檔，建立預設文檔
   useEffect(() => {
     if (documents.length === 0 && defaultContents && !isLoadingDefaults) {
-      createDocument('markdown', defaultContents.markdown['markdown-standard'], '預設 標記掉落 文檔');
-      createDocument('mermaid', defaultContents.mermaid['mermaid-standard'], '預設 美人魚 文檔');
+      createDocument('markdown', defaultContents.markdown['markdown-standard'], '預設 標記掉落 文檔', null, 'markdown-standard');
+      createDocument('mermaid', defaultContents.mermaid['mermaid-standard'], '預設 美人魚 文檔', null, 'mermaid-standard');
     }
   }, [documents.length, createDocument, defaultContents, isLoadingDefaults]);
 
@@ -236,7 +236,9 @@ const App: React.FC = () => {
   const syncLoop = useCallback(() => {
     if (!previewRef.current || !editorRef.current) return;
 
+    const editorScrollTop = (editorRef.current as any).getScrollTop?.() || 0;
     const diff = targetScrollTop.current - currentScrollTop.current;
+    
     if (Math.abs(diff) < 0.5) {
       currentScrollTop.current = targetScrollTop.current;
       rafId.current = null; // Stop loop
@@ -248,15 +250,18 @@ const App: React.FC = () => {
     if (isHoveringEditor.current) {
       previewRef.current.scrollTop = currentScrollTop.current;
     } else if (isHoveringPreview.current) {
-      editorRef.current.scrollTop = currentScrollTop.current;
+      (editorRef.current as any).setScrollTop?.(currentScrollTop.current);
     }
   }, []);
 
-  const handleEditorScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
+  const handleEditorScroll = (e: any) => {
     if (!isSyncScroll || mode !== 'markdown' || !isHoveringEditor.current) return;
 
-    const target = e.target as HTMLTextAreaElement;
-    const percentage = target.scrollTop / (target.scrollHeight - target.clientHeight);
+    // Use currentTarget which is manually passed from Editor.tsx
+    const target = e.currentTarget;
+    if (!target) return;
+    
+    const percentage = target.scrollTop / (target.scrollHeight - target.clientHeight || 1);
 
     if (previewRef.current) {
       targetScrollTop.current = percentage * (previewRef.current.scrollHeight - previewRef.current.clientHeight);
@@ -273,14 +278,18 @@ const App: React.FC = () => {
     if (!isSyncScroll || mode !== 'markdown' || !isHoveringPreview.current) return;
 
     const target = e.target as HTMLDivElement;
-    const percentage = target.scrollTop / (target.scrollHeight - target.clientHeight);
+    const percentage = target.scrollTop / (target.scrollHeight - target.clientHeight || 1);
 
     if (editorRef.current) {
-      targetScrollTop.current = percentage * (editorRef.current.scrollHeight - editorRef.current.clientHeight);
+      const editor = editorRef.current as any;
+      const editorScrollHeight = editor.scrollHeight || 0;
+      const editorClientHeight = editor.clientHeight || 0;
+      
+      targetScrollTop.current = percentage * (editorScrollHeight - editorClientHeight);
 
       if (!rafId.current) {
         // Sync starting point to avoid jump
-        currentScrollTop.current = editorRef.current.scrollTop;
+        currentScrollTop.current = editor.scrollTop || 0;
         rafId.current = requestAnimationFrame(syncLoop);
       }
     }
@@ -351,7 +360,7 @@ const App: React.FC = () => {
     // 使用傳入的資料夾 ID (來自側邊欄偵測或是 Wikilink 偵測)
     const folderId = pendingFolderId;
 
-    createDocument(modeToUse, defaultContent, name, folderId);
+    createDocument(modeToUse, defaultContent, name, folderId, modeToUse === 'mermaid' ? (templateId || 'mermaid-standard') : (templateId || 'markdown-standard'));
     setInitialDocName(''); // Reset
     setPendingFolderId(null); // Reset
   };
@@ -453,15 +462,20 @@ const App: React.FC = () => {
     const style = document.createElement('style');
     style.id = 'mermaid-print-override';
     style.textContent = `
-      @page { size: ${paperSize} ${orientation}; margin: ${marginMap[margin] ?? '1.5cm'}; }
-      header, aside, .editor-panel, .tab-bar { display: none !important; }
-      ${scaleCSS}
+      @media print {
+        @page { size: ${paperSize} ${orientation}; margin: ${marginMap[margin] ?? '1.5cm'}; }
+        header, aside, .tab-bar, section:not(.preview-panel) { display: none !important; }
+        ${scaleCSS}
+      }
     `;
     document.head.appendChild(style);
     window.print();
-    window.addEventListener('afterprint', () => {
+
+    const cleanup = () => {
       document.getElementById('mermaid-print-override')?.remove();
-    }, { once: true });
+    };
+
+    window.addEventListener('afterprint', cleanup, { once: true });
   };
 
   const downloadMarkdown = () => {
@@ -610,8 +624,18 @@ const App: React.FC = () => {
 
   const handleReset = () => {
     if (confirm("重置當前的工作到預設?")) {
-      const defaultCode = mode === 'mermaid' ? defaultContents?.mermaid['mermaid-standard'] : defaultContents?.markdown['markdown-standard'];
-      handleCodeChange(defaultCode || '');
+      let defaultCode = '';
+      const tid = currentDocument?.templateId;
+
+      if (mode === 'mermaid') {
+        const effectiveTid = tid || 'mermaid-standard';
+        defaultCode = defaultContents?.mermaid[effectiveTid] || defaultContents?.mermaid['mermaid-standard'] || '';
+      } else {
+        const effectiveTid = tid || 'markdown-standard';
+        defaultCode = defaultContents?.markdown[effectiveTid] || defaultContents?.markdown['markdown-standard'] || '';
+      }
+
+      handleCodeChange(defaultCode);
       resetNavigation();
     }
   };

@@ -76,7 +76,7 @@
       }
 
       /* 3. Target Preview Panel (The Right Side) */
-      section:last-of-type {
+      .preview-panel {
         display: block !important;
         position: static !important;
         width: 100% !important;
@@ -90,15 +90,15 @@
 
       /* Hide Floating Controls, Tips, and Status Bar within Preview Panel */
       /* These are absolute positioned divs or the bottom h-10 bar */
-      section:last-of-type>div.absolute,
-      section:last-of-type>div.h-10 {
+      .preview-panel > div.absolute,
+      .preview-panel > div.h-10 {
         display: none !important;
       }
 
       /* 4. Fix The Diagram Container Structure (for Mermaid) */
 
       /* The Viewport (flex-1 overflow-hidden) */
-      section:last-of-type>div.flex-1 {
+      .preview-panel > div.flex-1 {
         position: static !important;
         overflow: visible !important;
         /* Allow diagram to spill */
@@ -112,7 +112,7 @@
 
       /* The Panning Container (absolute inset-0) */
       /* We must reset this to static to let the document flow */
-      section:last-of-type>div.flex-1>div.absolute {
+      .preview-panel > div.flex-1 > div.absolute {
         position: static !important;
         inset: auto !important;
         transform: none !important;
@@ -126,7 +126,7 @@
 
       /* The Diagram Card (bg-white p-16...) */
       /* This holds the SVG. We need to kill the ZOOM transform */
-      section:last-of-type>div.flex-1>div.absolute>div.bg-white {
+      .preview-panel > div.flex-1 > div.absolute > div.bg-white {
         transform: none !important;
         /* KILL THE ZOOM TRANSFORM */
         box-shadow: none !important;
@@ -135,15 +135,6 @@
         margin: 0 auto !important;
         width: 100% !important;
         max-width: 100% !important;
-      }
-
-      /* The SVG itself (for Mermaid diagrams) */
-      svg {
-        width: 100% !important;
-        max-width: 100% !important;
-        height: auto !important;
-        display: block !important;
-        margin: 0 auto !important;
       }
 
       /* 5. Markdown Preview Specific Styles */
@@ -175,16 +166,6 @@
       .prose table {
         page-break-inside: avoid;
         /* 避免程式碼和表格被分頁切斷 */
-      }
-
-      /* Vega Chart Print Optimization */
-      /* Scale down Vega charts to 90% to fit better */
-      .vega-embed,
-      .vega-embed canvas,
-      .vega-embed svg {
-        transform: scale(0.9) !important;
-        transform-origin: top center !important;
-        max-width: 100% !important;
       }
 
       /* Ensure margins are exactly 10mm */

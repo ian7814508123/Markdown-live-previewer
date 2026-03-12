@@ -45,9 +45,9 @@ const ResizableWrapper: React.FC<{
     isDarkMode: boolean;
 }> = ({ children, width, height, scale, onWidthChange, onHeightChange, onScaleChange, onReset, isDarkMode }) => {
     return (
-        <div className="relative group/resizable my-8 print:my-4 print:p-0">
+        <div className="relative group/resizable my-8 print:my-4 print:p-0 print:w-full">
             <div
-                className="mx-auto transition-all duration-300 ease-in-out relative flex justify-center print:!max-h-none print:!overflow-visible"
+                className="mx-auto transition-all duration-300 ease-in-out relative flex justify-center print:!max-h-none print:!overflow-visible print:w-full"
                 style={{
                     width,
                     maxHeight: height === 'auto' ? 'none' : height,
@@ -55,7 +55,7 @@ const ResizableWrapper: React.FC<{
                 }}
             >
                 <div
-                    className="print:![transform:none] print:![zoom:var(--print-scale)]"
+                    className="print:![transform:none] print:![zoom:var(--print-scale)] print:w-full"
                     style={{
                         transform: `scale(${scale})`,
                         transformOrigin: 'top center',
@@ -124,10 +124,19 @@ const ResizableWrapper: React.FC<{
     );
 };
 
+// 初始化 Mermaid 配置，防止其在語法出錯時顯示預設的錯誤 UI
+mermaid.initialize({
+    startOnLoad: false,
+    theme: 'default',
+    // @ts-ignore - 部分版本類型定義可能未包含此屬性
+    suppressError: true, // 關鍵：抑制預設錯誤提示
+});
+
 const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(({ code, isDarkMode }) => {
     const [svg, setSvg] = useState('');
     const [isPending, setIsPending] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const isMounted = useRef(true);
 
     // 從程式碼註解中讀取初始設定
     const initialWidth = useMemo(() => {
@@ -145,22 +154,37 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo
     const [scale, setScale] = useState(initialScale);
 
     useEffect(() => {
+        isMounted.current = true;
         setIsPending(true);
         const timer = setTimeout(async () => {
             try {
+                // 先進行語法檢查
                 await mermaid.parse(code);
+                
                 const id = `mermaid-${hashString(code)}`;
                 const { svg: renderedSvg } = await mermaid.render(id, code);
-                setSvg(renderedSvg);
-                setError(null);
+                
+                if (isMounted.current) {
+                    setSvg(renderedSvg);
+                    setError(null);
+                }
             } catch (err: any) {
                 console.error('Mermaid render error:', err);
-                setError(err.message || 'Syntax Error');
+                if (isMounted.current) {
+                    setError(err.message || 'Syntax Error');
+                    // 如果渲染失敗，不更新 svg，保留上一個版本（或保持空白）
+                }
             } finally {
-                setIsPending(false);
+                if (isMounted.current) {
+                    setIsPending(false);
+                }
             }
         }, 200);
-        return () => clearTimeout(timer);
+
+        return () => {
+            isMounted.current = false;
+            clearTimeout(timer);
+        };
     }, [code, isDarkMode]);
 
     const handleReset = () => {

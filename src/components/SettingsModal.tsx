@@ -58,7 +58,7 @@ const PdfSettingsPanel: React.FC<{
     }
 
     return (
-        <div className="px-6 py-5 space-y-5 overflow-y-auto custom-scrollbar">
+        <div className="px-6 py-4 space-y-5 overflow-y-auto custom-scrollbar">
             {/* 紙張尺寸 */}
             <ToggleGroup
                 label="紙張尺寸"

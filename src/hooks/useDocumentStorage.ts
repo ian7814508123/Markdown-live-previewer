@@ -96,7 +96,7 @@ export function useDocumentStorage() {
     /**
      * 建立新文檔
      */
-    const createDocument = useCallback((mode: 'markdown' | 'mermaid', content: string = '', name?: string, folderId: string | null = null) => {
+    const createDocument = useCallback((mode: 'markdown' | 'mermaid', content: string = '', name?: string, folderId: string | null = null, templateId: string | null = null) => {
         if (state.documents.length >= MAX_DOCUMENTS) {
             alert(`最多只能建立 ${MAX_DOCUMENTS} 個文檔，請刪除部分舊文檔`);
             return null;
@@ -127,6 +127,7 @@ export function useDocumentStorage() {
             name: finalName,
             mode,
             content,
+            templateId,
             folderId,
             createdAt: now,
             updatedAt: now,

@@ -256,14 +256,14 @@ const App: React.FC = () => {
     }
   }, []);
 
-  const handleEditorScroll = (e: any) => {
+  const handleEditorScroll = () => {
     if (!isSyncScroll || mode !== 'markdown' || !isHoveringEditor.current) return;
+    if (!editorRef.current?.view) return;
 
-    // CodeMirror 捲動事件可能來自不同的 target
-    const target = e.target || e.srcElement;
-    if (!target || !target.scrollHeight) return;
+    const editorView = editorRef.current.view;
+    const scrollDOM = editorView.scrollDOM;
     
-    const percentage = target.scrollTop / (target.scrollHeight - target.clientHeight || 1);
+    const percentage = scrollDOM.scrollTop / (scrollDOM.scrollHeight - scrollDOM.clientHeight || 1);
 
     if (previewRef.current) {
       targetScrollTop.current = percentage * (previewRef.current.scrollHeight - previewRef.current.clientHeight);
@@ -724,6 +724,9 @@ const App: React.FC = () => {
       exFactor: 0.5,
       displayAlign: 'center',
       displayIndent: '0'
+    },
+    typesettingOptions: {
+      fn: 'tex2chtml'
     }
   };
 

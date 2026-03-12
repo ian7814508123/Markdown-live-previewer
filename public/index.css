@@ -204,10 +204,51 @@ body {
     transform: scale(0.96);
 }
 
-/* Custom Scrollbar is already in index.html, but moving here is good practice if we want to consolidate. 
-   For now, we just add the list styling. */
+/* ── 全域捲軸美化 (Scrollbar Styling) ────────────────────────────────── */
+/* 針對 Webkit 瀏覽器 (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
 
-/* Multi-level Ordered List Styling */
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1; /* 淺色模式下的預設顏色 */
+    border-radius: 20px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+    background-clip: content-box;
+}
+
+/* 深色模式下的捲軸樣式 */
+.dark ::-webkit-scrollbar-thumb {
+    background: #475569; /* slate-600 */
+    background-clip: content-box;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: #64748b; /* slate-500 */
+    background-clip: content-box;
+}
+
+/* 針對 Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+.dark * {
+    scrollbar-color: #475569 transparent;
+}
+
+/* ── 列表樣式與其他 ── */
 .prose ol {
     list-style-type: upper-roman;
     /* Level 1: I, II, III */

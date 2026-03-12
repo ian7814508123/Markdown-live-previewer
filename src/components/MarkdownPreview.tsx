@@ -303,12 +303,11 @@ const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(
         const timer = setTimeout(() => {
             if (!svgRef.current) return;
             try {
-                svgRef.current.innerHTML = '';
                 const drawer = new SmilesDrawer.SvgDrawer({
                     width: 200,
                     height: 100,
                     padding: 20,
-                    bondThickness: 1.0,
+                    bondThickness: 1.2,
                     bondLength: 15,
                     shortBondLength: 0.85,
                     bondSpacing: 4,
@@ -322,6 +321,8 @@ const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(
                     code.trim(),
                     (tree: any) => {
                         if (!svgRef.current) return;
+                        // 僅在準備好繪製時才清除舊內容，減少閃爍
+                        svgRef.current.innerHTML = '';
                         const svgEl = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
                         svgEl.setAttribute('width', '100%');
                         svgEl.setAttribute('height', 'auto');
@@ -342,7 +343,7 @@ const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(
             } finally {
                 setIsPending(false);
             }
-        }, 400);
+        }, 600);
         return () => clearTimeout(timer);
     }, [code, isDarkMode]);
 
@@ -427,6 +428,25 @@ const WikiLink: React.FC<WikiLinkProps> = React.memo(({ name, children, document
     );
 });
 
+// ─── 數學與化學元件 (Memoized) ────────────────────────────────────────────────
+interface MemoizedMathJaxProps {
+    content: string;
+    inline?: boolean;
+    isDarkMode: boolean;
+}
+
+const MemoizedMathJax: React.FC<MemoizedMathJaxProps> = React.memo(({ content, inline, isDarkMode }) => {
+    return (
+        <MathJax
+            renderMode="pre"
+            inline={inline}
+            dynamic={false}
+            text={content}
+            typesettingOptions={{ fn: 'tex2chtml' }}
+        />
+    );
+});
+
 const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDarkMode, documents = [], onSelectDocument, onCreateMissing, currentDocId }) => {
     const isDark = isDarkMode;
     const [debouncedContent, setDebouncedContent] = useState(content);
@@ -435,7 +455,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
         const timer = setTimeout(() => {
             const processed = content.replace(/\[\[(.*?)\]\]/g, '[$1](#wikilink-$1)');
             setDebouncedContent(processed);
-        }, 200);
+        }, 600);
         return () => clearTimeout(timer);
     }, [content]);
 
@@ -486,10 +506,11 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
         },
         div: ({ node, className, children, ...props }: any) => {
             if (className?.includes('math-display')) {
-                const stableKey = hashString(String(children));
+                const mathContent = String(children);
+                const stableKey = hashString(mathContent);
                 return (
                     <div key={stableKey} className="my-4 overflow-x-auto" style={{ whiteSpace: 'nowrap' }}>
-                        <MathJax dynamic>{`$$${children}$$`}</MathJax>
+                        <MemoizedMathJax content={mathContent} isDarkMode={isDark} />
                     </div>
                 );
             }
@@ -497,10 +518,11 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
         },
         span: ({ node, className, children, ...props }: any) => {
             if (className?.includes('math-inline')) {
-                const stableKey = hashString(String(children));
+                const mathContent = String(children);
+                const stableKey = hashString(mathContent);
                 return (
                     <span key={stableKey} className="math-inline" style={{ whiteSpace: 'nowrap' }}>
-                        <MathJax dynamic inline>{`$${children}$`}</MathJax>
+                        <MemoizedMathJax content={mathContent} inline isDarkMode={isDark} />
                     </span>
                 );
             }

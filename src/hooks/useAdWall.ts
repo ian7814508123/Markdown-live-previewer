@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
 const AD_WALL_KEY = 'ad_wall_last_unlock';
-const UNLOCK_DURATION = 8 * 60 * 8 * 1000; // 10 小時 (毫秒)
+const UNLOCK_DURATION = 8 * 60 * 60 * 1000; // 8 小時 (毫秒)
 
 export const useAdWall = () => {
     const [isLocked, setIsLocked] = useState(false);

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Plus, FolderOpen, FileText, Wrench, ChevronDown, ChevronRight, Files, FolderPlus } from 'lucide-react';
+import { X, Plus, FolderOpen, FileText, Wrench, ChevronDown, ChevronRight, Files, FolderPlus, Trash2 } from 'lucide-react';
 import { DocumentRecord } from '../types';
 import DocumentItem from './DocumentItem';
 import ToolsModal from './ToolsModal';
@@ -104,12 +104,12 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                 {/* 標題列 (高度與主 Header 貼齊) */}
                 <div className="flex items-center justify-between px-6 h-16 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
                     <div className="flex items-center gap-2">
-                        <Files size={18} className="text-indigo-500 opacity-80" />
+                        <Files size={25} className="text-indigo-500 opacity-80" />
                         <h2 className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">我的文檔</h2>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                         <RippleButton
-                            variant="filled"
+                            variant="icon"
                             onClick={() => {
                                 let targetFolderId: string | null = null;
                                 if (expandedFolders.size > 0) {
@@ -121,21 +121,19 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                                 }
                                 onCreateDocument(targetFolderId);
                             }}
-                            className="text-[9px] h-[23px] px-0 justify-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white shadow-none rounded-full min-w-[60px]"
+                            className="w-10 h-10 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800"
                             title="新建文檔"
                         >
-                            <FileText size={12} />
-                            <span className="whitespace-nowrap">文檔</span>
+                            <FileText size={18} strokeWidth={2.5} />
                         </RippleButton>
 
                         <RippleButton
-                            variant="filled"
+                            variant="icon"
                             onClick={() => onCreateFolder('')}
-                            className="text-[9px] h-[23px] px-0 justify-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white shadow-none rounded-full min-w-[60px]"
+                            className="w-10 h-10 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800"
                             title="新建資料夾"
                         >
-                            <FolderPlus size={12} />
-                            <span className="whitespace-nowrap">資料夾</span>
+                            <FolderPlus size={18} strokeWidth={2.5} />
                         </RippleButton>
                     </div>
                 </div>
@@ -213,10 +211,10 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                                                                     onDeleteFolder(folder.id);
                                                                 }
                                                             }}
-                                                            className="p-1 hover:text-red-500 text-slate-400"
-                                                            title="刪除"
+                                                            className="p-1.5 rounded-full text-slate-400 dark:text-slate-500 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-500 transition-all"
+                                                            title="刪除資料夾"
                                                         >
-                                                            <X size={12} />
+                                                            <Trash2 size={14} />
                                                         </button>
                                                     </div>
                                                 </div>

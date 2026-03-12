@@ -150,7 +150,7 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
                     )}
                     <button
                         onClick={handleDeleteClick}
-                        className="p-1.5 rounded-full opacity-0 group-hover:opacity-100 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-all"
+                        className="p-1.5 rounded-full opacity-0 group-hover:opacity-100 text-slate-400 dark:text-slate-500 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-all"
                         title="刪除文檔"
                     >
                         <Trash2 size={14} />

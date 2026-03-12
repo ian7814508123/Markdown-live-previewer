@@ -73,7 +73,7 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
                             className={`absolute inset-0 overflow-auto custom-scrollbar p-8 bg-white dark:bg-slate-900 print:p-0 print:overflow-visible${isActive ? '' : ' tab-inactive'}`}
                             style={{ display: isActive ? 'block' : 'none' }}
                         >
-                            <div className="max-w-4xl mx-auto min-h-full bg-white dark:bg-slate-900 p-8 shadow-sm transition-colors duration-200 print:max-w-none print:w-full print:shadow-none print:p-0">
+                            <div className="max-w-[850px] mx-auto min-h-full bg-white dark:bg-slate-900 p-12 shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-none dark:border dark:border-slate-800 rounded-sm transition-all duration-300 print:max-w-none print:w-full print:shadow-none print:p-0 print:border-none print:rounded-none">
                                 <MarkdownPreview
                                     content={docContent}
                                     theme={theme}

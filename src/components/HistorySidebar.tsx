@@ -24,6 +24,7 @@ interface HistorySidebarProps {
     onDeleteFolder: (folderId: string) => void;
     onRenameFolder: (folderId: string, newName: string) => void;
     onMoveDocument: (docId: string, folderId: string | null) => void;
+    onReorderDocuments: (docIds: string[]) => void;
 }
 
 const HistorySidebar: React.FC<HistorySidebarProps> = ({
@@ -45,6 +46,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
     onDeleteFolder,
     onRenameFolder,
     onMoveDocument,
+    onReorderDocuments,
 }) => {
     const [isToolsOpen, setIsToolsOpen] = useState(false);
     const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
@@ -71,6 +73,41 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
             onRenameFolder(folderId, editFolderName.trim());
         }
         setEditingFolderId(null);
+    };
+
+    /**
+     * 處理文件排序相關的拖曳邏輯
+     */
+    const handleDragOverItem = (e: React.DragEvent, targetDocId: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // 增加視覺反饋可在這裡實作，目前先保持簡潔
+    };
+
+    const handleDropItem = (e: React.DragEvent, targetDocId: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const draggedDocId = e.dataTransfer.getData('text/plain');
+        if (!draggedDocId || draggedDocId === targetDocId) return;
+
+        const draggedDoc = documents.find(d => d.id === draggedDocId);
+        const targetDoc = documents.find(d => d.id === targetDocId);
+
+        if (draggedDoc && targetDoc && draggedDoc.folderId === targetDoc.folderId) {
+            // 在同一個資料夾內重排
+            const folderDocs = documents
+                .filter(d => d.folderId === draggedDoc.folderId)
+                .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.updatedAt - b.updatedAt);
+
+            const oldIndex = folderDocs.findIndex(d => d.id === draggedDocId);
+            const newIndex = folderDocs.findIndex(d => d.id === targetDocId);
+
+            const newOrder = [...folderDocs];
+            newOrder.splice(oldIndex, 1);
+            newOrder.splice(newIndex, 0, draggedDoc);
+
+            onReorderDocuments(newOrder.map(d => d.id));
+        }
     };
 
     const currentDoc = documents.find(d => d.id === currentDocId);
@@ -156,7 +193,9 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                                     </div>
                                     {folders.map(folder => {
                                         const isExpanded = expandedFolders.has(folder.id);
-                                        const folderDocs = documents.filter(d => d.folderId === folder.id);
+                                         const folderDocs = documents
+                                             .filter(d => d.folderId === folder.id)
+                                             .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.updatedAt - b.updatedAt);
                                         return (
                                             <div
                                                 key={folder.id}
@@ -250,6 +289,8 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                                                                         onSelectDocument={onSelectDocument}
                                                                         folders={folders}
                                                                         backlinks={getBacklinks(doc.name)}
+                                                                        onDragOverItem={handleDragOverItem}
+                                                                        onDropItem={handleDropItem}
                                                                     />
                                                                 ))
                                                             )}
@@ -297,6 +338,8 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                                             onSelectDocument={onSelectDocument}
                                             folders={folders}
                                             backlinks={getBacklinks(doc.name)}
+                                            onDragOverItem={handleDragOverItem}
+                                            onDropItem={handleDropItem}
                                         />
                                     ))
                                 )}

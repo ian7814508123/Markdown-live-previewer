@@ -159,25 +159,91 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
 
     // 決定要渲染的文件列表
     const docsToRenderIds = useMemo(() => {
-        // 如果開啟了「合併儲存庫 (PDF)」或「列印預覽」且當前文件在資料夾中
-        if ((mergeVaultOnPdfExport || showPrintPreview) && currentDoc?.folderId) {
+        // 修正：只有當開啟了「合併列印 (PDF)」時，才讀取整個儲存庫的文件
+        if (mergeVaultOnPdfExport && currentDoc?.folderId) {
             return (documents ?? [])
                 .filter((d: any) => d.folderId === currentDoc.folderId && d.mode === 'markdown')
                 .map((d: any) => d.id);
         }
         // 否則，只渲染已啟動的分頁
         return markdownDocIds.filter(id => activatedDocIds.has(id));
-    }, [mergeVaultOnPdfExport, showPrintPreview, currentDoc?.folderId, documents, markdownDocIds, activatedDocIds]);
+    }, [mergeVaultOnPdfExport, currentDoc?.folderId, documents, markdownDocIds, activatedDocIds]);
+
+    // 狀態鎖定：防止 Intentional Scroll 與 IntersectionObserver 產生衝突
+    const isManualScrolling = useRef(false);
+    const isHoveringInternal = useRef(false);
+    const lastSelectSource = useRef<'manual' | 'scroll' | null>(null);
+
+    // 主動偵測當前文件 (Bidirectional Sync)
+    useEffect(() => {
+        if (!showPrintPreview || !mergeVaultOnPdfExport || !currentDoc?.folderId) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                // 如果是正在進行手動捲動，或者滑鼠不在預覽板塊內，則跳過偵測
+                // 這樣編輯器捲動到底部時，不會因為預覽區位移而誤觸換頁
+                if (isManualScrolling.current || !isHoveringInternal.current) return;
+
+                const visibleEntries = entries.filter(e => e.isIntersecting);
+                if (visibleEntries.length > 0) {
+                    const topMost = visibleEntries.reduce((prev, curr) =>
+                        curr.boundingClientRect.top < prev.boundingClientRect.top ? curr : prev
+                    );
+                    const docId = topMost.target.getAttribute('data-doc-id');
+                    if (docId && docId !== currentDocId && onSelectDocument) {
+                        lastSelectSource.current = 'scroll';
+                        onSelectDocument(docId);
+                    }
+                }
+            },
+            { threshold: 0.3, root: containerRef.current }
+        );
+
+        const papers = document.querySelectorAll('.print-paper[data-doc-id]');
+        papers.forEach(p => observer.observe(p));
+
+        return () => observer.disconnect();
+    }, [showPrintPreview, mergeVaultOnPdfExport, documents, currentDoc?.folderId, currentDocId, onSelectDocument]);
+
+    // 自動導航：當 currentDocId 改變時，決定是否捲動
+    useEffect(() => {
+        if (!showPrintPreview) return;
+
+        const targetElement = document.querySelector(`.print-paper[data-doc-id="${currentDocId}"]`);
+
+        // 如果變動來源是預覽區捲動本身造成的，則不進行自動導航，避免跳動
+        if (lastSelectSource.current === 'scroll') {
+            lastSelectSource.current = null;
+            return;
+        }
+
+        if (targetElement && containerRef.current) {
+            isManualScrolling.current = true;
+            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            const timer = setTimeout(() => {
+                isManualScrolling.current = false;
+            }, 800);
+
+            return () => clearTimeout(timer);
+        }
+    }, [currentDocId, showPrintPreview]);
 
     return (
         <section
             className={`flex-1 flex flex-col bg-slate-100 dark:bg-slate-950 relative overflow-hidden group/preview transition-colors duration-200 preview-panel ${showPrintPreview ? 'show-print-preview' : ''}`}
-            onMouseEnter={onMouseEnter}
-            onMouseLeave={onMouseLeave}
+            onMouseEnter={() => {
+                isHoveringInternal.current = true;
+                if (onMouseEnter) onMouseEnter();
+            }}
+            onMouseLeave={() => {
+                isHoveringInternal.current = false;
+                if (onMouseLeave) onMouseLeave();
+            }}
         >
             <div className={`flex-1 relative ${showPrintPreview ? 'overflow-auto custom-scrollbar p-12' : 'overflow-hidden'}`} ref={showPrintPreview ? (node => { containerRef.current = node; if (typeof scrollRef === 'function') scrollRef(node); else if (scrollRef) (scrollRef as any).current = node; }) : undefined} onScroll={showPrintPreview ? onScroll : undefined}>
                 <div
-                    className={`mx-auto transition-all duration-300 origin-top-left ${showPrintPreview ? 'print-outer-wrapper' : 'max-w-[850px] relative h-full flex flex-col gap-8'}`}
+                    className={`mx-auto transition-all duration-300 origin-top-left ${showPrintPreview ? 'print-outer-wrapper' : 'print:print-outer-wrapper max-w-[850px] relative h-full flex flex-col gap-8'}`}
                     style={showPrintPreview ? {
                         width: paperPx.w * activeScale,
                         height: 'auto',
@@ -185,7 +251,7 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
                     } : {}}
                 >
                     <div
-                        className={showPrintPreview ? 'print-preview-container origin-top-left flex flex-col gap-8' : 'w-full h-full flex flex-col gap-8'}
+                        className={showPrintPreview ? 'print-preview-container origin-top-left flex flex-col gap-8' : 'print:print-preview-container w-full h-full flex flex-col gap-8'}
                         style={showPrintPreview ? {
                             transform: `scale(${activeScale})`,
                             width: paperPx.w,
@@ -196,23 +262,35 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
                             const docContent = doc?.content ?? '';
                             const isActive = docId === currentDocId;
 
-                            // 在「列印預覽」或「合併列印」模式下，所有被選中的文件都是 block；否則只有 isActive 是 block
-                            const isVisible = (mergeVaultOnPdfExport || showPrintPreview) && currentDoc?.folderId ? true : isActive;
+                            // 邏輯優化：區分「螢幕顯示」與「列印顯示」
+                            const isMergedMode = mergeVaultOnPdfExport && currentDoc?.folderId;
+
+                            // 螢幕上何時可見：或是目前活動文件，或是開啟了預覽模式下的合併
+                            const isVisibleOnScreen = showPrintPreview ? (isMergedMode || isActive) : isActive;
+                            // 列印時何時可見：或是目前活動文件，或是開啟了合併列印
+                            const isVisibleInPrint = isMergedMode || isActive;
 
                             return (
                                 <div
                                     key={docId}
                                     id={`wikilink-${encodeURIComponent(doc?.name || '')}`}
+                                    data-doc-id={docId}
                                     ref={!showPrintPreview && isActive ? (scrollRef as React.Ref<HTMLDivElement>) : undefined}
                                     onScroll={!showPrintPreview && isActive ? onScroll : undefined}
-                                    className={`${showPrintPreview ? 'print-paper paper-' + paperSize.toLowerCase() + ' paper-' + orientation + ' margin-' + margin : 'absolute inset-0 overflow-auto custom-scrollbar p-8 bg-white dark:bg-slate-900'} transition-all duration-300 print:max-w-none print:w-full print:shadow-none print:p-0 print:border-none print:rounded-none ${isVisible ? 'block' : 'hidden'} ${!isActive && !showPrintPreview ? 'tab-inactive' : ''}`}
-                                    style={!showPrintPreview ? { display: isVisible ? 'block' : 'none' } : {}}
+                                    className={`${showPrintPreview ? 'print-paper paper-' + paperSize.toLowerCase() + ' paper-' + orientation + ' margin-' + margin : 'print:print-paper print:paper-' + paperSize.toLowerCase() + ' print:paper-' + orientation + ' print:margin-' + margin + ' absolute inset-0 overflow-auto custom-scrollbar p-8 bg-white dark:bg-slate-900'} transition-all duration-300 print:max-w-none print:w-full print:shadow-none print:p-0 print:border-none print:rounded-none print:static print:inset-auto print:h-auto ${isVisibleOnScreen ? 'block' : 'hidden'} ${!isVisibleOnScreen && isVisibleInPrint ? 'print:block' : ''} ${!isActive && (!showPrintPreview && !isVisibleInPrint) ? 'tab-inactive' : ''} ${isActive && showPrintPreview ? 'ring-2 ring-indigo-500 ring-offset-4 dark:ring-offset-slate-950' : ''}`}
                                 >
-                                    <div className={showPrintPreview ? 'prose-container relative' : 'max-w-[850px] mx-auto min-h-full bg-white dark:bg-slate-900 p-12 shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-none dark:border dark:border-slate-800 rounded-sm'}>
+                                    {/* 增加文件標題標籤 (僅在合併預覽模式下且螢幕可見時顯示) */}
+                                    {showPrintPreview && isMergedMode && isVisibleOnScreen && (
+                                        <div className="absolute -top-10 left-0 flex items-center gap-2 px-4 py-1.5 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-t-lg shadow-lg print:hidden">
+                                            <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-green-400 animate-pulse' : 'bg-white/40'}`} />
+                                            {doc?.name || '無標題文件'}
+                                        </div>
+                                    )}
+                                    <div className={showPrintPreview ? 'prose-container relative' : 'print:prose-container max-w-[850px] mx-auto min-h-full bg-white dark:bg-slate-900 p-12 shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-none dark:border dark:border-slate-800 rounded-sm print:shadow-none print:border-none print:p-0'}>
                                         <MarkdownPreview
                                             content={docContent}
                                             theme={theme}
-                                            isDarkMode={isDarkMode}
+                                            isDarkMode={isDarkMode && !showPrintPreview}
                                             documents={documents}
                                             onSelectDocument={onSelectDocument}
                                             onCreateMissing={onCreateMissing}

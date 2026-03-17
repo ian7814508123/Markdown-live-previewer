@@ -41,6 +41,24 @@ export default defineConfig(() => {
       commonjsOptions: {
         transformMixedEsModules: true,
       },
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-mermaid': ['mermaid'],
+            'vendor-vega': ['vega', 'vega-lite', 'vega-embed'],
+            'vendor-mathjax': ['better-react-mathjax', 'rehype-mathjax', 'mathjax-full'],
+            'vendor-utils': ['xlsx', 'pdf-lib'],
+            'vendor-ui': [
+              'react', 
+              'react-dom', 
+              'lucide-react', 
+              '@uiw/react-codemirror',
+              '@codemirror/view',
+              '@codemirror/state'
+            ],
+          }
+        }
+      }
     }
   };
 });

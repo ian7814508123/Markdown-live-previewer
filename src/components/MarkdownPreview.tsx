@@ -489,50 +489,67 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
             const language = match ? match[1] : '';
             const codeString = String(children).replace(/\n$/, '');
             const stableKey = hashString(codeString);
+            const line = node?.position?.start?.line;
 
             if (!inline) {
-                if (language === 'mermaid') return <MermaidBlock key={stableKey} code={codeString} isDarkMode={isDark} />;
-                if (language === 'vega' || language === 'vega-lite') return <VegaBlock key={stableKey} code={codeString} isDarkMode={isDark} />;
-                if (language === 'smiles') return <SmilesBlock key={stableKey} code={codeString} isDarkMode={isDark} />;
+                if (language === 'mermaid') return <div data-line={line}><MermaidBlock key={stableKey} code={codeString} isDarkMode={isDark} /></div>;
+                if (language === 'vega' || language === 'vega-lite') return <div data-line={line}><VegaBlock key={stableKey} code={codeString} isDarkMode={isDark} /></div>;
+                if (language === 'smiles') return <div data-line={line}><SmilesBlock key={stableKey} code={codeString} isDarkMode={isDark} /></div>;
 
                 return (
-                    <SyntaxHighlighter
-                        key={stableKey}
-                        language={language || 'text'}
-                        style={isDark ? vscDarkPlus : vs}
-                        customStyle={{ borderRadius: '0.75rem', padding: '1rem', marginTop: '1.5rem', marginBottom: '1.5rem', fontSize: '0.875rem', lineHeight: '1.5' }}
-                        showLineNumbers={true}
-                        wrapLines={true}
-                    >
-                        {codeString}
-                    </SyntaxHighlighter>
+                    <div data-line={line}>
+                      <SyntaxHighlighter
+                          key={stableKey}
+                          language={language || 'text'}
+                          style={isDark ? vscDarkPlus : vs}
+                          customStyle={{ borderRadius: '0.75rem', padding: '1rem', marginTop: '1.5rem', marginBottom: '1.5rem', fontSize: '0.875rem', lineHeight: '1.5' }}
+                          showLineNumbers={true}
+                          wrapLines={true}
+                      >
+                          {codeString}
+                      </SyntaxHighlighter>
+                    </div>
                 );
             }
-            return <code className={className} {...props}>{children}</code>;
+            return <code className={className} {...props} data-line={line}>{children}</code>;
         },
+        // ─── 注入 Line Number 以實現精準同步捲動 ───────────────────────────────────
+        p: ({ node, ...props }: any) => <p data-line={node?.position?.start?.line} {...props} />,
+        h1: ({ node, ...props }: any) => <h1 data-line={node?.position?.start?.line} {...props} />,
+        h2: ({ node, ...props }: any) => <h2 data-line={node?.position?.start?.line} {...props} />,
+        h3: ({ node, ...props }: any) => <h3 data-line={node?.position?.start?.line} {...props} />,
+        h4: ({ node, ...props }: any) => <h4 data-line={node?.position?.start?.line} {...props} />,
+        h5: ({ node, ...props }: any) => <h5 data-line={node?.position?.start?.line} {...props} />,
+        h6: ({ node, ...props }: any) => <h6 data-line={node?.position?.start?.line} {...props} />,
+        ul: ({ node, ...props }: any) => <ul data-line={node?.position?.start?.line} {...props} />,
+        ol: ({ node, ...props }: any) => <ol data-line={node?.position?.start?.line} {...props} />,
+        li: ({ node, ...props }: any) => <li data-line={node?.position?.start?.line} {...props} />,
+        blockquote: ({ node, ...props }: any) => <blockquote data-line={node?.position?.start?.line} {...props} />,
+        table: ({ node, ...props }: any) => <table data-line={node?.position?.start?.line} {...props} />,
+        // ─────────────────────────────────────────────────────────────────────────
         div: ({ node, className, children, ...props }: any) => {
             if (className?.includes('math-display')) {
                 const mathContent = String(children);
                 const stableKey = hashString(mathContent);
                 return (
-                    <div key={stableKey} className="my-4 overflow-x-auto" style={{ whiteSpace: 'nowrap' }}>
+                    <div key={stableKey} className="my-4 overflow-x-auto" style={{ whiteSpace: 'nowrap' }} data-line={node?.position?.start?.line}>
                         <MemoizedMathJax content={mathContent} isDarkMode={isDark} />
                     </div>
                 );
             }
-            return <div className={className} {...props}>{children}</div>;
+            return <div className={className} {...props} data-line={node?.position?.start?.line}>{children}</div>;
         },
         span: ({ node, className, children, ...props }: any) => {
             if (className?.includes('math-inline')) {
                 const mathContent = String(children);
                 const stableKey = hashString(mathContent);
                 return (
-                    <span key={stableKey} className="math-inline" style={{ whiteSpace: 'nowrap' }}>
+                    <span key={stableKey} className="math-inline" style={{ whiteSpace: 'nowrap' }} data-line={node?.position?.start?.line}>
                         <MemoizedMathJax content={mathContent} inline isDarkMode={isDark} />
                     </span>
                 );
             }
-            return <span className={className} {...props}>{children}</span>;
+            return <span className={className} {...props} data-line={node?.position?.start?.line}>{children}</span>;
         },
         a: ({ node, href, children, ...props }: any) => {
             if (href?.startsWith('#wikilink-')) {
@@ -549,7 +566,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
                     </WikiLink>
                 );
             }
-            return <a href={href} {...props} target="_blank" rel="noopener noreferrer">{children}</a>;
+            return <a href={href} {...props} target="_blank" rel="noopener noreferrer" data-line={node?.position?.start?.line}>{children}</a>;
         }
     }), [isDark, documents, onSelectDocument, onCreateMissing, currentDocId]);
 

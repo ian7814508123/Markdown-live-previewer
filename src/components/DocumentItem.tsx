@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, FileCode2, Trash2, Clock, Link as LinkIcon } from 'lucide-react';
+import { FileText, FileCode2, Trash2, Clock, Link as LinkIcon, GripVertical } from 'lucide-react';
 import { DocumentRecord } from '../types';
 
 interface DocumentItemProps {
@@ -12,6 +12,8 @@ interface DocumentItemProps {
     onSelectDocument: (docId: string) => void;
     folders: any[];
     backlinks?: DocumentRecord[];
+    onDragOverItem?: (e: React.DragEvent, docId: string) => void;
+    onDropItem?: (e: React.DragEvent, docId: string) => void;
 }
 
 const DocumentItem: React.FC<DocumentItemProps> = ({
@@ -24,6 +26,8 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
     onSelectDocument,
     folders,
     backlinks = [],
+    onDragOverItem,
+    onDropItem,
 }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editName, setEditName] = useState(document.name);
@@ -81,6 +85,8 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
                 e.dataTransfer.setData('text/plain', document.id);
                 e.dataTransfer.effectAllowed = 'move';
             }}
+            onDragOver={(e) => onDragOverItem?.(e, document.id)}
+            onDrop={(e) => onDropItem?.(e, document.id)}
             className={`
         group relative px-3 py-2.5 mx-2 rounded-2xl cursor-pointer transition-all
         ${isActive
@@ -89,72 +95,79 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
                 }
       `}
         >
-            <div className="flex items-start gap-2">
-                {/* 模式圖示 */}
-                <div className={`mt-0.5 shrink-0 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-600'}`}>
-                    {document.mode === 'mermaid' ? <FileCode2 size={16} /> : <FileText size={16} />}
+            <div className="flex items-start gap-1">
+                {/* 拖曳圖框 (Hover 時顯示) */}
+                <div className="mt-1 opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing text-slate-300 dark:text-slate-600 transition-opacity">
+                    <GripVertical size={14} />
                 </div>
 
-                {/* 文檔名稱 */}
-                <div className="flex-1 min-w-0">
-                    {isEditing ? (
-                        <input
-                            type="text"
-                            value={editName}
-                            onChange={(e) => setEditName(e.target.value)}
-                            onBlur={handleSave}
-                            onKeyDown={handleKeyDown}
-                            onClick={(e) => e.stopPropagation()}
-                            className="w-full px-2 py-0.5 text-sm font-medium bg-white dark:bg-slate-700 border border-indigo-300 dark:border-indigo-700 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-200"
-                            autoFocus
-                        />
-                    ) : (
-                        <div
-                            className={`text-sm font-medium truncate ${isActive
-                                ? 'text-indigo-700 dark:text-indigo-300'
-                                : 'text-slate-700 dark:text-slate-300'
-                                }`}
-                            title={document.name}
-                        >
-                            {document.name}
-                        </div>
-                    )}
-
-                    <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400 dark:text-slate-500">
-                        <div className="flex items-center gap-1">
-                            <Clock size={10} />
-                            <span>{formatTime(document.updatedAt)}</span>
-                        </div>
-                        <span className={`px-1 rounded text-[9px] font-bold uppercase ${document.mode === 'mermaid'
-                            ? 'bg-blue-50/50 dark:bg-blue-900/20 text-blue-500 dark:text-blue-400'
-                            : 'bg-green-50/50 dark:bg-green-900/20 text-green-500 dark:text-green-400'
-                            }`}>
-                            {document.mode === 'mermaid' ? '美人魚' : '標記掉落'}
-                        </span>
+                <div className="flex items-start gap-2 flex-1 min-w-0">
+                    {/* 模式圖示 */}
+                    <div className={`mt-0.5 shrink-0 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-600'}`}>
+                        {document.mode === 'mermaid' ? <FileCode2 size={16} /> : <FileText size={16} />}
                     </div>
-                </div>
 
-                {/* 操作按鈕組 */}
-                <div className="flex items-center gap-1 shrink-0">
-                    {backlinks.length > 0 && (
+                    {/* 文檔名稱 */}
+                    <div className="flex-1 min-w-0">
+                        {isEditing ? (
+                            <input
+                                type="text"
+                                value={editName}
+                                onChange={(e) => setEditName(e.target.value)}
+                                onBlur={handleSave}
+                                onKeyDown={handleKeyDown}
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-full px-2 py-0.5 text-sm font-medium bg-white dark:bg-slate-700 border border-indigo-300 dark:border-indigo-700 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-200"
+                                autoFocus
+                            />
+                        ) : (
+                            <div
+                                className={`text-sm font-medium truncate ${isActive
+                                    ? 'text-indigo-700 dark:text-indigo-300'
+                                    : 'text-slate-700 dark:text-slate-300'
+                                    }`}
+                                title={document.name}
+                            >
+                                {document.name}
+                            </div>
+                        )}
+
+                        <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400 dark:text-slate-500">
+                            <div className="flex items-center gap-1">
+                                <Clock size={10} />
+                                <span>{formatTime(document.updatedAt)}</span>
+                            </div>
+                            <span className={`px-1 rounded text-[9px] font-bold uppercase ${document.mode === 'mermaid'
+                                ? 'bg-blue-50/50 dark:bg-blue-900/20 text-blue-500 dark:text-blue-400'
+                                : 'bg-green-50/50 dark:bg-green-900/20 text-green-500 dark:text-green-400'
+                                }`}>
+                                {document.mode === 'mermaid' ? '美人魚' : '標記掉落'}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* 操作按鈕組 */}
+                    <div className="flex items-center gap-1 shrink-0">
+                        {backlinks.length > 0 && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsBacklinksOpen(!isBacklinksOpen);
+                                }}
+                                className={`p-1.5 rounded-full transition-all ${isBacklinksOpen ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400' : 'text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
+                                title={`反向連結 (${backlinks.length})`}
+                            >
+                                <LinkIcon size={14} />
+                            </button>
+                        )}
                         <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setIsBacklinksOpen(!isBacklinksOpen);
-                            }}
-                            className={`p-1.5 rounded-full transition-all ${isBacklinksOpen ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400' : 'text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
-                            title={`反向連結 (${backlinks.length})`}
+                            onClick={handleDeleteClick}
+                            className="p-1.5 rounded-full opacity-0 group-hover:opacity-100 text-slate-400 dark:text-slate-500 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-all"
+                            title="刪除文檔"
                         >
-                            <LinkIcon size={14} />
+                            <Trash2 size={14} />
                         </button>
-                    )}
-                    <button
-                        onClick={handleDeleteClick}
-                        className="p-1.5 rounded-full opacity-0 group-hover:opacity-100 text-slate-400 dark:text-slate-500 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-all"
-                        title="刪除文檔"
-                    >
-                        <Trash2 size={14} />
-                    </button>
+                    </div>
                 </div>
             </div>
 

@@ -291,6 +291,22 @@ export function useDocumentStorage() {
     }, []);
 
     /**
+     * 重新排序文檔
+     */
+    const reorderDocuments = useCallback((docIds: string[]) => {
+        setState(prev => {
+            const newDocs = [...prev.documents];
+            docIds.forEach((id, index) => {
+                const docIndex = newDocs.findIndex(d => d.id === id);
+                if (docIndex !== -1) {
+                    newDocs[docIndex] = { ...newDocs[docIndex], order: index, updatedAt: Date.now() };
+                }
+            });
+            return { ...prev, documents: newDocs };
+        });
+    }, []);
+
+    /**
      * 當前文檔（僅在 currentDocId 或 documents 改變時重新計算）
      */
     const currentDocument = useMemo((): DocumentRecord | null => {
@@ -343,5 +359,6 @@ export function useDocumentStorage() {
         deleteFolder,
         renameFolder,
         moveDocument,
+        reorderDocuments,
     };
 }

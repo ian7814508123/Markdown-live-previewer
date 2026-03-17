@@ -81,50 +81,13 @@ const PdfSettingsPanel: React.FC<{
                             if (nextShow) patch.scale = 'fit';
                             onChange(patch);
                         }}
-                        className={`w-11 h-6 rounded-full transition-all relative ${settings.showPrintPreview ? 'bg-indigo-500' : 'bg-slate-200 dark:bg-slate-700'}`}
+                        className={`w-11 h-6 rounded-full transition-all relative ${settings.showPrintPreview ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`}
                     >
                         <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${settings.showPrintPreview ? 'left-6' : 'left-1'}`} />
                     </div>
                 </label>
             </div>
 
-            {/* 分組 B：儲存庫合併 (條件式顯示) */}
-            {!isStandalone && (
-                <div className="p-4 bg-indigo-50/40 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/30 shadow-sm space-y-4 animate-in slide-in-from-top-2 duration-300">
-                    <div className="flex items-center gap-2 mb-1">
-                        <div className="p-1.5 bg-indigo-100/50 dark:bg-indigo-800/30 rounded-lg text-indigo-600"><Box size={16} /></div>
-                        <p className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">儲存庫合併選項</p>
-                    </div>
-
-                    <label className="flex items-center justify-between cursor-pointer group">
-                        <div className="flex flex-col">
-                            <span className="text-xs font-bold text-slate-700 dark:text-slate-200">合併下載 (Markdown)</span>
-                            <span className="text-[10px] text-slate-400 dark:text-slate-500">自動合併同資料夾下所有 .md 文件</span>
-                        </div>
-                        <div 
-                            onClick={() => onChange({ mergeVaultOnMdExport: !settings.mergeVaultOnMdExport })}
-                            className={`w-11 h-6 rounded-full transition-all relative ${settings.mergeVaultOnMdExport ? 'bg-teal-500' : 'bg-slate-200 dark:bg-slate-700'}`}
-                        >
-                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${settings.mergeVaultOnMdExport ? 'left-6' : 'left-1'}`} />
-                        </div>
-                    </label>
-
-                    <div className="h-px bg-indigo-100/50 dark:bg-indigo-800/20" />
-
-                    <label className="flex items-center justify-between cursor-pointer group">
-                        <div className="flex flex-col">
-                            <span className="text-xs font-bold text-slate-700 dark:text-slate-200">合併列印 (PDF)</span>
-                            <span className="text-[10px] text-slate-400 dark:text-slate-500">列印時將資料夾內容合併為單一 PDF</span>
-                        </div>
-                        <div 
-                            onClick={() => onChange({ mergeVaultOnPdfExport: !settings.mergeVaultOnPdfExport })}
-                            className={`w-11 h-6 rounded-full transition-all relative ${settings.mergeVaultOnPdfExport ? 'bg-rose-500' : 'bg-slate-200 dark:bg-slate-700'}`}
-                        >
-                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${settings.mergeVaultOnPdfExport ? 'left-6' : 'left-1'}`} />
-                        </div>
-                    </label>
-                </div>
-            )}
 
             {/* 分組 C：頁面配置 */}
             <div className="p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-5">

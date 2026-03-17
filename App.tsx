@@ -116,6 +116,7 @@ const App: React.FC = () => {
     deleteFolder,
     renameFolder,
     moveDocument,
+    reorderDocuments,
   } = useDocumentStorage();
 
   // UI 狀態
@@ -264,11 +265,8 @@ const App: React.FC = () => {
   }, []);
 
   const handleEditorScroll = () => {
-    // console.log("Editor Scroll Triggered", { isSyncScroll, mode, scrollSource: scrollSource.current, isHoveringEditor: isHoveringEditor.current });
-    
     if (!isSyncScroll || mode !== 'markdown') return;
     if (!editorRef.current?.view) return;
-
     if (scrollSource.current === 'preview' && !isHoveringEditor.current) return;
     
     scrollSource.current = 'editor';
@@ -276,10 +274,38 @@ const App: React.FC = () => {
     const editorView = editorRef.current.view;
     const scrollDOM = editorView.scrollDOM;
     
-    const percentage = scrollDOM.scrollTop / (scrollDOM.scrollHeight - scrollDOM.clientHeight || 1);
+    // 取得當前編輯器頂部的行號
+    // CodeMirror 6: 使用 visualLineAtHeight 取得高度對應的行區塊
+    const lineBlock = editorView.lineBlockAtHeight(scrollDOM.scrollTop);
+    const lineNumber = editorView.state.doc.lineAt(lineBlock.from).number;
 
     if (previewRef.current) {
-      targetScrollTop.current = percentage * (previewRef.current.scrollHeight - previewRef.current.clientHeight);
+      // 在預覽區尋找具有 data-line 的元素
+      const elements = Array.from(previewRef.current.querySelectorAll('[data-line]'));
+      if (elements.length === 0) {
+        // 退回百分比模式
+        const percentage = scrollDOM.scrollTop / (scrollDOM.scrollHeight - scrollDOM.clientHeight || 1);
+        targetScrollTop.current = percentage * (previewRef.current.scrollHeight - previewRef.current.clientHeight);
+      } else {
+        // 尋找最接近且小於或等於 lineNumber 的元素
+        let targetElement = null;
+        for (let i = elements.length - 1; i >= 0; i--) {
+          const el = elements[i];
+          const elLine = parseInt(el.getAttribute('data-line') || '0');
+          if (elLine <= lineNumber) {
+            targetElement = el as HTMLElement;
+            break;
+          }
+        }
+
+        if (targetElement) {
+          // 計算目標位置：元素的 offsetTop 減去容器的 offsetTop
+          targetScrollTop.current = targetElement.offsetTop - (previewRef.current.offsetTop || 0);
+        } else {
+          // 如果找不到（在文件開頭），則滾到最上面
+          targetScrollTop.current = 0;
+        }
+      }
 
       if (!rafId.current) {
         currentScrollTop.current = previewRef.current.scrollTop;
@@ -293,20 +319,43 @@ const App: React.FC = () => {
 
     const target = e.currentTarget;
     if (!target) return;
-
-    // 只有當「編輯器」正在主導且滑鼠不在預覽區上方時，才跳過
     if (scrollSource.current === 'editor' && !isHoveringPreview.current) return;
 
     scrollSource.current = 'preview';
 
-    const percentage = target.scrollTop / (target.scrollHeight - target.clientHeight || 1);
-
     if (editorRef.current?.view) {
       const editorView = editorRef.current.view;
-      const editorScrollHeight = editorView.scrollDOM.scrollHeight || 0;
-      const editorClientHeight = editorView.scrollDOM.clientHeight || 0;
       
-      targetScrollTop.current = percentage * (editorScrollHeight - editorClientHeight);
+      // 在預覽區尋找目前在頂部的元素
+      const elements = Array.from(target.querySelectorAll('[data-line]'));
+      if (elements.length === 0) {
+        // 退回百分比模式
+        const percentage = target.scrollTop / (target.scrollHeight - target.clientHeight || 1);
+        targetScrollTop.current = percentage * (editorView.scrollDOM.scrollHeight - editorView.scrollDOM.clientHeight);
+      } else {
+        // 尋找目前可見區塊中最上方的帶有 data-line 的元素
+        let topElement = null;
+        const containerTop = target.getBoundingClientRect().top;
+        
+        for (const el of elements) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top >= containerTop - 20) { // 稍微給一點緩衝
+            topElement = el;
+            break;
+          }
+        }
+
+        if (topElement) {
+          const lineNumber = parseInt(topElement.getAttribute('data-line') || '1');
+          const line = editorView.state.doc.line(lineNumber);
+          // 取得該行在編輯器中的高度位置
+          targetScrollTop.current = editorView.lineBlockAt(line.from).top;
+        } else {
+          // 如果沒找到，可能在最底部，退回百分比
+          const percentage = target.scrollTop / (target.scrollHeight - target.clientHeight || 1);
+          targetScrollTop.current = percentage * (editorView.scrollDOM.scrollHeight - editorView.scrollDOM.clientHeight);
+        }
+      }
 
       if (!rafId.current) {
         currentScrollTop.current = editorView.scrollDOM.scrollTop || 0;
@@ -795,6 +844,9 @@ const App: React.FC = () => {
           onImportFullFile={handleImportFullFile}
           onOpenSettings={() => setIsSettingsOpen(true)}
           onPrint={() => handlePrint(mode)}
+          isInFolder={!!currentDocument?.folderId}
+          printSettings={settings.printSettings}
+          onUpdatePrintSettings={updatePrintSettings}
         />
 
         <main className="flex-1 flex overflow-hidden print:block print:overflow-visible">
@@ -818,6 +870,7 @@ const App: React.FC = () => {
             onDeleteFolder={deleteFolder}
             onRenameFolder={renameFolder}
             onMoveDocument={moveDocument}
+            onReorderDocuments={reorderDocuments}
           />
 
           {/* Create Document Modal */}

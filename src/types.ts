@@ -18,6 +18,7 @@ export interface DocumentRecord {
     content: string;                     // 編輯內容
     templateId?: string | null;           // 來源範本 ID
     folderId?: string | null;            // 所屬資料夾 ID (null 為獨立檔案)
+    order?: number;                      // 排序順序
     createdAt: number;                   // 建立時間戳
     updatedAt: number;                   // 最後修改時間戳
 }

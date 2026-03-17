@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
-import { Download, ChevronDown, Image as ImageIcon, FileImage, FileJson, FileText, Printer, Sun, Moon, FileUp, Settings } from 'lucide-react';
+import { Download, ChevronDown, Image as ImageIcon, FileImage, FileJson, FileText, Printer, Sun, Moon, FileUp, Settings, Box } from 'lucide-react';
 import { parseExcelToMarkdown } from '../services/excelParser';
 import RippleButton from './RippleButton';
 
@@ -18,6 +18,12 @@ interface HeaderProps {
     onOpenSettings: () => void;
     /** 統一列印 / PDF 呼叫 */
     onPrint: () => void;
+    /** 是否正處於資料夾中（儲存庫模式） */
+    isInFolder?: boolean;
+    /** 列印與合併設定 */
+    printSettings?: any;
+    /** 更新設定的回呼 */
+    onUpdatePrintSettings?: (patch: any) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -34,6 +40,9 @@ const Header: React.FC<HeaderProps> = ({
     onImportFullFile,
     onOpenSettings,
     onPrint,
+    isInFolder,
+    printSettings,
+    onUpdatePrintSettings,
 }) => {
     const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState(false);
     const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
@@ -223,6 +232,44 @@ const Header: React.FC<HeaderProps> = ({
                                 <div className="w-9 h-9 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-xl flex items-center justify-center"><Printer size={18} /></div>,
                                 '列印 / PDF', '套用 PDF 版面設定')}
 
+                            {/* 儲存庫合併快捷開關 */}
+                            {isInFolder && onUpdatePrintSettings && printSettings && (
+                                <div className="mt-2 mx-1 p-4 bg-indigo-50/40 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100/50 dark:border-indigo-900/30 shadow-sm space-y-4 animate-in slide-in-from-top-2 duration-300">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <div className="p-1.5 bg-indigo-100/50 dark:bg-indigo-800/30 rounded-lg text-indigo-600"><Box size={16} /></div>
+                                        <p className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">儲存庫合併選項</p>
+                                    </div>
+
+                                    <label className="flex items-center justify-between cursor-pointer group">
+                                        <div className="flex flex-col">
+                                            <span className="text-xs font-bold text-slate-700 dark:text-slate-200">合併下載 (Markdown)</span>
+                                            <span className="text-[10px] text-slate-400 dark:text-slate-500">自動合併同資料夾下所有 .md 原始碼</span>
+                                        </div>
+                                        <div 
+                                            onClick={(e) => { e.stopPropagation(); onUpdatePrintSettings({ mergeVaultOnMdExport: !printSettings.mergeVaultOnMdExport }); }}
+                                            className={`w-11 h-6 rounded-full transition-all relative ${printSettings.mergeVaultOnMdExport ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`}
+                                        >
+                                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${printSettings.mergeVaultOnMdExport ? 'left-6' : 'left-1'}`} />
+                                        </div>
+                                    </label>
+
+                                    <div className="h-px bg-indigo-100/50 dark:bg-indigo-800/20" />
+
+                                    <label className="flex items-center justify-between cursor-pointer group">
+                                        <div className="flex flex-col">
+                                            <span className="text-xs font-bold text-slate-700 dark:text-slate-200">合併列印 (PDF)</span>
+                                            <span className="text-[10px] text-slate-400 dark:text-slate-500">將資料夾內容合併為單一 PDF 匯出</span>
+                                        </div>
+                                        <div 
+                                            onClick={(e) => { e.stopPropagation(); onUpdatePrintSettings({ mergeVaultOnPdfExport: !printSettings.mergeVaultOnPdfExport }); }}
+                                            className={`w-11 h-6 rounded-full transition-all relative ${printSettings.mergeVaultOnPdfExport ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`}
+                                        >
+                                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${printSettings.mergeVaultOnPdfExport ? 'left-6' : 'left-1'}`} />
+                                        </div>
+                                    </label>
+                                </div>
+                            )}
+
                             {/* AdSense In-Menu Ad */}
                             <div className="mx-2 mt-4 p-2 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 min-h-[100px] flex items-center justify-center relative overflow-hidden">
                                 <ins className="adsbygoogle"
@@ -305,6 +352,44 @@ const Header: React.FC<HeaderProps> = ({
                             {menuItem(() => handleExport(onPrint),
                                 <div className="w-9 h-9 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-xl flex items-center justify-center"><Printer size={18} /></div>,
                                 '列印 / PDF', '套用 PDF 版面設定')}
+
+                            {/* 儲存庫合併快捷開關 */}
+                            {isInFolder && onUpdatePrintSettings && printSettings && (
+                                <div className="mt-2 mx-1 p-4 bg-indigo-50/40 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100/50 dark:border-indigo-900/30 shadow-sm space-y-4 animate-in slide-in-from-top-2 duration-300">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <div className="p-1.5 bg-indigo-100/50 dark:bg-indigo-800/30 rounded-lg text-indigo-600"><Box size={16} /></div>
+                                        <p className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">儲存庫合併選項</p>
+                                    </div>
+
+                                    <label className="flex items-center justify-between cursor-pointer group">
+                                        <div className="flex flex-col">
+                                            <span className="text-xs font-bold text-slate-700 dark:text-slate-200">合併下載 (Markdown)</span>
+                                            <span className="text-[10px] text-slate-400 dark:text-slate-500">自動合併同資料夾下所有 .md 原始碼</span>
+                                        </div>
+                                        <div 
+                                            onClick={(e) => { e.stopPropagation(); onUpdatePrintSettings({ mergeVaultOnMdExport: !printSettings.mergeVaultOnMdExport }); }}
+                                            className={`w-11 h-6 rounded-full transition-all relative ${printSettings.mergeVaultOnMdExport ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`}
+                                        >
+                                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${printSettings.mergeVaultOnMdExport ? 'left-6' : 'left-1'}`} />
+                                        </div>
+                                    </label>
+
+                                    <div className="h-px bg-indigo-100/50 dark:bg-indigo-800/20" />
+
+                                    <label className="flex items-center justify-between cursor-pointer group">
+                                        <div className="flex flex-col">
+                                            <span className="text-xs font-bold text-slate-700 dark:text-slate-200">合併列印 (PDF)</span>
+                                            <span className="text-[10px] text-slate-400 dark:text-slate-500">將資料夾內容合併為單一 PDF 匯出</span>
+                                        </div>
+                                        <div 
+                                            onClick={(e) => { e.stopPropagation(); onUpdatePrintSettings({ mergeVaultOnPdfExport: !printSettings.mergeVaultOnPdfExport }); }}
+                                            className={`w-11 h-6 rounded-full transition-all relative ${printSettings.mergeVaultOnPdfExport ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`}
+                                        >
+                                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${printSettings.mergeVaultOnPdfExport ? 'left-6' : 'left-1'}`} />
+                                        </div>
+                                    </label>
+                                </div>
+                            )}
 
                             {/* AdSense In-Menu Ad */}
                             <div className="mx-2 mt-4 p-2 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 min-h-[100px] flex items-center justify-center relative overflow-hidden">

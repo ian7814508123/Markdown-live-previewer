@@ -236,8 +236,8 @@ const Header: React.FC<HeaderProps> = ({
                             {isInFolder && onUpdatePrintSettings && printSettings && (
                                 <div className="mt-2 mx-1 p-4 bg-indigo-50/40 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100/50 dark:border-indigo-900/30 shadow-sm space-y-4 animate-in slide-in-from-top-2 duration-300">
                                     <div className="flex items-center gap-2 mb-1">
-                                        <div className="p-1.5 bg-indigo-100/50 dark:bg-indigo-800/30 rounded-lg text-indigo-600"><Box size={16} /></div>
-                                        <p className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">儲存庫合併選項</p>
+                                        <div className="p-1.5 bg-indigo-100/50 dark:bg-indigo-800/30 rounded-lg text-indigo-600"><Box size={15} /></div>
+                                        <p className="text-[12px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">儲存庫合併選項</p>
                                     </div>
 
                                     <label className="flex items-center justify-between cursor-pointer group">
@@ -245,7 +245,7 @@ const Header: React.FC<HeaderProps> = ({
                                             <span className="text-xs font-bold text-slate-700 dark:text-slate-200">合併下載 (Markdown)</span>
                                             <span className="text-[10px] text-slate-400 dark:text-slate-500">自動合併同資料夾下所有 .md 原始碼</span>
                                         </div>
-                                        <div 
+                                        <div
                                             onClick={(e) => { e.stopPropagation(); onUpdatePrintSettings({ mergeVaultOnMdExport: !printSettings.mergeVaultOnMdExport }); }}
                                             className={`w-11 h-6 rounded-full transition-all relative ${printSettings.mergeVaultOnMdExport ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`}
                                         >
@@ -260,7 +260,7 @@ const Header: React.FC<HeaderProps> = ({
                                             <span className="text-xs font-bold text-slate-700 dark:text-slate-200">合併列印 (PDF)</span>
                                             <span className="text-[10px] text-slate-400 dark:text-slate-500">將資料夾內容合併為單一 PDF 匯出</span>
                                         </div>
-                                        <div 
+                                        <div
                                             onClick={(e) => { e.stopPropagation(); onUpdatePrintSettings({ mergeVaultOnPdfExport: !printSettings.mergeVaultOnPdfExport }); }}
                                             className={`w-11 h-6 rounded-full transition-all relative ${printSettings.mergeVaultOnPdfExport ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`}
                                         >
@@ -366,7 +366,7 @@ const Header: React.FC<HeaderProps> = ({
                                             <span className="text-xs font-bold text-slate-700 dark:text-slate-200">合併下載 (Markdown)</span>
                                             <span className="text-[10px] text-slate-400 dark:text-slate-500">自動合併同資料夾下所有 .md 原始碼</span>
                                         </div>
-                                        <div 
+                                        <div
                                             onClick={(e) => { e.stopPropagation(); onUpdatePrintSettings({ mergeVaultOnMdExport: !printSettings.mergeVaultOnMdExport }); }}
                                             className={`w-11 h-6 rounded-full transition-all relative ${printSettings.mergeVaultOnMdExport ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`}
                                         >
@@ -381,7 +381,7 @@ const Header: React.FC<HeaderProps> = ({
                                             <span className="text-xs font-bold text-slate-700 dark:text-slate-200">合併列印 (PDF)</span>
                                             <span className="text-[10px] text-slate-400 dark:text-slate-500">將資料夾內容合併為單一 PDF 匯出</span>
                                         </div>
-                                        <div 
+                                        <div
                                             onClick={(e) => { e.stopPropagation(); onUpdatePrintSettings({ mergeVaultOnPdfExport: !printSettings.mergeVaultOnPdfExport }); }}
                                             className={`w-11 h-6 rounded-full transition-all relative ${printSettings.mergeVaultOnPdfExport ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`}
                                         >

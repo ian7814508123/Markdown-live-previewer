@@ -49,6 +49,22 @@
         size: auto;
       }
 
+      /* 0. Aggressive Reset - 防止 PDF 出現異常陰影、濾鏡或漸層 */
+      *, ::before, ::after {
+        box-shadow: none !important;
+        text-shadow: none !important;
+        filter: none !important;
+        -webkit-filter: none !important;
+        transition: none !important;
+        /* 強制重置 Tailwind 的陰影與環繞 (Ring) 變數 */
+        --tw-shadow: 0 0 #0000 !important;
+        --tw-shadow-colored: 0 0 #0000 !important;
+        --tw-ring-offset-shadow: 0 0 #0000 !important;
+        --tw-ring-shadow: 0 0 #0000 !important;
+        --tw-ring-color: transparent !important;
+        --tw-ring-offset-color: transparent !important;
+      }
+
       /* 1. Global Reset */
       body,
       #root,
@@ -58,9 +74,9 @@
         overflow: visible !important;
         display: block !important;
         background: white !important;
+        background-color: white !important;
         margin: 0 !important;
         padding: 0 !important;
-        /* 移除 padding，避免內容偏下 */
       }
 
       /* 2. Hide Non-Print Elements */
@@ -106,6 +122,7 @@
         background-image: none !important;
         padding: 0 !important;
         margin: 0 !important;
+        display: block !important;
       }
 
       /* Use wrapper classes to reset layout during print */

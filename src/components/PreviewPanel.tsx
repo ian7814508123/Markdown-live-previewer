@@ -251,7 +251,7 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
                     } : {}}
                 >
                     <div
-                        className={showPrintPreview ? 'print-preview-container origin-top-left flex flex-col gap-8' : 'print:print-preview-container w-full h-full flex flex-col gap-8'}
+                        className={showPrintPreview ? 'print-preview-container origin-top-left flex flex-col gap-8' : 'print:print-preview-container print:gap-0 w-full h-full flex flex-col gap-8'}
                         style={showPrintPreview ? {
                             transform: `scale(${activeScale})`,
                             width: paperPx.w,
@@ -286,7 +286,7 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
                                             {doc?.name || '無標題文件'}
                                         </div>
                                     )}
-                                    <div className={showPrintPreview ? 'prose-container relative' : 'print:prose-container max-w-[850px] mx-auto min-h-full bg-white dark:bg-slate-900 p-12 shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-none dark:border dark:border-slate-800 rounded-sm print:shadow-none print:border-none print:p-0'}>
+                                    <div className={showPrintPreview ? 'prose-container relative' : 'print:prose-container max-w-[850px] mx-auto min-h-full bg-white dark:bg-slate-900 p-12 shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-none dark:border dark:border-slate-800 rounded-sm print:shadow-none print:border-none print:p-0 print:bg-white'}>
                                         <MarkdownPreview
                                             content={docContent}
                                             theme={theme}

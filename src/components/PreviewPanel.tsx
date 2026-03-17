@@ -279,13 +279,6 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
                                     onScroll={!showPrintPreview && isActive ? onScroll : undefined}
                                     className={`${showPrintPreview ? 'print-paper paper-' + paperSize.toLowerCase() + ' paper-' + orientation + ' margin-' + margin : 'print:print-paper print:paper-' + paperSize.toLowerCase() + ' print:paper-' + orientation + ' print:margin-' + margin + ' absolute inset-0 overflow-auto custom-scrollbar p-8 bg-white dark:bg-slate-900'} transition-all duration-300 print:max-w-none print:w-full print:shadow-none print:p-0 print:border-none print:rounded-none print:static print:inset-auto print:h-auto ${isVisibleOnScreen ? 'block' : 'hidden'} ${!isVisibleOnScreen && isVisibleInPrint ? 'print:block' : ''} ${!isActive && (!showPrintPreview && !isVisibleInPrint) ? 'tab-inactive' : ''} ${isActive && showPrintPreview ? 'ring-2 ring-indigo-500 ring-offset-4 dark:ring-offset-slate-950' : ''}`}
                                 >
-                                    {/* 增加文件標題標籤 (僅在合併預覽模式下且螢幕可見時顯示) */}
-                                    {showPrintPreview && isMergedMode && isVisibleOnScreen && (
-                                        <div className="absolute -top-10 left-0 flex items-center gap-2 px-4 py-1.5 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-t-lg shadow-lg print:hidden">
-                                            <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-green-400 animate-pulse' : 'bg-white/40'}`} />
-                                            {doc?.name || '無標題文件'}
-                                        </div>
-                                    )}
                                     <div className={showPrintPreview ? 'prose-container relative' : 'print:prose-container max-w-[850px] mx-auto min-h-full bg-white dark:bg-slate-900 p-12 shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-none dark:border dark:border-slate-800 rounded-sm print:shadow-none print:border-none print:p-0 print:bg-white'}>
                                         <MarkdownPreview
                                             content={docContent}

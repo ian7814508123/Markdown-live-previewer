@@ -23,9 +23,15 @@ const CodeMirrorEditor = React.forwardRef<ReactCodeMirrorRef, CodeMirrorEditorPr
         const exts = [
             EditorView.lineWrapping,
             mode === 'mermaid' ? mermaid() : markdown({ base: markdownLanguage, codeLanguages: languages }),
+            // 透過 domEventHandlers 確保監聽到 scroller 的捲動事件
+            EditorView.domEventHandlers({
+                scroll: (event, view) => {
+                    if (onScroll) onScroll(event);
+                }
+            })
         ];
         return exts;
-    }, [mode]);
+    }, [mode, onScroll]);
 
     const theme = isDarkMode ? vscodeDark : vscodeLight;
 
@@ -35,7 +41,7 @@ const CodeMirrorEditor = React.forwardRef<ReactCodeMirrorRef, CodeMirrorEditorPr
 
     // Handle scroll synchronization
     const handleScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
-        if (onScroll && event.currentTarget) {
+        if (onScroll) {
             onScroll(event);
         }
     }, [onScroll]);

@@ -411,13 +411,19 @@ const WikiLink: React.FC<WikiLinkProps> = React.memo(({ name, children, document
 
     return (
         <a
-            href={`#${name}`}
+            href={`#wikilink-${encodeURIComponent(decodedName)}`}
             onClick={(e) => {
-                e.preventDefault();
-                if (exists && onSelectDocument && targetDoc) {
-                    onSelectDocument(targetDoc.id);
-                } else if (!exists && onCreateMissing) {
-                    onCreateMissing(name);
+                // 如果在目前的「列印預覽模式」或「PDF」中，不攔截預設跳轉（讓它實現頁面內移動）
+                // 但為了瀏覽器內的使用者體驗，如果是正常模式，依然執行切換文件
+                if (window.location.hash.includes('wikilink-') || document.querySelector('.show-print-preview')) {
+                    // 讓瀏覽器自然跳轉
+                } else {
+                    e.preventDefault();
+                    if (exists && onSelectDocument && targetDoc) {
+                        onSelectDocument(targetDoc.id);
+                    } else if (!exists && onCreateMissing) {
+                        onCreateMissing(name);
+                    }
                 }
             }}
             className={`px-1 py-0.5 rounded-md transition-all duration-200 ${exists ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border-b border-indigo-300 dark:border-indigo-700' : 'text-slate-400 dark:text-slate-500 bg-slate-100/50 dark:bg-slate-800/20 hover:bg-slate-200 dark:hover:bg-slate-800 border-b border-dashed border-slate-300 dark:border-slate-700 italic cursor-help'}`}
@@ -546,6 +552,21 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
             return <a href={href} {...props} target="_blank" rel="noopener noreferrer">{children}</a>;
         }
     }), [isDark, documents, onSelectDocument, onCreateMissing, currentDocId]);
+
+    // 監聽圖片載入完成，若有必要可觸發同步刷新
+    useEffect(() => {
+        const container = document.querySelector('.prose');
+        if (!container) return;
+
+        const handleImageLoad = () => {
+            // 圖片載入後高度會變，這可能會導致同步偏差。
+            // 這裡可以觸發一個自定義事件或回調，讓 App.tsx 重新對齊
+            window.dispatchEvent(new CustomEvent('preview-content-height-change'));
+        };
+
+        container.addEventListener('load', handleImageLoad, true);
+        return () => container.removeEventListener('load', handleImageLoad, true);
+    }, [debouncedContent]);
 
     return (
         <div className={`prose max-w-none p-8 select-text ${isDark ? 'prose-invert' : 'prose-slate'} prose-headings:font-bold prose-a:text-indigo-600 prose-img:rounded-xl prose-table:border-collapse prose-th:border prose-th:border-slate-300 dark:prose-th:border-slate-700 prose-th:p-2 prose-td:border prose-td:border-slate-300 dark:prose-td:border-slate-700 prose-td:p-2 print:p-0 print:max-w-none`}>

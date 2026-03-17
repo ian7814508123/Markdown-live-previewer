@@ -322,4 +322,120 @@ mjx-container:not([display="true"]) {
     .tab-inactive {
         display: none !important;
     }
+
+    /* 重置預覽模擬用的邊距與樣式 */
+    .prose-container {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .print-paper {
+        width: 100% !important;
+        min-height: auto !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* 強制每個文件在新的一頁開始 */
+    [id^="wikilink-"] {
+        page-break-before: always !important;
+    }
+
+    /* 隱藏預覽專用的指標 */
+    .page-break-indicator {
+        display: none !important;
+    }
+}
+
+/* ── 列印預覽模式 (Print Preview Simulation) ────────────────────────────── */
+
+/* 模擬 A4 紙張的基礎樣式 */
+.print-paper {
+    background: white !important;
+    color: black !important;
+    margin: 0 auto !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+    position: relative;
+    border: none !important;
+    min-height: 297mm; /* A4 高度參考 */
+    overflow: hidden; /* 確保內容不會溢出紙張邊界 */
+}
+
+/* 分頁指示線 */
+.page-break-indicator {
+    height: 1px;
+    border-top: 1.5px dashed rgba(99, 102, 241, 0.5); /* 靛藍色虛線 */
+    z-index: 10;
+    pointer-events: none;
+}
+
+.page-break-indicator::after {
+    content: "PAGE BREAK";
+    position: absolute;
+    right: 0;
+    top: -10px;
+    font-size: 9px;
+    font-weight: 800;
+    background: #6366f1;
+    color: white;
+    padding: 1px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+}
+
+@media print {
+    .page-break-indicator {
+        display: none !important;
+    }
+}
+
+/* 不同尺寸的容器寬度 */
+.paper-a4 { width: 210mm; min-height: 297mm; }
+.paper-a3 { width: 297mm; min-height: 420mm; }
+.paper-letter { width: 215.9mm; min-height: 279.4mm; }
+
+/* 橫向模式調換寬高 */
+.paper-landscape.paper-a4 { width: 297mm; }
+.paper-landscape.paper-a3 { width: 420mm; }
+.paper-landscape.paper-letter { width: 279.4mm; }
+
+/* 分頁線預覽 (僅在瀏覽器預覽時顯示) */
+.page-break-indicator {
+    height: 1px;
+    border-top: 2px dashed #e2e8f0;
+    margin: 2rem -3rem;
+    position: relative;
+    z-index: 10;
+}
+
+.page-break-indicator::after {
+    content: 'PAGE BREAK';
+    position: absolute;
+    right: 0;
+    top: -8px;
+    background: #f8fafc;
+    color: #94a3b8;
+    font-size: 8px;
+    padding: 0 8px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+}
+
+/* 模擬頁面邊距 */
+.margin-normal .prose-container { padding: 15mm !important; }
+.margin-narrow .prose-container { padding: 5mm !important; }
+.margin-none .prose-container { padding: 0 !important; }
+
+.dark .print-paper {
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5) !important;
+}
+
+/* 滾動容器優化 */
+.show-print-preview .preview-panel > div.flex-1 {
+    background-color: #f1f5f9; /* 外層灰底，凸顯白紙 */
+}
+
+.dark .show-print-preview .preview-panel > div.flex-1 {
+    background-color: #0f172a;
 }

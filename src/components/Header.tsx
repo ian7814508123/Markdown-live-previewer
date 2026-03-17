@@ -16,8 +16,8 @@ interface HeaderProps {
     onInsertCode: (code: string) => void;
     onImportFullFile: (file: File, content: string) => void;
     onOpenSettings: () => void;
-    /** Mermaid PDF 匹出：注入 @page CSS 後列印，繞開 canvas 安全限制 */
-    onMermaidPrint: () => void;
+    /** 統一列印 / PDF 呼叫 */
+    onPrint: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -33,7 +33,7 @@ const Header: React.FC<HeaderProps> = ({
     onInsertCode,
     onImportFullFile,
     onOpenSettings,
-    onMermaidPrint,
+    onPrint,
 }) => {
     const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState(false);
     const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
@@ -219,7 +219,7 @@ const Header: React.FC<HeaderProps> = ({
                                 <div className="w-9 h-9 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl flex items-center justify-center"><FileText size={18} /></div>,
                                 'Mermaid 原始碼', '.md 源碼')}
                             <div className="mx-4 my-1 border-t border-slate-100 dark:border-slate-700" />
-                            {menuItem(() => handleExport(onMermaidPrint),
+                            {menuItem(() => handleExport(onPrint),
                                 <div className="w-9 h-9 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-xl flex items-center justify-center"><Printer size={18} /></div>,
                                 '列印 / PDF', '套用 PDF 版面設定')}
 
@@ -302,9 +302,9 @@ const Header: React.FC<HeaderProps> = ({
                                 <div className="w-9 h-9 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl flex items-center justify-center"><FileText size={18} /></div>,
                                 'Markdown 檔案', '.md 源碼')}
                             <div className="mx-4 my-1 border-t border-slate-100 dark:border-slate-700" />
-                            {menuItem(() => handleExport(() => window.print()),
+                            {menuItem(() => handleExport(onPrint),
                                 <div className="w-9 h-9 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-xl flex items-center justify-center"><Printer size={18} /></div>,
-                                '列印 / PDF', '瀏覽器原生')}
+                                '列印 / PDF', '套用 PDF 版面設定')}
 
                             {/* AdSense In-Menu Ad */}
                             <div className="mx-2 mt-4 p-2 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 min-h-[100px] flex items-center justify-center relative overflow-hidden">

@@ -230,35 +230,48 @@ const App: React.FC = () => {
   // Sync Scroll State
   const targetScrollTop = useRef(0);
   const currentScrollTop = useRef(0);
+  const scrollSource = useRef<'editor' | 'preview' | null>(null);
   const isHoveringEditor = useRef(false);
   const isHoveringPreview = useRef(false);
   const rafId = useRef<number | null>(null);
 
   const syncLoop = useCallback(() => {
-    if (!previewRef.current || !editorRef.current?.view) return;
+    if (!previewRef.current || !editorRef.current?.view) {
+      scrollSource.current = null;
+      rafId.current = null;
+      return;
+    }
 
     const editorView = editorRef.current.view;
-    const editorScrollTop = editorView.scrollDOM.scrollTop;
     const diff = targetScrollTop.current - currentScrollTop.current;
     
-    if (Math.abs(diff) < 0.5) {
+    if (Math.abs(diff) < 0.8) { // 稍微放寬判定範圍
       currentScrollTop.current = targetScrollTop.current;
-      rafId.current = null; // Stop loop
+      rafId.current = null;
+      scrollSource.current = null;
+      // console.log("Sync completed and source released");
+      return; // 確保中斷
     } else {
-      currentScrollTop.current += diff * 0.1; // Smooth factor
+      currentScrollTop.current += diff * 0.15;
       rafId.current = requestAnimationFrame(syncLoop);
     }
 
-    if (isHoveringEditor.current) {
+    if (scrollSource.current === 'editor') {
       previewRef.current.scrollTop = currentScrollTop.current;
-    } else if (isHoveringPreview.current) {
+    } else if (scrollSource.current === 'preview') {
       editorView.scrollDOM.scrollTop = currentScrollTop.current;
     }
   }, []);
 
   const handleEditorScroll = () => {
-    if (!isSyncScroll || mode !== 'markdown' || !isHoveringEditor.current) return;
+    // console.log("Editor Scroll Triggered", { isSyncScroll, mode, scrollSource: scrollSource.current, isHoveringEditor: isHoveringEditor.current });
+    
+    if (!isSyncScroll || mode !== 'markdown') return;
     if (!editorRef.current?.view) return;
+
+    if (scrollSource.current === 'preview' && !isHoveringEditor.current) return;
+    
+    scrollSource.current = 'editor';
 
     const editorView = editorRef.current.view;
     const scrollDOM = editorView.scrollDOM;
@@ -269,7 +282,6 @@ const App: React.FC = () => {
       targetScrollTop.current = percentage * (previewRef.current.scrollHeight - previewRef.current.clientHeight);
 
       if (!rafId.current) {
-        // Sync starting point to avoid jump
         currentScrollTop.current = previewRef.current.scrollTop;
         rafId.current = requestAnimationFrame(syncLoop);
       }
@@ -277,9 +289,16 @@ const App: React.FC = () => {
   };
 
   const handlePreviewScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (!isSyncScroll || mode !== 'markdown' || !isHoveringPreview.current) return;
+    if (!isSyncScroll || mode !== 'markdown') return;
 
-    const target = e.target as HTMLDivElement;
+    const target = e.currentTarget;
+    if (!target) return;
+
+    // 只有當「編輯器」正在主導且滑鼠不在預覽區上方時，才跳過
+    if (scrollSource.current === 'editor' && !isHoveringPreview.current) return;
+
+    scrollSource.current = 'preview';
+
     const percentage = target.scrollTop / (target.scrollHeight - target.clientHeight || 1);
 
     if (editorRef.current?.view) {
@@ -290,7 +309,6 @@ const App: React.FC = () => {
       targetScrollTop.current = percentage * (editorScrollHeight - editorClientHeight);
 
       if (!rafId.current) {
-        // Sync starting point to avoid jump
         currentScrollTop.current = editorView.scrollDOM.scrollTop || 0;
         rafId.current = requestAnimationFrame(syncLoop);
       }
@@ -452,41 +470,69 @@ const App: React.FC = () => {
     return name.replace(/[<>:"/\\|?*]/g, '-').trim();
   };
 
-  /** Mermaid PDF 匹出：注入 @page CSS 後呼叫 window.print()，完全繞開 canvas 安全限制 */
-  const handleMermaidPrint = () => {
+  /** 統一下載 / 列印：注入 @page CSS 後呼叫 window.print() */
+  const handlePrint = (printMode: EditorMode) => {
     const { paperSize, orientation, scale, margin } = settings.printSettings;
     const marginMap: Record<string, string> = { normal: '1.5cm', narrow: '0.5cm', none: '0' };
-    const scaleCSS = scale === 'fit'
-      ? 'svg { max-width: 100% !important; width: 100% !important; height: auto !important; }'
-      : scale === 'actual' ? ''
-        : `svg { zoom: ${scale}%; }`;
+    
+    // 縮放與佈局樣式
+    let additionalCSS = '';
+    if (printMode === 'mermaid') {
+      additionalCSS = scale === 'fit'
+        ? 'svg { max-width: 100% !important; width: 100% !important; height: auto !important; }'
+        : scale === 'actual' ? ''
+          : `svg { zoom: ${scale}%; }`;
+    } else {
+      // Markdown 模式：當開啟列印預覽時，我們需要確保列印時捨棄所有 UI，只留紙張
+      additionalCSS = `
+        .preview-panel { background: white !important; padding: 0 !important; }
+        .print-outer-wrapper { width: 100% !important; height: auto !important; min-height: auto !important; transform: none !important; margin: 0 !important; padding: 0 !important; }
+        .print-preview-container { transform: none !important; width: 100% !important; gap: 0 !important; }
+        .print-paper { box-shadow: none !important; margin: 0 !important; width: 100% !important; min-height: none !important; }
+      `;
+    }
 
     const style = document.createElement('style');
-    style.id = 'mermaid-print-override';
+    style.id = 'app-print-override';
     style.textContent = `
       @media print {
         @page { size: ${paperSize} ${orientation}; margin: ${marginMap[margin] ?? '1.5cm'}; }
-        header, aside, .tab-bar, section:not(.preview-panel) { display: none !important; }
-        ${scaleCSS}
+        header, aside, .tab-bar, section:not(.preview-panel), .status-bar, .floating-controls { display: none !important; }
+        .preview-panel { overflow: visible !important; width: 100% !important; height: auto !important; position: static !important; }
+        ${additionalCSS}
       }
     `;
     document.head.appendChild(style);
     window.print();
 
     const cleanup = () => {
-      document.getElementById('mermaid-print-override')?.remove();
+      document.getElementById('app-print-override')?.remove();
     };
 
     window.addEventListener('afterprint', cleanup, { once: true });
   };
 
   const downloadMarkdown = () => {
-    const blob = new Blob([code], { type: 'text/markdown;charset=utf-8' });
+    let contentToDownload = code;
+    let fileName = currentDocument?.name ? sanitizeFileName(currentDocument.name) : `document-${Date.now()}`;
+
+    // 如果開啟了「合併儲存庫 (Markdown)」且文件在資料夾中
+    if (settings.printSettings.mergeVaultOnMdExport && currentDocument?.folderId) {
+      const vaultDocs = documents.filter(d => d.folderId === currentDocument.folderId && d.mode === 'markdown');
+      if (vaultDocs.length > 1) {
+        contentToDownload = vaultDocs
+          .map(d => `--- \n# ${d.name}\n\n${d.content}`)
+          .join('\n\n');
+        
+        const folder = folders.find(f => f.id === currentDocument.folderId);
+        fileName = folder ? `${sanitizeFileName(folder.name)}-full` : `${fileName}-merged`;
+      }
+    }
+
+    const blob = new Blob([contentToDownload], { type: 'text/markdown;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    // 使用文檔自訂名稱，若無則使用時間戳記
-    const fileName = currentDocument?.name ? sanitizeFileName(currentDocument.name) : `document-${Date.now()}`;
     link.download = `${fileName}.md`;
     link.click();
     URL.revokeObjectURL(url);
@@ -748,7 +794,7 @@ const App: React.FC = () => {
           onInsertCode={(newCode) => handleCodeChange(code + '\n\n' + newCode)}
           onImportFullFile={handleImportFullFile}
           onOpenSettings={() => setIsSettingsOpen(true)}
-          onMermaidPrint={handleMermaidPrint}
+          onPrint={() => handlePrint(mode)}
         />
 
         <main className="flex-1 flex overflow-hidden print:block print:overflow-visible">
@@ -797,8 +843,13 @@ const App: React.FC = () => {
               copied={copied}
               onScroll={handleEditorScroll}
               isDarkMode={isDarkMode}
-              onMouseEnter={() => { isHoveringEditor.current = true; }}
-              onMouseLeave={() => { isHoveringEditor.current = false; }}
+              onMouseEnter={() => { 
+                isHoveringEditor.current = true;
+                if (!rafId.current) scrollSource.current = null;
+              }}
+              onMouseLeave={() => { 
+                isHoveringEditor.current = false;
+              }}
               onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
               openDocIds={openDocIds}
               currentDocId={currentDocId}
@@ -827,13 +878,19 @@ const App: React.FC = () => {
               code={code}
               theme={theme}
               isDarkMode={isDarkMode}
-              onMouseEnter={() => { isHoveringPreview.current = true; }}
-              onMouseLeave={() => { isHoveringPreview.current = false; }}
+              onMouseEnter={() => {
+                isHoveringPreview.current = true;
+                if (!rafId.current) scrollSource.current = null;
+              }}
+              onMouseLeave={() => {
+                isHoveringPreview.current = false;
+              }}
               documents={documents}
               onSelectDocument={handleDocumentSwitch}
               onCreateMissing={handleOpenCreateModal}
               currentDocId={currentDocId}
               openDocIds={openDocIds}
+              printSettings={settings.printSettings}
             />
           </div>
         </main>
@@ -848,6 +905,7 @@ const App: React.FC = () => {
           onRestoreDefaults={restoreDefaults}
           currentPrintSettings={settings.printSettings}
           onSavePrintSettings={updatePrintSettings}
+          isStandalone={!documents.find(d => d.id === currentDocId)?.folderId}
         />
       </div>
     </MathJaxContext>

@@ -9,6 +9,12 @@ export interface PrintSettings {
     /** 'fit' = 符合頁面, 'actual' = 實際大小, number = 自訂百分比 (10–200) */
     scale: 'fit' | 'actual' | number;
     margin: 'normal' | 'narrow' | 'none';
+    /** 匯出 MD 時合併儲存庫 */
+    mergeVaultOnMdExport: boolean;
+    /** 下載 PDF 時合併儲存庫 */
+    mergeVaultOnPdfExport: boolean;
+    /** 在預覽區顯示列印預覽（邊界與分頁線） */
+    showPrintPreview: boolean;
 }
 
 export interface AppSettings {
@@ -21,6 +27,9 @@ const DEFAULT_PRINT_SETTINGS: PrintSettings = {
     orientation: 'landscape',
     scale: 'fit',
     margin: 'normal',
+    mergeVaultOnMdExport: false,
+    mergeVaultOnPdfExport: false,
+    showPrintPreview: false,
 };
 
 const DEFAULT_SETTINGS: AppSettings = {

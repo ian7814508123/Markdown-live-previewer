@@ -42,28 +42,21 @@
       background: #94a3b8;
     }
 
-    @media print {
-      @page {
-        margin: 1cm;
-        /* 設定頁面邊距為 1cm，避免被裁切 */
-        size: auto;
-      }
+      @media print {
+        @page {
+          margin: 1cm;
+          /* 設定頁面邊距為 1cm，避免被裁切 */
+          size: auto;
+        }
 
-      /* 0. Aggressive Reset - 防止 PDF 出現異常陰影、濾鏡或漸層 */
-      *, ::before, ::after {
-        box-shadow: none !important;
-        text-shadow: none !important;
-        filter: none !important;
-        -webkit-filter: none !important;
-        transition: none !important;
-        /* 強制重置 Tailwind 的陰影與環繞 (Ring) 變數 */
-        --tw-shadow: 0 0 #0000 !important;
-        --tw-shadow-colored: 0 0 #0000 !important;
-        --tw-ring-offset-shadow: 0 0 #0000 !important;
-        --tw-ring-shadow: 0 0 #0000 !important;
-        --tw-ring-color: transparent !important;
-        --tw-ring-offset-color: transparent !important;
-      }
+        /* 0. Aggressive Reset - 防止 PDF 出現異常陰影、濾鏡或漸層 (僅限於列印模式) */
+        .print-preview-container *, .print-preview-container ::before, .print-preview-container ::after {
+          box-shadow: none !important;
+          text-shadow: none !important;
+          filter: none !important;
+          -webkit-filter: none !important;
+          transition: none !important;
+        }
 
       /* 1. Global Reset */
       body,

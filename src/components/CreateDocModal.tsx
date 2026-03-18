@@ -42,6 +42,20 @@ const CreateDocModal: React.FC<CreateDocModalProps> = ({ isOpen, onClose, onCrea
             setTimeout(() => {
                 inputRef.current?.focus();
             }, 100);
+
+            // 初始化 AdSense - 延遲執行以確保容器寬度已計算 (xl 螢幕)
+            const adTimer = setTimeout(() => {
+                try {
+                    if (typeof window !== 'undefined') {
+                        const adsbygoogle = (window as any).adsbygoogle || [];
+                        adsbygoogle.push({});
+                        adsbygoogle.push({});
+                    }
+                } catch (e) {
+                    console.error('AdSense CreateDocModal error:', e);
+                }
+            }, 500);
+            return () => clearTimeout(adTimer);
         }
     }, [isOpen]);
 

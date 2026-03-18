@@ -11,14 +11,22 @@ const AdWall: React.FC<AdWallProps> = ({ onUnlock }) => {
     const [isCounting, setIsCounting] = useState(true);
 
     useEffect(() => {
-        // 嘗試加載廣告
-        try {
-            (window as any).adsbygoogle = (window as any).adsbygoogle || [];
-            (window as any).adsbygoogle.push({});
-        } catch (e) {
-            console.error('AdSense load error:', e);
-        }
+        // 嘗試加載廣告 - 增加小延遲以確保 DOM 已渲染並計算寬度
+        const timer = setTimeout(() => {
+            try {
+                if (typeof window !== 'undefined') {
+                    (window as any).adsbygoogle = (window as any).adsbygoogle || [];
+                    (window as any).adsbygoogle.push({});
+                }
+            } catch (e) {
+                console.error('AdSense load error:', e);
+            }
+        }, 300); // 300ms 延遲
 
+        return () => clearTimeout(timer);
+    }, []); // 僅在掛載時執行一次
+
+    useEffect(() => {
         // 倒數計時邏輯
         let timer: any;
         if (isCounting && countdown > 0) {

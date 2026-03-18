@@ -38,6 +38,7 @@ export default defineConfig(() => {
       }
     },
     build: {
+      sourcemap: true,
       commonjsOptions: {
         transformMixedEsModules: true,
       },
@@ -49,9 +50,9 @@ export default defineConfig(() => {
             'vendor-mathjax': ['better-react-mathjax', 'rehype-mathjax', 'mathjax-full'],
             'vendor-utils': ['xlsx', 'pdf-lib'],
             'vendor-ui': [
-              'react', 
-              'react-dom', 
-              'lucide-react', 
+              'react',
+              'react-dom',
+              'lucide-react',
               '@uiw/react-codemirror',
               '@codemirror/view',
               '@codemirror/state'

@@ -4,7 +4,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>標記掉落 即時編輯者</title>
+  <meta name="description"
+    content="Markdown-live-previewer - 一款強大且美觀的 Markdown 即時預覽編輯器，支持 Mermaid 圖表、LaTeX 數學公式及多種導出格式。">
+  <meta name="keywords" content="Markdown, Editor, Live Preview, Mermaid, MathJax,Smiles, Web Tool">
+  <meta name="author" content="Huang Jyun Ying">
+  <meta name="theme-color" content="#6366f1">
+  <title>Markdown Live Previewer | 即時編輯預覽器</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
   <link
@@ -42,21 +47,23 @@
       background: #94a3b8;
     }
 
-      @media print {
-        @page {
-          margin: 1cm;
-          /* 設定頁面邊距為 1cm，避免被裁切 */
-          size: auto;
-        }
+    @media print {
+      @page {
+        margin: 1cm;
+        /* 設定頁面邊距為 1cm，避免被裁切 */
+        size: auto;
+      }
 
-        /* 0. Aggressive Reset - 防止 PDF 出現異常陰影、濾鏡或漸層 (僅限於列印模式) */
-        .print-preview-container *, .print-preview-container ::before, .print-preview-container ::after {
-          box-shadow: none !important;
-          text-shadow: none !important;
-          filter: none !important;
-          -webkit-filter: none !important;
-          transition: none !important;
-        }
+      /* 0. Aggressive Reset - 防止 PDF 出現異常陰影、濾鏡或漸層 (僅限於列印模式) */
+      .print-preview-container *,
+      .print-preview-container ::before,
+      .print-preview-container ::after {
+        box-shadow: none !important;
+        text-shadow: none !important;
+        filter: none !important;
+        -webkit-filter: none !important;
+        transition: none !important;
+      }
 
       /* 1. Global Reset */
       body,
@@ -99,8 +106,8 @@
 
       /* Hide Floating Controls, Tips, and Status Bar within Preview Panel */
       /* These are absolute positioned divs or the bottom h-10 bar */
-      .preview-panel > div.absolute,
-      .preview-panel > div.h-10 {
+      .preview-panel>div.absolute,
+      .preview-panel>div.h-10 {
         display: none !important;
       }
 
@@ -155,7 +162,8 @@
       }
 
       /* 重置 Tailwind Typography 的深色模式變數，確保列印時永遠是黑紙白字（或更準確地說：白紙黑字） */
-      .prose, .prose-invert {
+      .prose,
+      .prose-invert {
         --tw-prose-body: #000 !important;
         --tw-prose-headings: #000 !important;
         --tw-prose-lead: #333 !important;
@@ -175,7 +183,8 @@
       }
 
       /* 強制將所有文字設為黑色，防止繼承深色模式的淺灰色 */
-      .prose *, .prose-invert * {
+      .prose *,
+      .prose-invert * {
         color: black !important;
         border-color: #ddd !important;
       }
@@ -223,7 +232,7 @@
   <link rel="stylesheet" href="/index.css?v=1.1.0">
   <!-- Google AdSense -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8170892352848798"
-     crossorigin="anonymous"></script>
+    crossorigin="anonymous"></script>
 </head>
 
 <body class="bg-slate-50 text-slate-900 overflow-hidden">

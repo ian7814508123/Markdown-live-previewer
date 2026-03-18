@@ -59,6 +59,8 @@ const Header: React.FC<HeaderProps> = ({
     ];
     const currentTheme = THEMES.find(t => t.value === theme) ?? THEMES[0];
 
+    const [hasPushedAd, setHasPushedAd] = useState(false);
+
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (downloadMenuRef.current && !downloadMenuRef.current.contains(event.target as Node)) {
@@ -71,6 +73,24 @@ const Header: React.FC<HeaderProps> = ({
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    // 當選單打開時初始化 AdSense
+    useEffect(() => {
+        if (isDownloadMenuOpen && !hasPushedAd) {
+            const timer = setTimeout(() => {
+                try {
+                    if (typeof window !== 'undefined') {
+                        (window as any).adsbygoogle = (window as any).adsbygoogle || [];
+                        (window as any).adsbygoogle.push({});
+                        setHasPushedAd(true);
+                    }
+                } catch (e) {
+                    console.error('AdSense Header error:', e);
+                }
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [isDownloadMenuOpen, hasPushedAd]);
 
     const handleExport = (action: () => void) => {
         action();

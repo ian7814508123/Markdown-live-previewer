@@ -43,6 +43,27 @@ function renderToolPanel(
 const ToolsModal: React.FC<ToolsModalProps> = ({ isOpen, onClose, currentDocContent, currentDocMode, onInsertIntoDoc }) => {
     const [activeTool, setActiveTool] = useState<ToolId>('pdf-merge');
 
+    // 初始化 AdSense
+    useEffect(() => {
+        if (!isOpen) return;
+
+        // 延遲執行以確保 Modal 動畫完成且容器寬度已計算
+        const timer = setTimeout(() => {
+            try {
+                if (typeof window !== 'undefined') {
+                    const adsbygoogle = (window as any).adsbygoogle || [];
+                    // 此 Modal 有左右兩個廣告位 (xl 螢幕顯示)
+                    adsbygoogle.push({});
+                    adsbygoogle.push({});
+                }
+            } catch (e) {
+                console.error('AdSense ToolsModal error:', e);
+            }
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [isOpen]);
+
     // 按 Escape 關閉
     useEffect(() => {
         if (!isOpen) return;

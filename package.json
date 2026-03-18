@@ -43,8 +43,8 @@
   },
   "devDependencies": {
     "@originjs/vite-plugin-commonjs": "^1.0.3",
-    "@tailwindcss/postcss": "^4.0.0",
     "@tailwindcss/typography": "^0.5.19",
+    "@tailwindcss/vite": "^4.2.1",
     "@types/node": "^22.14.0",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@uiw/codemirror-theme-vscode": "^4.25.8",

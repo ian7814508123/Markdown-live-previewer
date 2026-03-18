@@ -1,0 +1,490 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* ── Tailwind v4 深色模式策略修正：使其支援手動 .dark 類別切換 ── */
+@variant dark (&:where(.dark, .dark *));
+
+@layer base {
+    :root {
+        color-scheme: light;
+    }
+    .dark {
+        color-scheme: dark;
+    }
+}
+
+/* ── Material Design 3 動效與緩動變數 ─────────────────────────────────── */
+:root {
+    --m3-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+    --m3-easing-emphasized: cubic-bezier(0.3, 0, 0, 1);
+    --m3-easing-decelerate: cubic-bezier(0, 0, 0, 1);
+    --m3-easing-accelerate: cubic-bezier(0.3, 0, 1, 1);
+}
+
+/* ── 全域基礎過渡（精簡版） ───────────────────────────────────────────── */
+html,
+body {
+    /* 僅針對最基礎的背景與文字色 */
+    transition: background-color 0.4s var(--m3-easing-standard),
+        color 0.4s var(--m3-easing-standard);
+}
+
+/* ── View Transitions API：圓形擴散主題切換 ────────────────────────────── */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+/* 圓形擴散效果的動畫定義 */
+::view-transition-new(root) {
+    clip-path: circle(0% at var(--reveal-center-x, 50%) var(--reveal-center-y, 50%));
+    animation: reveal-circle 500ms var(--m3-easing-emphasized) forwards;
+}
+
+@keyframes reveal-circle {
+    to {
+        clip-path: circle(125% at var(--reveal-center-x, 50%) var(--reveal-center-y, 50%));
+    }
+}
+
+/* ── 文檔切換與通用淡入動畫 ─────────────────────────────────────────── */
+@keyframes m3-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.m3-fade-in {
+    animation: m3-fade-in 300ms var(--m3-easing-standard) both;
+}
+
+@keyframes doc-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.doc-fade-in {
+    animation: doc-fade-in 180ms var(--m3-easing-standard) both;
+}
+
+/* ── 視窗與彈窗動效 (Slide-up & Scale) ───────────────────────────────── */
+@keyframes m3-slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.m3-slide-up {
+    animation: m3-slide-up 400ms var(--m3-easing-standard) both;
+}
+
+/* ── 工具面板切換：從中心往上下浮現 ──────────────────────────────────────
+ * 設計原則：transform-origin: center 讓縮放從元素中央展開，
+ * 配合 opacity 消除閃爍感，cubic-bezier(0.4,0,0.2,1) 達到先快後慢的物理感。
+ * 適用場景：任何需要「上下撐開」或「左右撐開」的面板元素。
+ * 左右展開：改用 scaleX(0.94)→scaleX(1) 即可，transform-origin 同樣為 center。
+ * ─────────────────────────────────────────────────────────────────────── */
+@keyframes toolPanelIn {
+    from {
+        opacity: 0;
+        transform: scaleY(0.94);
+        transform-origin: center;
+    }
+
+    to {
+        opacity: 1;
+        transform: scaleY(1);
+        transform-origin: center;
+    }
+}
+
+/* ── 側邊欄與工具切換 (Slide-in) ─────────────────────────────────────── */
+@keyframes slide-in-from-right {
+    from {
+        opacity: 0;
+        transform: translateX(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slide-in-from-left {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.animate-in {
+    animation-fill-mode: both;
+}
+
+.slide-in-from-right-4 {
+    animation-name: slide-in-from-right;
+}
+
+.fade-in {
+    animation-name: m3-fade-in;
+}
+
+.duration-150 {
+    animation-duration: 150ms;
+}
+
+.duration-200 {
+    animation-duration: 200ms;
+}
+
+.duration-300 {
+    animation-duration: 300ms;
+}
+
+.duration-400 {
+    animation-duration: 400ms;
+}
+
+/* ── MD3 Ripple Effect ─────────────────────────────────── */
+
+@keyframes md-ripple {
+    from {
+        transform: scale(0);
+        opacity: 0.36;
+    }
+
+    to {
+        transform: scale(2.5);
+        opacity: 0;
+    }
+}
+
+.md-ripple-root {
+    position: relative;
+    overflow: hidden;
+    /* 確保 ripple 不超出圓角邊界 */
+    isolation: isolate;
+}
+
+.md-ripple-wave {
+    position: absolute;
+    border-radius: 50%;
+    background: currentColor;
+    pointer-events: none;
+    transform: scale(0);
+    animation: md-ripple 550ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ── MD3 按下回饋（fallback for non-ripple elements） ───── */
+.md-press {
+    transition: transform 100ms cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow 100ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.md-press:active {
+    transform: scale(0.96);
+}
+
+/* ── 全域捲軸美化 (Scrollbar Styling) ────────────────────────────────── */
+/* 針對 Webkit 瀏覽器 (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    /* 淺色模式下的預設顏色 */
+    border-radius: 20px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+    background-clip: content-box;
+}
+
+/* 深色模式下的捲軸樣式 */
+.dark ::-webkit-scrollbar-thumb {
+    background: #475569;
+    /* slate-600 */
+    background-clip: content-box;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+    /* slate-500 */
+    background-clip: content-box;
+}
+
+/* 針對 Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+.dark * {
+    scrollbar-color: #475569 transparent;
+}
+
+/* ── 列表樣式與其他 ── */
+.prose ol {
+    list-style-type: upper-roman;
+    /* Level 1: I, II, III */
+}
+
+.prose ol ol {
+    list-style-type: lower-roman;
+    /* Level 2: i, ii, iii */
+}
+
+.prose ol ol ol {
+    list-style-type: upper-alpha;
+    /* Level 3: A, B, C */
+}
+
+.prose ol ol ol ol {
+    list-style-type: lower-alpha;
+    /* Level 4: a, b, c */
+}
+
+.prose ol ol ol ol ol {
+    list-style-type: decimal;
+    /* Level 5: 1, 2, 3 */
+}
+
+/* Multi-level Unordered List Styling */
+.prose ul {
+    list-style-type: disc;
+    /* Level 1 */
+}
+
+.prose ul ul {
+    list-style-type: circle;
+    /* Level 2 */
+}
+
+.prose ul ul ul {
+    list-style-type: square;
+    /* Level 3 */
+}
+
+.prose ul ul ul ul {
+    list-style-type: disc;
+    /* Level 4 */
+}
+
+.prose ul ul ul ul ul {
+    list-style-type: circle;
+    /* Level 5 */
+}
+
+/* Print Styles Override (Consolidated) */
+/* Print Styles handled by Tailwind classes in components */
+
+/* MathJax Override for Production Build */
+mjx-container[display="true"] {
+    display: block;
+    margin: 1em 0 !important;
+}
+
+mjx-container:not([display="true"]) {
+    display: inline-block !important;
+    vertical-align: middle;
+}
+
+/* ── 列印 / PDF：只列印當前啟用的分頁 ────────────────────────────────────
+ * 配合 MarkdownPreviewSection 中為非當前 tab 添加的 .tab-inactive class
+ * 確保多分頁情境下 window.print() 只輸出當前文件，而非所有開啟的分頁
+ * ─────────────────────────────────────────────────────────────────────── */
+@media print {
+    .tab-inactive {
+        display: none !important;
+    }
+
+    /* 重置預覽模擬用的邊距與樣式 */
+    .prose-container {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .print-paper {
+        width: 100% !important;
+        min-height: auto !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* 強制每個文件在新的一頁開始 */
+    [id^="wikilink-"] {
+        page-break-before: always !important;
+    }
+
+    /* 隱藏預覽專用的指標 */
+    .page-break-indicator {
+        display: none !important;
+    }
+}
+
+/* ── 列印預覽模式 (Print Preview Simulation) ────────────────────────────── */
+
+/* 模擬 A4 紙張的基礎樣式 */
+.print-paper {
+    background: white !important;
+    color: black !important;
+    margin: 0 auto !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+    position: relative;
+    border: none !important;
+    min-height: 297mm;
+    /* A4 高度參考 */
+    overflow: hidden;
+    /* 確保內容不會溢出紙張邊界 */
+}
+
+/* 分頁指示線 */
+.page-break-indicator {
+    height: 1px;
+    border-top: 1.5px dashed rgba(99, 102, 241, 0.5);
+    /* 靛藍色虛線 */
+    z-index: 10;
+    pointer-events: none;
+}
+
+.page-break-indicator::after {
+    content: "PAGE BREAK";
+    position: absolute;
+    right: 0;
+    top: -10px;
+    font-size: 9px;
+    font-weight: 800;
+    background: #6366f1;
+    color: white;
+    padding: 1px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+}
+
+@media print {
+    .page-break-indicator {
+        display: none !important;
+    }
+}
+
+/* 不同尺寸的容器寬度 */
+.paper-a4 {
+    width: 210mm;
+    min-height: 297mm;
+}
+
+.paper-a3 {
+    width: 297mm;
+    min-height: 420mm;
+}
+
+.paper-letter {
+    width: 215.9mm;
+    min-height: 279.4mm;
+}
+
+/* 橫向模式調換寬高 */
+.paper-landscape.paper-a4 {
+    width: 297mm;
+}
+
+.paper-landscape.paper-a3 {
+    width: 420mm;
+}
+
+.paper-landscape.paper-letter {
+    width: 279.4mm;
+}
+
+/* 分頁線預覽 (僅在瀏覽器預覽時顯示) */
+.page-break-indicator {
+    height: 1px;
+    border-top: 2px dashed #e2e8f0;
+    margin: 2rem -3rem;
+    position: relative;
+    z-index: 10;
+}
+
+.page-break-indicator::after {
+    content: 'PAGE BREAK';
+    position: absolute;
+    right: 0;
+    top: -8px;
+    background: #f8fafc;
+    color: #94a3b8;
+    font-size: 8px;
+    padding: 0 8px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+}
+
+/* 模擬頁面邊距 */
+.margin-normal .prose-container {
+    padding: 15mm !important;
+}
+
+.margin-narrow .prose-container {
+    padding: 5mm !important;
+}
+
+.margin-none .prose-container {
+    padding: 0 !important;
+}
+
+.dark .print-paper {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* 滾動容器優化 */
+.show-print-preview .preview-panel>div.flex-1 {
+    background-color: #f1f5f9;
+    /* 外層灰底，凸顯白紙 */
+}
+
+.dark .show-print-preview .preview-panel>div.flex-1 {
+    background-color: #0f172a;
+}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Lock, Heart, ShieldCheck } from 'lucide-react';
 import RippleButton from './RippleButton';
 
@@ -10,21 +10,35 @@ const AdWall: React.FC<AdWallProps> = ({ onUnlock }) => {
     const [countdown, setCountdown] = useState(30); // 預設倒數 30 秒
     const [isCounting, setIsCounting] = useState(true);
 
-    useEffect(() => {
-        // 嘗試加載廣告 - 增加小延遲以確保 DOM 已渲染並計算寬度
-        const timer = setTimeout(() => {
-            try {
-                if (typeof window !== 'undefined') {
-                    (window as any).adsbygoogle = (window as any).adsbygoogle || [];
-                    (window as any).adsbygoogle.push({});
-                }
-            } catch (e) {
-                console.error('AdSense load error:', e);
-            }
-        }, 300); // 300ms 延遲
+    const adContainerRef = useRef<HTMLDivElement>(null);
+    const [hasPushedAd, setHasPushedAd] = useState(false);
 
+    useEffect(() => {
+        if (hasPushedAd) return;
+
+        let retryCount = 0;
+        const maxRetries = 10;
+
+        const tryPushAd = () => {
+            if (adContainerRef.current && adContainerRef.current.clientWidth > 0) {
+                try {
+                    if (typeof window !== 'undefined') {
+                        const adsbygoogle = (window as any).adsbygoogle || [];
+                        adsbygoogle.push({});
+                        setHasPushedAd(true);
+                    }
+                } catch (e) {
+                    console.error('AdSense AdWall error:', e);
+                }
+            } else if (retryCount < maxRetries) {
+                retryCount++;
+                setTimeout(tryPushAd, 200); // 寬度不夠，200ms 後重試
+            }
+        };
+
+        const timer = setTimeout(tryPushAd, 500); // 初始延遲
         return () => clearTimeout(timer);
-    }, []); // 僅在掛載時執行一次
+    }, [hasPushedAd]);
 
     useEffect(() => {
         // 倒數計時邏輯
@@ -56,7 +70,7 @@ const AdWall: React.FC<AdWallProps> = ({ onUnlock }) => {
                 </p>
 
                 {/* 廣告佔位單元 */}
-                <div className="w-full bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 mb-8 border border-dashed border-slate-200 dark:border-slate-700 min-h-[250px] flex items-center justify-center relative">
+                <div ref={adContainerRef} className="w-full bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 mb-8 border border-dashed border-slate-200 dark:border-slate-700 min-h-[250px] flex items-center justify-center relative">
                     <ins className="adsbygoogle"
                         style={{ display: 'block' }}
                         data-ad-client="ca-pub-8170892352848798"

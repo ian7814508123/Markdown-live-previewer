@@ -52,14 +52,17 @@ const ToolsModal: React.FC<ToolsModalProps> = ({ isOpen, onClose, currentDocCont
             try {
                 if (typeof window !== 'undefined') {
                     const adsbygoogle = (window as any).adsbygoogle || [];
-                    // 此 Modal 有左右兩個廣告位 (xl 螢幕顯示)
-                    adsbygoogle.push({});
-                    adsbygoogle.push({});
+                    
+                    // 只有在螢幕寬度足夠顯示側邊廣告 (xl: 1280px) 時才載入
+                    if (window.innerWidth >= 1280) {
+                        // 此 Modal 僅保留右側側邊廣告位
+                        adsbygoogle.push({});
+                    }
                 }
             } catch (e) {
                 console.error('AdSense ToolsModal error:', e);
             }
-        }, 500);
+        }, 600); // 稍微增加延遲到 600ms
 
         return () => clearTimeout(timer);
     }, [isOpen]);
@@ -80,15 +83,6 @@ const ToolsModal: React.FC<ToolsModalProps> = ({ isOpen, onClose, currentDocCont
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in m3-fade-in duration-300"
             onClick={onClose}
         >
-            {/* Left Skyscraper Ad (Wide screen only) */}
-            <div className="hidden xl:flex absolute left-8 w-40 h-[600px] bg-white/5 border border-white/10 rounded-2xl items-center justify-center overflow-hidden">
-                <ins className="adsbygoogle"
-                    style={{ display: 'block' }}
-                    data-ad-client="ca-pub-8170892352848798"
-                    data-ad-slot="1864612249"
-                    data-ad-format="vertical"
-                    data-full-width-responsive="true"></ins>
-            </div>
 
             {/* Modal 本體 */}
             <div

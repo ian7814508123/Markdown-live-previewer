@@ -60,6 +60,7 @@ const Header: React.FC<HeaderProps> = ({
     const currentTheme = THEMES.find(t => t.value === theme) ?? THEMES[0];
 
     const [hasPushedAd, setHasPushedAd] = useState(false);
+    const adContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -77,17 +78,30 @@ const Header: React.FC<HeaderProps> = ({
     // 當選單打開時初始化 AdSense
     useEffect(() => {
         if (isDownloadMenuOpen && !hasPushedAd) {
-            const timer = setTimeout(() => {
-                try {
-                    if (typeof window !== 'undefined') {
-                        (window as any).adsbygoogle = (window as any).adsbygoogle || [];
-                        (window as any).adsbygoogle.push({});
-                        setHasPushedAd(true);
+            let retryCount = 0;
+            const maxRetries = 10;
+
+            const tryPushAd = () => {
+                // 確保組件仍掛載且選單仍開啟
+                if (!isDownloadMenuOpen) return;
+
+                if (adContainerRef.current && adContainerRef.current.clientWidth > 0) {
+                    try {
+                        if (typeof window !== 'undefined') {
+                            const adsbygoogle = (window as any).adsbygoogle || [];
+                            adsbygoogle.push({});
+                            setHasPushedAd(true);
+                        }
+                    } catch (e) {
+                        console.error('AdSense Header error:', e);
                     }
-                } catch (e) {
-                    console.error('AdSense Header error:', e);
+                } else if (retryCount < maxRetries) {
+                    retryCount++;
+                    setTimeout(tryPushAd, 200);
                 }
-            }, 500);
+            };
+
+            const timer = setTimeout(tryPushAd, 600); // 初始延遲略大於動畫時間 (250ms)
             return () => clearTimeout(timer);
         }
     }, [isDownloadMenuOpen, hasPushedAd]);
@@ -291,7 +305,7 @@ const Header: React.FC<HeaderProps> = ({
                             )}
 
                             {/* AdSense In-Menu Ad */}
-                            <div className="mx-2 mt-4 p-2 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 min-h-[100px] flex items-center justify-center relative overflow-hidden">
+                            <div ref={adContainerRef} className="mx-2 mt-4 p-2 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 min-h-[100px] flex items-center justify-center relative overflow-hidden">
                                 <ins className="adsbygoogle"
                                     style={{ display: 'block' }}
                                     data-ad-client="ca-pub-8170892352848798"
@@ -412,7 +426,7 @@ const Header: React.FC<HeaderProps> = ({
                             )}
 
                             {/* AdSense In-Menu Ad */}
-                            <div className="mx-2 mt-4 p-2 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 min-h-[100px] flex items-center justify-center relative overflow-hidden">
+                            <div ref={adContainerRef} className="mx-2 mt-4 p-2 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 min-h-[100px] flex items-center justify-center relative overflow-hidden">
                                 <ins className="adsbygoogle"
                                     style={{ display: 'block' }}
                                     data-ad-client="ca-pub-8170892352848798"

@@ -1,13 +1,16 @@
 # ====================================
 # Stage 1: 構建階段 (Build Stage)
 # ====================================
-FROM node:18-alpine AS builder
+FROM node:24.14.0-alpine AS builder
 
 # 設定工作目錄
 WORKDIR /app
 
 # 複製 package 檔案
 COPY package*.json ./
+
+# 更新 npm 到最新版本
+RUN npm install -g npm@latest
 
 # 安裝所有依賴（包含 devDependencies，vite build 需要）
 RUN npm ci

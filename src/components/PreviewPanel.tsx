@@ -494,21 +494,22 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
                 </div>
                 <div className="flex items-center gap-6">
                     <div className="flex items-center gap-2">
-                        <span className="opacity-50 text-[10px] text-slate-900 dark:text-slate-50">縮放</span>
+                        <label htmlFor="preview-zoom-input" className="text-[10px] text-slate-500 dark:text-slate-400 cursor-pointer">縮放</label>
                         <div className="relative group/zoom">
                             <input
+                                id="preview-zoom-input"
                                 type="text"
                                 value={`${Math.round(zoom)}%`}
                                 onChange={(e) => {
                                     const val = e.target.value.replace(/[^0-9]/g, '');
                                     if (val) onSetZoom(Math.min(Math.max(parseInt(val), 5), 1000));
                                 }}
-                                className="w-14 text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md tabular-nums border-none outline-none focus:ring-1 focus:ring-indigo-300 text-center transition-all"
+                                className="w-14 text-indigo-700 dark:text-indigo-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md tabular-nums border-none outline-none focus:ring-1 focus:ring-indigo-300 text-center transition-all"
                             />
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <span className="opacity-50 text-[10px] text-slate-900 dark:text-slate-50">位置</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400">位置</span>
                         <span className="text-slate-900 dark:text-slate-50 tabular-nums">{Math.round(position.x)}, {Math.round(position.y)}</span>
                     </div>
 

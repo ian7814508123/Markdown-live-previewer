@@ -208,6 +208,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                         <RippleButton
                             variant="icon"
                             onClick={onClose}
+                            title="關閉"
                             aria-label="關閉側邊欄"
                             className="w-10 h-10 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                         >
@@ -234,9 +235,9 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                                     </div>
                                     {folders.map(folder => {
                                         const isExpanded = expandedFolders.has(folder.id);
-                                         const folderDocs = documents
-                                             .filter(d => d.folderId === folder.id)
-                                             .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.updatedAt - b.updatedAt);
+                                        const folderDocs = documents
+                                            .filter(d => d.folderId === folder.id)
+                                            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.updatedAt - b.updatedAt);
                                         return (
                                             <div
                                                 key={folder.id}

@@ -160,10 +160,10 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo
             try {
                 // 先進行語法檢查
                 await mermaid.parse(code);
-                
+
                 const id = `mermaid-${hashString(code)}`;
                 const { svg: renderedSvg } = await mermaid.render(id, code);
-                
+
                 if (isMounted.current) {
                     setSvg(renderedSvg);
                     setError(null);
@@ -446,7 +446,7 @@ const MemoizedMathJax: React.FC<MemoizedMathJaxProps> = React.memo(({ content, i
         <MathJax
             renderMode="pre"
             inline={inline}
-            dynamic={false}
+            dynamic={true}
             text={content}
             typesettingOptions={{ fn: 'tex2chtml' }}
         />
@@ -498,16 +498,16 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
 
                 return (
                     <div data-line={line}>
-                      <SyntaxHighlighter
-                          key={stableKey}
-                          language={language || 'text'}
-                          style={isDark ? vscDarkPlus : vs}
-                          customStyle={{ borderRadius: '0.75rem', padding: '1rem', marginTop: '1.5rem', marginBottom: '1.5rem', fontSize: '0.875rem', lineHeight: '1.5' }}
-                          showLineNumbers={true}
-                          wrapLines={true}
-                      >
-                          {codeString}
-                      </SyntaxHighlighter>
+                        <SyntaxHighlighter
+                            key={stableKey}
+                            language={language || 'text'}
+                            style={isDark ? vscDarkPlus : vs}
+                            customStyle={{ borderRadius: '0.75rem', padding: '1rem', marginTop: '1.5rem', marginBottom: '1.5rem', fontSize: '0.875rem', lineHeight: '1.5' }}
+                            showLineNumbers={true}
+                            wrapLines={true}
+                        >
+                            {codeString}
+                        </SyntaxHighlighter>
                     </div>
                 );
             }

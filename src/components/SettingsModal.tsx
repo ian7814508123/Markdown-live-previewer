@@ -269,9 +269,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                 <div className="w-20 h-20 bg-indigo-600 rounded-[2.5rem] flex items-center justify-center text-white shadow-xl shadow-indigo-200 dark:shadow-indigo-900/40">
                                     <img src="/image/markdown_liveditor.svg" alt="Logo" className="w-16 h-16" />
                                 </div>
-                                <div>
+                                <div className="pt-2">
                                     <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Markdown Live Previewer</h3>
-                                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 lowercase tracking-widest mt-1">版本 1.2.e </p>
+                                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 lowercase tracking-widest mt-1">版本 1.3.0 </p>
                                 </div>
                                 <div className="px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-full text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
                                     授權：MIT 開源協議

@@ -94,7 +94,11 @@ export function useAppSettings() {
                     };
                 }
                 // stored 存在但沒有 customMacros，補上預設後回傳
-                return { ...DEFAULT_SETTINGS, ...parsed, printSettings: parsed.printSettings ?? DEFAULT_PRINT_SETTINGS };
+                return { 
+                    ...DEFAULT_SETTINGS, 
+                    ...parsed, 
+                    printSettings: parsed.printSettings ?? DEFAULT_PRINT_SETTINGS
+                };
             }
             return DEFAULT_SETTINGS;
         } catch (error) {

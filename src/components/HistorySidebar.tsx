@@ -190,6 +190,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                             }}
                             className="w-10 h-10 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800"
                             title="新建文檔"
+                            aria-label="新建文檔"
                         >
                             <FileText size={18} strokeWidth={2.5} />
                         </RippleButton>
@@ -199,8 +200,18 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                             onClick={() => onCreateFolder('')}
                             className="w-10 h-10 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800"
                             title="新建資料夾"
+                            aria-label="新建資料夾"
                         >
                             <FolderPlus size={18} strokeWidth={2.5} />
+                        </RippleButton>
+
+                        <RippleButton
+                            variant="icon"
+                            onClick={onClose}
+                            aria-label="關閉側邊欄"
+                            className="w-10 h-10 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                        >
+                            <X size={20} />
                         </RippleButton>
                     </div>
                 </div>
@@ -280,6 +291,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                                                                     onDeleteFolder(folder.id);
                                                                 }
                                                             }}
+                                                            aria-label="刪除資料夾"
                                                             className="p-1.5 rounded-full text-slate-400 dark:text-slate-500 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-500 transition-all"
                                                             title="刪除資料夾"
                                                         >

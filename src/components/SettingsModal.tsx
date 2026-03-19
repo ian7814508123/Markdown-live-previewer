@@ -63,17 +63,17 @@ const PdfSettingsPanel: React.FC<{
         <div className="px-6 py-4 space-y-6 bg-slate-50/30 dark:bg-slate-900/30">
             {/* 分組 A：視覺化預覽 */}
             <div className="p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
-               <div className="flex items-center gap-2 mb-1">
-                   <div className="p-1.5 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg text-indigo-500"><FileText size={16} /></div>
-                   <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">預覽行為</p>
-               </div>
-                
+                <div className="flex items-center gap-2 mb-1">
+                    <div className="p-1.5 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg text-indigo-500"><FileText size={16} /></div>
+                    <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">預覽行為</p>
+                </div>
+
                 <label className="flex items-center justify-between cursor-pointer group">
                     <div className="flex flex-col">
                         <span className="text-xs font-bold text-slate-700 dark:text-slate-200 group-hover:text-indigo-600 transition-colors">顯示列印預覽</span>
                         <span className="text-[10px] text-slate-400 dark:text-slate-500">在編輯器旁模擬紙張邊界與分頁線</span>
                     </div>
-                    <div 
+                    <div
                         onClick={() => {
                             const nextShow = !settings.showPrintPreview;
                             const patch: Partial<PrintSettings> = { showPrintPreview: nextShow };
@@ -229,27 +229,29 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                             <h2 className="text-xl font-black text-slate-800 dark:text-slate-100 tracking-tight">偏好設定</h2>
                             <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-[0.2em] mt-1">Application Configuration</p>
                         </div>
-                        <RippleButton variant="icon" onClick={onClose} className="w-10 h-10 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 rounded-full transition-all">
+                        <RippleButton variant="icon" onClick={onClose}
+                            aria-label="關閉偏好設定"
+                            className="w-10 h-10 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 rounded-full transition-all">
                             <X size={20} />
                         </RippleButton>
                     </div>
 
                     <div className="flex p-1.5 bg-slate-100 dark:bg-slate-800/50 rounded-2xl w-full">
-                        <button 
+                        <button
                             onClick={() => setActiveTab('editor')}
                             className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'editor' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                         >
                             <Box size={14} />
                             編輯器設定
                         </button>
-                        <button 
+                        <button
                             onClick={() => setActiveTab('print')}
                             className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'print' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                         >
                             <Printer size={14} />
                             列印與匯出
                         </button>
-                        <button 
+                        <button
                             onClick={() => setActiveTab('about')}
                             className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'about' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                         >
@@ -268,8 +270,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     <img src="/image/markdown_liveditor.svg" alt="Logo" className="w-16 h-16" />
                                 </div>
                                 <div>
-                                    <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">標記掉落 即時編輯者</h3>
-                                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">版本 0.0.0 (Beta)</p>
+                                    <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Markdown Live Previewer</h3>
+                                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">版本 1.2.a </p>
                                 </div>
                                 <div className="px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-full text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
                                     授權：MIT 開源協議
@@ -337,7 +339,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                             )}
                                         </div>
                                     </div>
-                                    
+
                                     <div className="flex items-center justify-between pb-8">
                                         <RippleButton variant="text" onClick={() => confirm('確定要還原預設巨集設定嗎?') && onRestoreDefaults()} className="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 text-[10px] font-black uppercase tracking-widest">
                                             <RotateCcw size={14} />

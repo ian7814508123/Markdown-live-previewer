@@ -170,7 +170,7 @@ const Header: React.FC<HeaderProps> = ({
                 </div>
                 <div>
                     <h1 className="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100">Markdown Live Previewer</h1>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">Professional Editor for Markdown</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">專業的線上編輯器 給 標註掉落</p>
                 </div>
             </div>
 
@@ -185,6 +185,7 @@ const Header: React.FC<HeaderProps> = ({
 
                     {/* 深色模式 */}
                     <RippleButton variant="icon" onClick={(e) => toggleDarkMode(e)}
+                        aria-label={isDarkMode ? '切換到亮色模式' : '切換到深色模式'}
                         title={isDarkMode ? '切換 到 亮色模式' : '切換 到 深色模式'}
                         className="text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400">
                         {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
@@ -193,7 +194,9 @@ const Header: React.FC<HeaderProps> = ({
                     <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
 
                     {/* 設定（Mermaid → PDF 版面設定） */}
-                    <RippleButton variant="icon" onClick={onOpenSettings} title="PDF 版面設定"
+                    <RippleButton variant="icon" onClick={onOpenSettings}
+                        aria-label="PDF 版面設定"
+                        title="PDF 版面設定"
                         className="text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400">
                         <Settings size={20} />
                     </RippleButton>
@@ -203,6 +206,7 @@ const Header: React.FC<HeaderProps> = ({
                     {/* 主題選擇器 */}
                     <div className="relative ml-1" ref={themeMenuRef}>
                         <button onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
+                            aria-label="開啟主題選擇選單"
                             style={{ position: 'relative', overflow: 'hidden' }}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 transition-all select-none">
                             <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">主題</span>
@@ -234,7 +238,9 @@ const Header: React.FC<HeaderProps> = ({
 
                     {/* 下載選單（Mermaid） */}
                     <div className="relative" ref={downloadMenuRef}>
-                        <RippleButton variant="filled" onClick={() => setIsDownloadMenuOpen(!isDownloadMenuOpen)} className="text-sm pr-3">
+                        <RippleButton variant="filled" onClick={() => setIsDownloadMenuOpen(!isDownloadMenuOpen)}
+                            aria-label="開啟導出選單"
+                            className="text-sm pr-3">
                             <Download size={16} />
                             <span>下載</span>
                             <ChevronDown size={14} className={`transition-transform duration-200 ${isDownloadMenuOpen ? 'rotate-180' : ''}`} />
@@ -324,6 +330,7 @@ const Header: React.FC<HeaderProps> = ({
 
                     {/* 深色模式 */}
                     <RippleButton variant="icon" onClick={(e) => toggleDarkMode(e)}
+                        aria-label={isDarkMode ? '切換到亮色模式' : '切換到深色模式'}
                         title={isDarkMode ? '切換 到 亮色模式' : '切換 到 深色模式'}
                         className="text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400">
                         {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
@@ -332,7 +339,9 @@ const Header: React.FC<HeaderProps> = ({
                     <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
 
                     {/* 設定（Markdown → MathJax 巨集） */}
-                    <RippleButton variant="icon" onClick={onOpenSettings} title="偏好設定"
+                    <RippleButton variant="icon" onClick={onOpenSettings}
+                        aria-label="偏好設定"
+                        title="偏好設定"
                         className="text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400">
                         <Settings size={20} />
                     </RippleButton>
@@ -366,7 +375,9 @@ const Header: React.FC<HeaderProps> = ({
 
                     {/* 下載選單（Markdown） */}
                     <div className="relative" ref={downloadMenuRef}>
-                        <RippleButton variant="filled" onClick={() => setIsDownloadMenuOpen(!isDownloadMenuOpen)} className="text-sm pr-3">
+                        <RippleButton variant="filled" onClick={() => setIsDownloadMenuOpen(!isDownloadMenuOpen)}
+                            aria-label="開啟導出選單"
+                            className="text-sm pr-3">
                             <Download size={16} />
                             <span>下載</span>
                             <ChevronDown size={14} className={`transition-transform duration-200 ${isDownloadMenuOpen ? 'rotate-180' : ''}`} />

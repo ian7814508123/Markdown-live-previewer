@@ -183,6 +183,7 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                             <button
                                 onClick={() => handleColChange(-1)}
                                 disabled={cols <= MIN_COLS}
+                                aria-label="減少欄數"
                                 className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-violet-100 dark:hover:bg-violet-900/30 hover:text-violet-600 dark:hover:text-violet-400 disabled:opacity-30 disabled:pointer-events-none transition-colors"
                             >
                                 <Minus size={11} />
@@ -191,6 +192,7 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                             <button
                                 onClick={() => handleColChange(1)}
                                 disabled={cols >= MAX_COLS}
+                                aria-label="增加欄數"
                                 className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-violet-100 dark:hover:bg-violet-900/30 hover:text-violet-600 dark:hover:text-violet-400 disabled:opacity-30 disabled:pointer-events-none transition-colors"
                             >
                                 <Plus size={11} />
@@ -205,6 +207,7 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                             <button
                                 onClick={() => handleRowChange(-1)}
                                 disabled={rows <= MIN_ROWS}
+                                aria-label="減少列數"
                                 className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-violet-100 dark:hover:bg-violet-900/30 hover:text-violet-600 dark:hover:text-violet-400 disabled:opacity-30 disabled:pointer-events-none transition-colors"
                             >
                                 <Minus size={11} />
@@ -213,6 +216,7 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                             <button
                                 onClick={() => handleRowChange(1)}
                                 disabled={rows >= MAX_ROWS}
+                                aria-label="增加列數"
                                 className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-violet-100 dark:hover:bg-violet-900/30 hover:text-violet-600 dark:hover:text-violet-400 disabled:opacity-30 disabled:pointer-events-none transition-colors"
                             >
                                 <Plus size={11} />
@@ -232,6 +236,7 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                                                 <button
                                                     onClick={() => cycleAlign(ci)}
                                                     title={`切換對齊（目前：${align}）`}
+                                                    aria-label={`切換第 ${ci + 1} 欄對齊方式，目前為 ${align}`}
                                                     className="flex items-center justify-center gap-1 mx-auto px-2 py-0.5 rounded-md text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-colors"
                                                 >
                                                     <AlignIcon align={align} />

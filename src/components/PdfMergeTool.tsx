@@ -211,6 +211,7 @@ const PdfMergeTool: React.FC = () => {
                                     </span>
                                     <button
                                         onClick={() => removeItem(item.id)}
+                                        aria-label={`移除檔案 ${item.file.name}`}
                                         className="md-ripple-root p-1 rounded-full text-slate-300 hover:text-red-500 dark:text-slate-600 dark:hover:text-red-400 transition-colors shrink-0"
                                     >
                                         <X size={12} />

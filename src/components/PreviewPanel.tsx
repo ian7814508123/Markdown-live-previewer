@@ -411,16 +411,26 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
                             <p className="font-black text-sm mb-1 uppercase tracking-tight">Syntax Error Detected</p>
                             <p className="opacity-80 leading-relaxed font-mono whitespace-pre-wrap break-all">{error}</p>
                         </div>
-                        <button onClick={() => setError(null)} className="shrink-0 text-red-400 hover:text-red-600 p-1"><Trash2 size={16} /></button>
+                        <button onClick={() => setError(null)} 
+                            aria-label="清除錯誤提示"
+                            className="shrink-0 text-red-400 hover:text-red-600 p-1">
+                            <Trash2 size={16} />
+                        </button>
                     </div>
                 </div>
             )}
 
             {/* Floating Controls */}
             <div className="absolute bottom-16 right-8 z-30 flex flex-col gap-3 opacity-0 group-hover/preview:opacity-100 transition-all duration-500 translate-y-4 group-hover/preview:translate-y-0">
-                <button onClick={() => onZoom(25)} className="p-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all active:scale-90 ring-1 ring-black/5" title="放大"><ZoomIn size={22} /></button>
-                <button onClick={() => onZoom(-25)} className="p-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all active:scale-90 ring-1 ring-black/5" title="缩小"><ZoomOut size={22} /></button>
-                <button onClick={onResetNav} className="p-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all active:scale-90 ring-1 ring-black/5" title="居中"><Maximize size={22} /></button>
+                <button onClick={() => onZoom(25)} 
+                    aria-label="放大預覽"
+                    className="p-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all active:scale-90 ring-1 ring-black/5" title="放大"><ZoomIn size={22} /></button>
+                <button onClick={() => onZoom(-25)} 
+                    aria-label="縮小預覽"
+                    className="p-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all active:scale-90 ring-1 ring-black/5" title="缩小"><ZoomOut size={22} /></button>
+                <button onClick={onResetNav} 
+                    aria-label="重置預覽位置與縮放"
+                    className="p-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all active:scale-90 ring-1 ring-black/5" title="居中"><Maximize size={22} /></button>
             </div>
 
             {/* Main Viewport */}

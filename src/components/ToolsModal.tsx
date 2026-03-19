@@ -103,6 +103,7 @@ const ToolsModal: React.FC<ToolsModalProps> = ({ isOpen, onClose, currentDocCont
                     <RippleButton
                         variant="icon"
                         onClick={onClose}
+                        aria-label="關閉工具箱"
                         className="w-8 h-8 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                         title="關閉"
                     >

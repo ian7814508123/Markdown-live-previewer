@@ -154,6 +154,7 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
                                     e.stopPropagation();
                                     setIsBacklinksOpen(!isBacklinksOpen);
                                 }}
+                                aria-label={`查看反向連結 (${backlinks.length} 個)`}
                                 className={`p-1.5 rounded-full transition-all ${isBacklinksOpen ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400' : 'text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
                                 title={`反向連結 (${backlinks.length})`}
                             >
@@ -162,6 +163,7 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
                         )}
                         <button
                             onClick={handleDeleteClick}
+                            aria-label="刪除此文檔"
                             className="p-1.5 rounded-full opacity-0 group-hover:opacity-100 text-slate-400 dark:text-slate-500 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-all"
                             title="刪除文檔"
                         >

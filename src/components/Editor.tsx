@@ -61,6 +61,7 @@ const Editor = forwardRef<ReactCodeMirrorRef, EditorProps>(({
                         <RippleButton
                             variant="icon"
                             onClick={onToggleSidebar}
+                            aria-label="我的文檔"
                             title="我的文檔"
                             className="w-8 h-8 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full"
                         >
@@ -90,6 +91,7 @@ const Editor = forwardRef<ReactCodeMirrorRef, EditorProps>(({
                                 <span className={`truncate flex-1 ${isActive ? 'font-bold' : ''}`}>{doc.name}</span>
                                 <button
                                     onClick={(e) => onCloseTab?.(id, e)}
+                                    aria-label="關閉此分頁"
                                     className={`
                                         p-0.5 rounded-full transition-all flex items-center justify-center
                                         ${isActive
@@ -120,13 +122,19 @@ const Editor = forwardRef<ReactCodeMirrorRef, EditorProps>(({
 
                 {/* 右側操作按鈕 */}
                 <div className="flex items-center gap-1 px-2 mb-1">
-                    <RippleButton variant="icon" onClick={onCopy} title="複製" className="w-8 h-8 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800">
+                    <RippleButton variant="icon" onClick={onCopy} 
+                        aria-label="複製內容"
+                        title="複製" className="w-8 h-8 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800">
                         {copied ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
                     </RippleButton>
-                    <RippleButton variant="icon" onClick={onReset} title="重置" className="w-8 h-8 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800">
+                    <RippleButton variant="icon" onClick={onReset} 
+                        aria-label="還原初始內容"
+                        title="重置" className="w-8 h-8 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800">
                         <RefreshCw size={14} />
                     </RippleButton>
-                    <RippleButton variant="icon" onClick={onClear} title="清除" className="w-8 h-8 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
+                    <RippleButton variant="icon" onClick={onClear} 
+                        aria-label="清空編輯器"
+                        title="清除" className="w-8 h-8 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
                         <Trash2 size={14} />
                     </RippleButton>
                 </div>

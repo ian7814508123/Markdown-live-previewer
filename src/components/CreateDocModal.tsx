@@ -101,6 +101,7 @@ const CreateDocModal: React.FC<CreateDocModalProps> = ({ isOpen, onClose, onCrea
                             <RippleButton
                                 variant="icon"
                                 onClick={() => setStep('type')}
+                                aria-label="返回類別選擇"
                                 className="w-9 h-9 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                             >
                                 <ChevronLeft size={20} />
@@ -122,6 +123,7 @@ const CreateDocModal: React.FC<CreateDocModalProps> = ({ isOpen, onClose, onCrea
                     <RippleButton
                         variant="icon"
                         onClick={onClose}
+                        aria-label="關閉彈窗"
                         className="w-9 h-9 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                         title="關閉"
                     >

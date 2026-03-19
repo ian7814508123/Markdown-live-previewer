@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant">
 
 <head>
   <meta charset="UTF-8">
@@ -14,12 +14,58 @@
   frame-src 'self' https://*.googlesyndication.com https://*.google.com https://*.doubleclick.net; 
   worker-src 'self' blob:;
 ">
+  <!-- SEO: 基本描述與關鍵字 (未來新增功能請更新此處) -->
   <meta name="description"
     content="Markdown-live-previewer - 一款強大且美觀的 Markdown 即時預覽編輯器，支持 Mermaid 圖表、LaTeX 數學公式及多種導出格式。">
   <meta name="keywords" content="Markdown, Editor, Live Preview, Mermaid, MathJax,Smiles, Web Tool">
   <meta name="author" content="Huang Jyun Ying">
   <meta name="theme-color" content="#6366f1">
-  <title>Markdown Live Previewer | 即時編輯預覽器</title>
+  <title>Markdown Live Previewer | 強大且美觀的 Markdown 即時編輯預覽器</title>
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://markdown-live-previewer.onrender.com/">
+  <meta property="og:title" content="Markdown Live Previewer | 強大且美觀的 Markdown 即時編輯預覽器">
+  <meta property="og:description" content="專業線上 Markdown 編輯器。支持即時同步預覽、Mermaid 圖表渲染、LaTeX 數學公式與導出功能。">
+  <meta property="og:image" content="https://markdown-live-previewer.onrender.com/favicon.svg">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://markdown-live-previewer.onrender.com/">
+  <meta property="twitter:title" content="Markdown Live Previewer | 強大且美觀的 Markdown 即時編輯預覽器">
+  <meta property="twitter:description" content="專業線上 Markdown 編輯器。支持即時同步預覽、Mermaid 圖表渲染、LaTeX 數學公式與導出功能。">
+  <meta property="twitter:image" content="https://markdown-live-previewer.onrender.com/favicon.svg">
+
+  <!-- SEO: 結構化數據 (未來新增子功能、導出格式或功能摘要請更新此處的 description) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Markdown Live Previewer",
+    "operatingSystem": "Web",
+    "applicationCategory": "MultimediaApplication",
+    "description": "一款強大且美觀的 Markdown 即時預覽編輯器，支持 Mermaid 圖表、LaTeX 數學公式及多種導出格式。",
+    "featureList": [
+      "即時同步滾動預覽",
+      "Mermaid 流程圖、時序圖、甘特圖渲染",
+      "LaTeX 數學公式與化學模型支持",
+      "Vega-Lite 專業數據視覺化圖表",
+      "WikiLinks 雙向連結與知識管理",
+      "專業 PDF、PNG、SVG、Markdown 導出",
+      "內建 PDF 合併工具與 Excel 轉 Markdown 表格功能",
+      "瀏覽器端單機存儲，私密且快速"
+    ],
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "author": {
+      "@type": "Person",
+      "name": "Huang Jyun Ying"
+    }
+  }
+  </script>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap"
@@ -240,7 +286,7 @@
 
 <body class="bg-slate-50 text-slate-900 overflow-hidden">
   <div id="root">
-    <!-- 靜態 SEO 內容 (爬蟲可見，JS 載入後會被置換) -->
+    <!-- SEO: 靜態內容 (未來新增功能點請更新此清單，以便爬蟲在 JS 載入前讀取) -->
     <div class="sr-only"
       style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;">
       <h1>Markdown Live Previewer - 專業線上編輯與預覽工具</h1>

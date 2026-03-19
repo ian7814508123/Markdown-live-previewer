@@ -169,8 +169,8 @@ const Header: React.FC<HeaderProps> = ({
                     <img src="/image/markdown_liveditor.svg" alt="Logo" className="w-12 h-12" />
                 </div>
                 <div>
-                    <h1 className="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100">標記掉落 即時編輯者</h1>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">專業的 編輯者 給 標記掉落</p>
+                    <h1 className="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100">Markdown Live Previewer</h1>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">Professional Editor for Markdown</p>
                 </div>
             </div>
 
@@ -332,7 +332,7 @@ const Header: React.FC<HeaderProps> = ({
                     <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
 
                     {/* 設定（Markdown → MathJax 巨集） */}
-                    <RippleButton variant="icon" onClick={onOpenSettings} title="MathJax 巨集設定"
+                    <RippleButton variant="icon" onClick={onOpenSettings} title="偏好設定"
                         className="text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400">
                         <Settings size={20} />
                     </RippleButton>

@@ -183,7 +183,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     onSavePrintSettings,
     isStandalone = false,
 }) => {
-    const [activeTab, setActiveTab] = useState<'editor' | 'print'>('editor');
+    const [activeTab, setActiveTab] = useState<'editor' | 'print' | 'about'>('editor');
     const [jsonInput, setJsonInput] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
@@ -249,12 +249,67 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                             <Printer size={14} />
                             列印與匯出
                         </button>
+                        <button 
+                            onClick={() => setActiveTab('about')}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'about' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                        >
+                            <AlertCircle size={14} />
+                            關於
+                        </button>
                     </div>
                 </div>
 
                 {/* 內容區 */}
                 <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
-                    {activeTab === 'print' ? (
+                    {activeTab === 'about' ? (
+                        <div className="p-8 space-y-8">
+                            <div className="flex flex-col items-center text-center space-y-4">
+                                <div className="w-20 h-20 bg-indigo-600 rounded-[2.5rem] flex items-center justify-center text-white shadow-xl shadow-indigo-200 dark:shadow-indigo-900/40">
+                                    <img src="/image/markdown_liveditor.svg" alt="Logo" className="w-16 h-16" />
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">標記掉落 即時編輯者</h3>
+                                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">版本 0.0.0 (Beta)</p>
+                                </div>
+                                <div className="px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-full text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                                    授權：MIT 開源協議
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                                    <Box size={16} className="text-indigo-500" />
+                                    <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">第三方套件與致謝 (Credits)</h4>
+                                </div>
+                                <div className="grid grid-cols-1 gap-3">
+                                    {[
+                                        { name: 'React', license: 'MIT', url: 'https://react.dev' },
+                                        { name: 'CodeMirror', license: 'MIT', url: 'https://codemirror.net' },
+                                        { name: 'Mermaid', license: 'MIT', url: 'https://mermaid.js.org' },
+                                        { name: 'MathJax', license: 'Apache-2.0', url: 'https://www.mathjax.org' },
+                                        { name: 'Lucide Icons', license: 'ISC', url: 'https://lucide.dev' },
+                                        { name: 'Vega / Vega-Lite', license: 'BSD-3-Clause', url: 'https://vega.github.io' },
+                                        { name: 'SheetJS', license: 'Apache-2.0', url: 'https://sheetjs.com' },
+                                        { name: 'PDF-lib', license: 'MIT', url: 'https://pdf-lib.js.org' },
+                                        { name: 'Vite', license: 'MIT', url: 'https://vitejs.dev' },
+                                        { name: 'Tailwind CSS', license: 'MIT', url: 'https://tailwindcss.com' },
+                                    ].map((pkg) => (
+                                        <div key={pkg.name} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-indigo-100 dark:hover:border-indigo-900/50 transition-colors">
+                                            <div className="flex flex-col">
+                                                <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{pkg.name}</span>
+                                                <span className="text-[9px] text-slate-400 dark:text-slate-500 uppercase font-black tracking-tighter">{pkg.license} License</span>
+                                            </div>
+                                            <a href={pkg.url} target="_blank" rel="noopener noreferrer" className="text-[10px] font-black text-indigo-500 hover:text-indigo-600 transition-colors uppercase tracking-widest">網站</a>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="rounded-2xl bg-indigo-50/30 dark:bg-slate-800/40 px-5 py-4 text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed border border-indigo-50/50 dark:border-slate-700/50 text-center">
+                                © 2026 HUANGJYUNYING. 本專案採 MIT 協議授權。使用本軟體即代表您同意其授權條款。
+                            </div>
+                        </div>
+                    ) : activeTab === 'print' ? (
                         <PdfSettingsPanel settings={currentPrintSettings} onChange={onSavePrintSettings} isStandalone={isStandalone} />
                     ) : (
                         <div className="flex flex-col">

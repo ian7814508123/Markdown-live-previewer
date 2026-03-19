@@ -239,7 +239,32 @@
 </head>
 
 <body class="bg-slate-50 text-slate-900 overflow-hidden">
-  <div id="root"></div>
+  <div id="root">
+    <!-- 靜態 SEO 內容 (爬蟲可見，JS 載入後會被置換) -->
+    <div class="sr-only"
+      style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;">
+      <h1>Markdown Live Previewer - 專業線上編輯與預覽工具</h1>
+      <p>Markdown Live Previewer 是一款基於 React 開發的高效能線上 Markdown 編輯器。支持即時同步預覽、Mermaid 圖表渲染、MathJax 數學公式與化學方程式、Vega-Lite
+        數據圖表、以及 WikiLinks 雙向連結功能。</p>
+      <p>無論您是工程師、學生還是作家，都能透過本工具輕鬆撰寫並導出高品質的 PDF、PNG、SVG 或 Markdown 檔案。</p>
+      <ul>
+        <li>即時同步滾動預覽</li>
+        <li>Mermaid 流程圖、時序圖、甘特圖</li>
+        <li>LaTeX 數學公式與化學模型支持</li>
+        <li>專業 PDF/圖片 導出</li>
+        <li>單機存儲，私密且快速</li>
+        <li>支援 WikiLinks 雙向連結與知識管理</li>
+        <li>內建 PDF 合併工具與 Excel 轉 Markdown 表格功能</li>
+        <li>支援 Vega-Lite 專業數據視覺化圖表</li>
+      </ul>
+    </div>
+  </div>
+  <noscript>
+    <div style="padding: 20px; text-align: center; font-family: sans-serif;">
+      <h2>您的瀏覽器不支援或已停用 JavaScript</h2>
+      <p>Markdown Live Previewer 需要 JavaScript 才能運作。請開啟 JavaScript 以獲得最佳的編輯體驗。</p>
+    </div>
+  </noscript>
   <script type="module" src="/index.tsx"></script>
 </body>
 

@@ -113,3 +113,9 @@ The `vite.config.ts` is configured to set the base path to `/Markdown-live-previ
 **Note on Styling**:
 Production builds include specific CSS overrides in `public/index.css` to ensure MathJax equations render correctly without unwanted line breaks. Always verify with `npm run preview` before deploying.
 
+## License
+
+This project is licensed under the [MIT License](LICENSE). 
+
+For a complete list of third-party dependencies and their licenses, please refer to [docs/dependencies.md](docs/dependencies.md) or check the **About** tab in the application settings.
+

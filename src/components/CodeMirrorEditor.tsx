@@ -74,6 +74,7 @@ const CodeMirrorEditor = React.forwardRef<ReactCodeMirrorRef, CodeMirrorEditorPr
                 fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
             }}
             className="codemirror-editor-container"
+            aria-label={mode === 'mermaid' ? 'Mermaid 圖表代碼編輯器' : 'Markdown 內容編輯器'}
         />
     );
 });

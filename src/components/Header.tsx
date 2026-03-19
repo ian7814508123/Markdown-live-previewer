@@ -208,8 +208,8 @@ const Header: React.FC<HeaderProps> = ({
                         <button onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
                             aria-label="開啟主題選擇選單"
                             style={{ position: 'relative', overflow: 'hidden' }}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 transition-all select-none">
-                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">主題</span>
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-50 hover:bg-slate-100 dark:hover:bg-white/10 transition-all select-none">
+                            <span className="text-[10px] font-bold text-slate-700 dark:text-slate-100 uppercase tracking-wide">主題</span>
                             <span>{currentTheme.emoji} {currentTheme.label}</span>
                             <ChevronDown size={12} className={`transition-transform duration-200 ${isThemeMenuOpen ? 'rotate-180' : ''}`} />
                         </button>

@@ -411,7 +411,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
                             <p className="font-black text-sm mb-1 uppercase tracking-tight">Syntax Error Detected</p>
                             <p className="opacity-80 leading-relaxed font-mono whitespace-pre-wrap break-all">{error}</p>
                         </div>
-                        <button onClick={() => setError(null)} 
+                        <button onClick={() => setError(null)}
                             aria-label="清除錯誤提示"
                             className="shrink-0 text-red-400 hover:text-red-600 p-1">
                             <Trash2 size={16} />
@@ -422,15 +422,15 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
 
             {/* Floating Controls */}
             <div className="absolute bottom-16 right-8 z-30 flex flex-col gap-3 opacity-0 group-hover/preview:opacity-100 transition-all duration-500 translate-y-4 group-hover/preview:translate-y-0">
-                <button onClick={() => onZoom(25)} 
+                <button onClick={() => onZoom(25)}
                     aria-label="放大預覽"
-                    className="p-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all active:scale-90 ring-1 ring-black/5" title="放大"><ZoomIn size={22} /></button>
-                <button onClick={() => onZoom(-25)} 
+                    className="p-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl text-slate-800 dark:text-slate-50 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all active:scale-90 ring-1 ring-black/5" title="放大"><ZoomIn size={22} /></button>
+                <button onClick={() => onZoom(-25)}
                     aria-label="縮小預覽"
-                    className="p-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all active:scale-90 ring-1 ring-black/5" title="缩小"><ZoomOut size={22} /></button>
-                <button onClick={onResetNav} 
+                    className="p-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl text-slate-800 dark:text-slate-50 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all active:scale-90 ring-1 ring-black/5" title="缩小"><ZoomOut size={22} /></button>
+                <button onClick={onResetNav}
                     aria-label="重置預覽位置與縮放"
-                    className="p-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all active:scale-90 ring-1 ring-black/5" title="居中"><Maximize size={22} /></button>
+                    className="p-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl text-slate-800 dark:text-slate-50 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all active:scale-90 ring-1 ring-black/5" title="居中"><Maximize size={22} /></button>
             </div>
 
             {/* Main Viewport */}
@@ -483,12 +483,18 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
             {/* Status Bar */}
             <div className="h-10 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between px-6 text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-[0.2em] shrink-0 z-30 transition-colors duration-200">
                 <div className="flex items-center gap-3">
-                    <div className={`w-2.5 h-2.5 rounded-full border-2 ${error ? 'bg-red-500 border-red-200' : 'bg-green-500 border-green-200 animate-pulse'}`} />
-                    <span className={error ? 'text-red-500' : 'text-slate-500'}>{error ? '批判的 語法' : '引擎 準備'}</span>
+                    <div className={`
+                        w-2 h-2 rounded-full transition-all
+                        ${error
+                            ? 'bg-red-600 ring-2 ring-red-200 dark:ring-red-900/50'
+                            : 'bg-emerald-500 ring-2 ring-emerald-200 dark:ring-emerald-900/50 animate-pulse'
+                        }
+                    `} />
+                    <span className={error ? 'text-red-700 dark:text-red-400' : 'text-slate-800 dark:text-slate-200'}>{error ? '批判的語法' : '引擎準備'}</span>
                 </div>
                 <div className="flex items-center gap-6">
                     <div className="flex items-center gap-2">
-                        <span className="opacity-50 text-[9px]">縮放</span>
+                        <span className="opacity-50 text-[10px] text-slate-900 dark:text-slate-50">縮放</span>
                         <div className="relative group/zoom">
                             <input
                                 type="text"
@@ -502,8 +508,8 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <span className="opacity-50">位置</span>
-                        <span className="text-slate-600 tabular-nums">{Math.round(position.x)}, {Math.round(position.y)}</span>
+                        <span className="opacity-50 text-[10px] text-slate-900 dark:text-slate-50">位置</span>
+                        <span className="text-slate-900 dark:text-slate-50 tabular-nums">{Math.round(position.x)}, {Math.round(position.y)}</span>
                     </div>
 
                 </div>

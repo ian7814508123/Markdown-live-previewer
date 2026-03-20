@@ -267,7 +267,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <div className="p-8 space-y-8">
                             <div className="flex flex-col items-center text-center space-y-4">
                                 <div className="w-20 h-20 bg-indigo-600 rounded-[2.5rem] flex items-center justify-center text-white shadow-xl shadow-indigo-200 dark:shadow-indigo-900/40">
-                                    <img src="/image/markdown_liveditor.svg" alt="Logo" className="w-16 h-16" />
+                                    <img src="/image/markdown_liveditor.svg?v=2" alt="Logo" className="w-16 h-16" />
                                 </div>
                                 <div className="pt-2">
                                     <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Markdown Live Previewer</h3>

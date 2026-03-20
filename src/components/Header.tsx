@@ -166,7 +166,7 @@ const Header: React.FC<HeaderProps> = ({
             {/* Logo + 標題 */}
             <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200 dark:shadow-indigo-900/40">
-                    <img src="/image/markdown_liveditor.svg" alt="Logo" className="w-12 h-12" />
+                    <img src="/image/markdown_liveditor.svg?v=2" alt="Logo" className="w-12 h-12" />
                 </div>
                 <div>
                     <h1 className="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100">Markdown Live Previewer</h1>

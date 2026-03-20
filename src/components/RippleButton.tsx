@@ -23,7 +23,7 @@ interface RippleButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement
 /** 每個 variant 預設的 ripple 顏色 */
 const RIPPLE_COLORS: Record<string, string> = {
     filled: 'rgba(255,255,255,0.28)',
-    tonal: 'rgba(99,102,241,0.18)',
+    tonal: 'rgba(0, 65, 106, 0.18)',
     outlined: 'rgba(100,116,139,0.14)',
     text: 'rgba(100,116,139,0.14)',
     icon: 'rgba(100,116,139,0.18)',
@@ -82,13 +82,13 @@ const RippleButton: React.FC<RippleButtonProps> = ({
     }, [onMouseDown, rippleColor, variant]);
 
     // ── Variant 對應的 Tailwind class ──────────────────────
-    const BASE = 'inline-flex items-center justify-center gap-2 font-semibold transition-all duration-200 select-none disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/70 [transition-timing-function:var(--m3-easing-standard)]';
+    const BASE = 'inline-flex items-center justify-center gap-2 font-semibold transition-all duration-200 select-none disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/70 [transition-timing-function:var(--m3-easing-standard)]';
 
     const VARIANTS: Record<ButtonVariant, string> = {
         filled:
-            'rounded-full px-5 py-2.5 text-sm bg-indigo-600 text-white hover:bg-indigo-500 dark:hover:bg-indigo-500 active:bg-indigo-700 shadow-sm hover:shadow-md',
+            'rounded-full px-5 py-2.5 text-sm bg-brand-primary text-white hover:bg-brand-primary/90 active:bg-brand-primary shadow-sm hover:shadow-md',
         tonal:
-            'rounded-full px-5 py-2.5 text-sm bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-white/10 active:bg-indigo-200',
+            'rounded-full px-5 py-2.5 text-sm bg-brand-secondary dark:bg-brand-primary/30 text-brand-primary dark:text-brand-primary hover:bg-brand-secondary/80 dark:hover:bg-brand-primary/40 active:bg-brand-secondary',
         outlined:
             'rounded-full px-5 py-2.5 text-sm border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 active:bg-slate-200',
         text:

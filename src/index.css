@@ -4,12 +4,28 @@
 /* ── Tailwind v4 深色模式策略修正：使其支援手動 .dark 類別切換 ── */
 @variant dark (&:where(.dark, .dark *));
 
+@theme {
+    --color-brand-primary: var(--brand-primary);
+    --color-brand-secondary: var(--brand-secondary);
+    --color-brand-accent: var(--brand-accent);
+    --color-brand-text: var(--brand-primary);
+    --color-brand-surface: var(--brand-surface);
+}
+
 @layer base {
     :root {
         color-scheme: light;
+        --brand-primary: #005B94;      /* 調整後稍淺的染料靛青：主色 */
+        --brand-secondary: #F0F9FF;    /* 極細微的天藍：輔助背景 */
+        --brand-accent: #0284C7;       /* 亮藍：互動強調 */
+        --brand-surface: #F8FAFC;      /* 極淺灰藍：介面底色 */
     }
     .dark {
         color-scheme: dark;
+        --brand-primary: #38BDF8;      /* 亮靛青：深色模式下的透亮主色 */
+        --brand-secondary: #00416A;    /* 染料靛青：深色模式下的容器背景 */
+        --brand-accent: #7DD3FC;       /* 極亮藍：深色模式互動 */
+        --brand-surface: #0F172A;      /* 深藍黑：深色模式底色 */
     }
 }
 
@@ -231,22 +247,22 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: var(--color-brand-primary);
     /* 淺色模式下的預設顏色 */
     border-radius: 20px;
     border: 2px solid transparent;
     background-clip: content-box;
+    opacity: 0.8;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: var(--color-brand-accent);
     background-clip: content-box;
 }
 
 /* 深色模式下的捲軸樣式 */
 .dark ::-webkit-scrollbar-thumb {
-    background: #475569;
-    /* slate-600 */
+    background: var(--color-brand-primary);
     background-clip: content-box;
 }
 
@@ -385,10 +401,11 @@ mjx-container:not([display="true"]) {
 /* 分頁指示線 */
 .page-break-indicator {
     height: 1px;
-    border-top: 1.5px dashed rgba(99, 102, 241, 0.5);
-    /* 靛藍色虛線 */
+    border-top: 1.5px dashed var(--color-brand-primary);
+    /* 品牌靛青色虛線 */
     z-index: 10;
     pointer-events: none;
+    opacity: 0.5;
 }
 
 .page-break-indicator::after {
@@ -398,7 +415,7 @@ mjx-container:not([display="true"]) {
     top: -10px;
     font-size: 9px;
     font-weight: 800;
-    background: #6366f1;
+    background: var(--color-brand-primary);
     color: white;
     padding: 1px 6px;
     border-radius: 4px;

@@ -148,12 +148,12 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
 
             {/* ── 標題 ── */}
             <div className="flex items-center gap-2 shrink-0">
-                <div className="w-7 h-7 bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 rounded-xl flex items-center justify-center">
+                <div className="w-7 h-7 bg-brand-secondary dark:bg-brand-primary/40 text-brand-primary rounded-xl flex items-center justify-center">
                     <Table size={15} />
                 </div>
                 <div>
-                    <p className="text-xs font-bold text-slate-700 dark:text-slate-200">Markdown 表格產生器</p>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-300">視覺化編輯，直接插入文件或複製語法</p>
+                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100">Markdown 表格產生器</p>
+                    <p className="text-[12px] text-slate-600 dark:text-slate-300">視覺化編輯，直接插入文件或複製語法</p>
                 </div>
             </div>
 
@@ -164,10 +164,10 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                         <AlertTriangle size={20} />
                     </div>
                     <div className="text-center">
-                        <p className="text-sm font-bold text-amber-700 dark:text-amber-500 mb-1">
+                        <p className="text-sm font-bold text-amber-700 dark:text-amber-400 mb-1">
                             Mermaid 模式不支援 Markdown 表格
                         </p>
-                        <p className="text-[11px] text-amber-600/80 dark:text-amber-300/70 leading-relaxed">
+                        <p className="text-[12px] text-amber-600/80 dark:text-amber-300/80 leading-relaxed">
                             目前文檔為 <span className="font-semibold">Mermaid 圖表</span> 模式。<br />
                             請切換到 <span className="font-semibold">Markdown</span> 文檔後再使用表格產生器。
                         </p>
@@ -184,7 +184,7 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                                 onClick={() => handleColChange(-1)}
                                 disabled={cols <= MIN_COLS}
                                 aria-label="減少欄數"
-                                className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-violet-100 dark:hover:bg-violet-900/30 hover:text-violet-600 dark:hover:text-violet-400 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                                className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-brand-secondary dark:hover:bg-brand-primary/30 hover:text-brand-primary disabled:opacity-30 disabled:pointer-events-none transition-colors"
                             >
                                 <Minus size={11} />
                             </button>
@@ -193,7 +193,7 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                                 onClick={() => handleColChange(1)}
                                 disabled={cols >= MAX_COLS}
                                 aria-label="增加欄數"
-                                className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-violet-100 dark:hover:bg-violet-900/30 hover:text-violet-600 dark:hover:text-violet-400 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                                className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-brand-secondary dark:hover:bg-brand-primary/30 hover:text-brand-primary disabled:opacity-30 disabled:pointer-events-none transition-colors"
                             >
                                 <Plus size={11} />
                             </button>
@@ -208,7 +208,7 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                                 onClick={() => handleRowChange(-1)}
                                 disabled={rows <= MIN_ROWS}
                                 aria-label="減少列數"
-                                className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-violet-100 dark:hover:bg-violet-900/30 hover:text-violet-600 dark:hover:text-violet-400 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                                className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-brand-secondary dark:hover:bg-brand-primary/30 hover:text-brand-primary disabled:opacity-30 disabled:pointer-events-none transition-colors"
                             >
                                 <Minus size={11} />
                             </button>
@@ -217,7 +217,7 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                                 onClick={() => handleRowChange(1)}
                                 disabled={rows >= MAX_ROWS}
                                 aria-label="增加列數"
-                                className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-violet-100 dark:hover:bg-violet-900/30 hover:text-violet-600 dark:hover:text-violet-400 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                                className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-brand-secondary dark:hover:bg-brand-primary/30 hover:text-brand-primary disabled:opacity-30 disabled:pointer-events-none transition-colors"
                             >
                                 <Plus size={11} />
                             </button>
@@ -237,7 +237,7 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                                                     onClick={() => cycleAlign(ci)}
                                                     title={`切換對齊（目前：${align}）`}
                                                     aria-label={`切換第 ${ci + 1} 欄對齊方式，目前為 ${align}`}
-                                                    className="flex items-center justify-center gap-1 mx-auto px-2 py-0.5 rounded-md text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-colors"
+                                                    className="flex items-center justify-center gap-1 mx-auto px-2 py-0.5 rounded-md text-slate-400 hover:text-brand-primary hover:bg-brand-secondary dark:hover:bg-brand-primary/20 transition-colors"
                                                 >
                                                     <AlignIcon align={align} />
                                                     <span className="text-[9px] capitalize">{align}</span>
@@ -246,7 +246,7 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                                         ))}
                                     </tr>
                                     {/* Header 列 */}
-                                    <tr className="bg-violet-50/60 dark:bg-violet-900/10 border-b border-slate-200 dark:border-slate-700">
+                                    <tr className="bg-brand-secondary/60 dark:bg-brand-primary/10 border-b border-slate-200 dark:border-slate-700">
                                         {grid[0].map((val, ci) => (
                                             <th key={ci} className="border-b border-slate-200 dark:border-slate-700 p-0 font-normal">
                                                 <input
@@ -254,7 +254,7 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                                                     value={val}
                                                     placeholder={`欄位 ${ci + 1}`}
                                                     onChange={e => handleCellChange(0, ci, e.target.value)}
-                                                    className="w-full px-2 py-1.5 text-[11px] font-semibold text-violet-700 dark:text-violet-300 bg-transparent placeholder:text-slate-300 dark:placeholder:text-slate-600 focus:outline-none focus:bg-violet-100/40 dark:focus:bg-violet-900/20 transition-colors"
+                                                    className="w-full px-2 py-1.5 text-[11px] font-semibold text-brand-primary dark:text-brand-primary bg-transparent placeholder:text-slate-300 dark:placeholder:text-slate-600 focus:outline-none focus:bg-brand-secondary/40 dark:focus:bg-brand-primary/20 transition-colors"
                                                 />
                                             </th>
                                         ))}
@@ -271,7 +271,7 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                                                         value={val}
                                                         placeholder="—"
                                                         onChange={e => handleCellChange(ri + 1, ci, e.target.value)}
-                                                        className="w-full px-2 py-1.5 text-[11px] text-slate-600 dark:text-slate-300 bg-transparent placeholder:text-slate-200 dark:placeholder:text-slate-700 focus:outline-none focus:bg-violet-50/40 dark:focus:bg-violet-900/10 transition-colors"
+                                                        className="w-full px-2 py-1.5 text-[11px] text-slate-600 dark:text-slate-300 bg-transparent placeholder:text-slate-200 dark:placeholder:text-slate-700 focus:outline-none focus:bg-brand-secondary/40 dark:focus:bg-brand-primary/10 transition-colors"
                                                     />
                                                 </td>
                                             ))}
@@ -295,7 +295,7 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                                     onClick={handleInsert}
                                     className={`text-[11px] h-7 px-2.5 gap-1 transition-all ${inserted
                                         ? 'bg-emerald-500 hover:bg-emerald-500'
-                                        : 'bg-indigo-600 hover:bg-indigo-700'
+                                        : 'bg-brand-primary hover:bg-brand-primary/90'
                                         }`}
                                 >
                                     {inserted

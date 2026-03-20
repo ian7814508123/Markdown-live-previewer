@@ -176,26 +176,26 @@ const WordCountTool: React.FC<WordCountToolProps> = ({ currentDocContent }) => {
 
             {/* ── 標題 ── */}
             <div className="flex items-center gap-2 shrink-0">
-                <div className="w-7 h-7 bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 rounded-xl flex items-center justify-center">
+                <div className="w-7 h-7 bg-brand-secondary dark:bg-brand-primary/40 text-brand-primary rounded-xl flex items-center justify-center">
                     <BarChart2 size={15} />
                 </div>
                 <div>
-                    <p className="text-xs font-bold text-slate-700 dark:text-slate-200">字數統計</p>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500">自動略過公式、圖表等特殊區塊</p>
+                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100">字數統計</p>
+                    <p className="text-[12px] text-slate-600 dark:text-slate-300">自動略過公式、圖表等特殊區塊</p>
                 </div>
             </div>
 
             {/* ── 模式切換 Tab ── */}
-            <div className="flex shrink-0 rounded-xl bg-slate-100 dark:bg-slate-800 p-0.5 gap-0.5">
+            <div className="flex shrink-0 rounded-xl bg-slate-200 dark:bg-slate-800 p-0.5 gap-0.5">
                 <ModeTab
                     active={mode === 'current-doc'}
-                    icon={<FileText size={11} />}
+                    icon={<FileText size={12} />}
                     label="目前文檔"
                     onClick={() => setMode('current-doc')}
                 />
                 <ModeTab
                     active={mode === 'paste'}
-                    icon={<ClipboardPaste size={11} />}
+                    icon={<ClipboardPaste size={12} />}
                     label="貼上文字"
                     onClick={() => setMode('paste')}
                 />
@@ -203,13 +203,13 @@ const WordCountTool: React.FC<WordCountToolProps> = ({ currentDocContent }) => {
 
             {/* ── 模式說明 / 輸入區 ── */}
             {mode === 'current-doc' ? (
-                <div className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl bg-violet-50 dark:bg-violet-900/15 border border-violet-200 dark:border-violet-800/40">
-                    <FileText size={13} className="text-violet-500 shrink-0" />
+                <div className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl bg-brand-secondary dark:bg-brand-primary/15 border border-brand-primary/20 dark:border-brand-primary/40">
+                    <FileText size={13} className="text-brand-primary shrink-0" />
                     <div className="min-w-0">
-                        <p className="text-[10px] font-semibold text-violet-700 dark:text-violet-300">
+                        <p className="text-[12px] font-semibold text-brand-primary">
                             即時讀取編輯器內容
                         </p>
-                        <p className="text-[9px] text-violet-500 dark:text-violet-400 truncate">
+                        <p className="text-[10px] text-brand-primary/80 truncate">
                             {isEmpty ? '目前文檔為空' : `已讀取 ${currentDocContent.length.toLocaleString()} 字元`}
                         </p>
                     </div>
@@ -221,13 +221,13 @@ const WordCountTool: React.FC<WordCountToolProps> = ({ currentDocContent }) => {
                     placeholder={PASTE_PLACEHOLDER}
                     spellCheck={false}
                     className={[
-                        'w-full h-24 resize-none rounded-xl border text-[11px] leading-relaxed shrink-0',
+                        'w-full h-24 resize-none rounded-xl border text-[12px] leading-relaxed shrink-0',
                         'px-3 py-2.5 font-mono',
                         'text-slate-600 dark:text-slate-300',
                         'bg-slate-50 dark:bg-slate-800/60',
                         'border-slate-200 dark:border-slate-700',
                         'placeholder:text-slate-300 dark:placeholder:text-slate-600',
-                        'focus:outline-none focus:ring-2 focus:ring-violet-400/40 focus:border-violet-400',
+                        'focus:outline-none focus:ring-2 focus:ring-brand-primary/40 focus:border-brand-primary',
                         'transition-colors custom-scrollbar',
                     ].join(' ')}
                 />
@@ -280,7 +280,7 @@ const WordCountTool: React.FC<WordCountToolProps> = ({ currentDocContent }) => {
                     'w-full justify-center text-[11px] h-8 gap-1.5 transition-all shrink-0',
                     copied
                         ? 'bg-emerald-500 hover:bg-emerald-500'
-                        : 'bg-violet-600 hover:bg-violet-700',
+                        : 'bg-brand-primary hover:bg-brand-primary/90',
                     isEmpty ? 'opacity-40 pointer-events-none' : '',
                 ].join(' ')}
             >
@@ -309,8 +309,8 @@ const ModeTab: React.FC<ModeTabProps> = ({ active, icon, label, onClick }) => (
         className={[
             'flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-150',
             active
-                ? 'bg-white dark:bg-slate-700 text-violet-700 dark:text-violet-300 shadow-sm'
-                : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300',
+                ? 'bg-white dark:bg-slate-700 text-brand-primary shadow-sm'
+                : 'text-slate-400 dark:text-slate-500 hover:text-brand-primary',
         ].join(' ')}
     >
         {icon}
@@ -332,14 +332,14 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, unit, accent, small }
     <div className={[
         'flex flex-col rounded-xl px-3 py-2',
         accent
-            ? 'bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800/40'
+            ? 'bg-brand-secondary dark:bg-brand-primary/20 border border-brand-primary/20 dark:border-brand-primary/40'
             : 'bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50',
     ].join(' ')}>
-        <span className={`text-[9px] uppercase tracking-wide font-semibold leading-tight ${accent ? 'text-violet-500' : 'text-slate-400 dark:text-slate-500'}`}>
+        <span className={`text-[9px] uppercase tracking-wide font-semibold leading-tight ${accent ? 'text-brand-primary' : 'text-slate-400 dark:text-slate-500'}`}>
             {label}
         </span>
         <div className="flex items-baseline gap-1 mt-0.5">
-            <span className={`font-bold tabular-nums ${small ? 'text-sm' : 'text-xl'} ${accent ? 'text-violet-700 dark:text-violet-300' : 'text-slate-700 dark:text-slate-200'}`}>
+            <span className={`font-bold tabular-nums ${small ? 'text-sm' : 'text-xl'} ${accent ? 'text-brand-primary' : 'text-slate-700 dark:text-slate-200'}`}>
                 {value}
             </span>
             {unit && <span className="text-[9px] text-slate-400 dark:text-slate-500 leading-none">{unit}</span>}

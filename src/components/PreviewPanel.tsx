@@ -277,7 +277,7 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
                                     data-doc-id={docId}
                                     ref={!showPrintPreview && isActive ? (scrollRef as React.Ref<HTMLDivElement>) : undefined}
                                     onScroll={!showPrintPreview && isActive ? onScroll : undefined}
-                                    className={`${showPrintPreview ? 'print-paper bg-white shadow-2xl mx-auto paper-' + paperSize.toLowerCase() + ' paper-' + orientation + ' margin-' + margin : 'print:print-paper print:paper-' + paperSize.toLowerCase() + ' print:paper-' + orientation + ' print:margin-' + margin + ' absolute inset-0 overflow-auto custom-scrollbar p-8 bg-white dark:bg-slate-900 shadow-inner'} transition-all duration-300 print:max-w-none print:w-full print:shadow-none print:bg-white print:p-0 print:border-none print:rounded-none print:static print:inset-auto print:h-auto ${isVisibleOnScreen ? 'block' : 'hidden'} ${!isVisibleOnScreen && isVisibleInPrint ? 'print:block' : ''} ${!isActive && (!showPrintPreview && !isVisibleInPrint) ? 'tab-inactive' : ''} ${isActive && showPrintPreview ? 'ring-4 ring-indigo-500/50' : ''}`}
+                                    className={`${showPrintPreview ? 'print-paper bg-white shadow-2xl mx-auto paper-' + paperSize.toLowerCase() + ' paper-' + orientation + ' margin-' + margin : 'print:print-paper print:paper-' + paperSize.toLowerCase() + ' print:paper-' + orientation + ' print:margin-' + margin + ' absolute inset-0 overflow-auto custom-scrollbar p-8 bg-white dark:bg-slate-900 shadow-inner'} transition-all duration-300 print:max-w-none print:w-full print:shadow-none print:bg-white print:p-0 print:border-none print:rounded-none print:static print:inset-auto print:h-auto ${isVisibleOnScreen ? 'block' : 'hidden'} ${!isVisibleOnScreen && isVisibleInPrint ? 'print:block' : ''} ${!isActive && (!showPrintPreview && !isVisibleInPrint) ? 'tab-inactive' : ''} ${isActive && showPrintPreview ? 'ring-4 ring-brand-primary/50' : ''}`}
                                 >
                                     <div className={showPrintPreview ? 'prose-container relative' : 'print:prose-container max-w-[850px] mx-auto min-h-full bg-white dark:bg-slate-900 p-12 shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-none dark:border dark:border-slate-800 rounded-sm print:shadow-none print:border-none print:p-0 print:bg-white'}>
                                         <MarkdownPreview
@@ -424,13 +424,13 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
             <div className="absolute bottom-16 right-8 z-30 flex flex-col gap-3 opacity-0 group-hover/preview:opacity-100 transition-all duration-500 translate-y-4 group-hover/preview:translate-y-0">
                 <button onClick={() => onZoom(25)}
                     aria-label="放大預覽"
-                    className="p-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl text-slate-800 dark:text-slate-50 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all active:scale-90 ring-1 ring-black/5" title="放大"><ZoomIn size={22} /></button>
+                    className="p-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl text-slate-800 dark:text-slate-50 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-brand-accent transition-all active:scale-90 ring-1 ring-black/5" title="放大"><ZoomIn size={22} /></button>
                 <button onClick={() => onZoom(-25)}
                     aria-label="縮小預覽"
-                    className="p-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl text-slate-800 dark:text-slate-50 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all active:scale-90 ring-1 ring-black/5" title="缩小"><ZoomOut size={22} /></button>
+                    className="p-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl text-slate-800 dark:text-slate-50 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-brand-accent transition-all active:scale-90 ring-1 ring-black/5" title="缩小"><ZoomOut size={22} /></button>
                 <button onClick={onResetNav}
                     aria-label="重置預覽位置與縮放"
-                    className="p-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl text-slate-800 dark:text-slate-50 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all active:scale-90 ring-1 ring-black/5" title="居中"><Maximize size={22} /></button>
+                    className="p-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl text-slate-800 dark:text-slate-50 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-brand-primary transition-all active:scale-90 ring-1 ring-black/5" title="居中"><Maximize size={22} /></button>
             </div>
 
             {/* Main Viewport */}
@@ -464,7 +464,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
                         <div className="text-slate-400 text-center flex flex-col items-center">
                             <div className="relative mb-6">
                                 <RefreshCw size={64} className="opacity-10 animate-spin duration-[3s]" />
-                                <Sparkles size={32} className="absolute inset-0 m-auto text-indigo-400/30 animate-pulse" />
+                                <Sparkles size={32} className="absolute inset-0 m-auto text-brand-primary/30 animate-pulse" />
                             </div>
                             <p className="text-sm font-bold uppercase tracking-[0.3em] opacity-40">編譯圖表</p>
                         </div>
@@ -504,7 +504,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
                                     const val = e.target.value.replace(/[^0-9]/g, '');
                                     if (val) onSetZoom(Math.min(Math.max(parseInt(val), 5), 1000));
                                 }}
-                                className="w-14 text-indigo-700 dark:text-indigo-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md tabular-nums border-none outline-none focus:ring-1 focus:ring-indigo-300 text-center transition-all"
+                                className="w-14 text-brand-primary bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md tabular-nums border-none outline-none focus:ring-1 focus:ring-brand-primary/30 text-center transition-all"
                             />
                         </div>
                     </div>

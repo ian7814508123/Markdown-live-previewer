@@ -16,17 +16,17 @@ const LayoutSplitter: React.FC<LayoutSplitterProps> = ({ onMouseDown, isResizing
             {/* 拖動線本體 */}
             <div
                 className={`w-full h-full transition-colors duration-200 ${isResizing
-                        ? 'bg-indigo-500'
+                        ? 'bg-brand-primary'
                         : isDarkMode
-                            ? 'bg-slate-800 group-hover:bg-indigo-500/50'
-                            : 'bg-slate-200 group-hover:bg-indigo-500/50'
+                            ? 'bg-slate-800 group-hover:bg-brand-primary/50'
+                            : 'bg-slate-200 group-hover:bg-brand-primary/50'
                     }`}
             />
 
             {/* 拖動手柄 */}
             <div
                 className={`absolute top-1/2 -translate-y-1/2 w-4 h-12 rounded-full border shadow-lg transition-all flex items-center justify-center pointer-events-none ${isResizing
-                        ? 'scale-110 opacity-100 bg-indigo-500 border-indigo-400 text-white'
+                        ? 'scale-110 opacity-100 bg-brand-primary border-brand-accent text-white'
                         : isDarkMode
                             ? 'opacity-0 group-hover:opacity-100 bg-slate-800 border-slate-700 text-slate-400'
                             : 'opacity-0 group-hover:opacity-100 bg-white border-slate-200 text-slate-400'

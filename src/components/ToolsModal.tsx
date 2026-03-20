@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, Wrench, FileText, Table, BarChart2 } from 'lucide-react';
+import { X, Wrench, FileText, Table, BarChart2, Image } from 'lucide-react';
 import PdfMergeTool from './PdfMergeTool';
 import TableGeneratorTool from './TableGeneratorTool';
 import WordCountTool from './WordCountTool';
+import ImageUploaderTool from './ImageUploaderTool';
 import RippleButton from './RippleButton';
 
 interface ToolsModalProps {
@@ -16,13 +17,14 @@ interface ToolsModalProps {
     onInsertIntoDoc: (text: string) => void;
 }
 
-type ToolId = 'pdf-merge' | 'table-gen' | 'word-count';
+type ToolId = 'pdf-merge' | 'table-gen' | 'word-count' | 'image-upload';
 
 /** 工具清單定義：未來新增工具只需在此擴充 */
 const TOOLS: { id: ToolId; label: string; desc: string; icon: React.ReactNode }[] = [
     { id: 'pdf-merge', label: 'PDF 合併', desc: '合併 PDF 與圖片為單一 PDF', icon: <FileText size={13} /> },
     { id: 'table-gen', label: 'MD 表格', desc: '視覺化產生 Markdown 表格', icon: <Table size={13} /> },
     { id: 'word-count', label: '字數統計', desc: '自動略過公式與圖表區塊', icon: <BarChart2 size={13} /> },
+    { id: 'image-upload', label: '圖片上傳', desc: '本地圖片上傳與即時預覽', icon: <Image size={13} /> },
 ];
 
 /** 根據 ToolId 渲染對應工具面板（新增工具只需在此 switch 加 case） */
@@ -36,6 +38,7 @@ function renderToolPanel(
         case 'pdf-merge': return <PdfMergeTool />;
         case 'table-gen': return <TableGeneratorTool currentDocMode={currentDocMode} onInsertIntoDoc={onInsertIntoDoc} />;
         case 'word-count': return <WordCountTool currentDocContent={currentDocContent} />;
+        case 'image-upload': return <ImageUploaderTool onInsertIntoDoc={onInsertIntoDoc} />;
         default: return null;
     }
 }
@@ -52,7 +55,7 @@ const ToolsModal: React.FC<ToolsModalProps> = ({ isOpen, onClose, currentDocCont
             try {
                 if (typeof window !== 'undefined') {
                     const adsbygoogle = (window as any).adsbygoogle || [];
-                    
+
                     // 只有在螢幕寬度足夠顯示側邊廣告 (xl: 1280px) 時才載入
                     if (window.innerWidth >= 1280) {
                         // 此 Modal 僅保留右側側邊廣告位
@@ -92,7 +95,7 @@ const ToolsModal: React.FC<ToolsModalProps> = ({ isOpen, onClose, currentDocCont
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-2.5 border-b border-slate-200 dark:border-slate-800 shrink-0">
                     <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 rounded-xl flex items-center justify-center">
+                        <div className="w-8 h-8 bg-brand-secondary dark:bg-brand-primary/20 text-brand-primary rounded-xl flex items-center justify-center">
                             <Wrench size={16} />
                         </div>
                         <div>
@@ -124,13 +127,13 @@ const ToolsModal: React.FC<ToolsModalProps> = ({ isOpen, onClose, currentDocCont
                                     className={[
                                         'md-ripple-root w-full flex flex-col items-start',
                                         'px-2.5 py-2.5 rounded-xl text-left transition-colors duration-200 [transition-timing-function:var(--m3-easing-standard)]',
-                                        '[&_.md-ripple-wave]:text-violet-600/15',
+                                        '[&_.md-ripple-wave]:text-brand-primary/15',
                                         isActive
-                                            ? 'bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300'
+                                            ? 'bg-brand-secondary dark:bg-brand-primary/30 text-brand-primary'
                                             : 'text-slate-500 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-white/8',
                                     ].join(' ')}
                                 >
-                                    <div className={`mb-1 p-1.5 rounded-xl ${isActive ? 'bg-violet-200/70 dark:bg-violet-800/50' : 'bg-slate-100 dark:bg-slate-800'}`}>
+                                    <div className={`mb-1 p-1.5 rounded-xl ${isActive ? 'bg-brand-primary/20 dark:bg-brand-primary/50 text-brand-primary' : 'bg-slate-100 dark:bg-slate-800'}`}>
                                         {tool.icon}
                                     </div>
                                     <span className="text-[11px] font-semibold leading-tight">{tool.label}</span>

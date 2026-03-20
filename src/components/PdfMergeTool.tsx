@@ -128,12 +128,12 @@ const PdfMergeTool: React.FC = () => {
         <div className="flex flex-col gap-3 p-3">
             {/* 標題 */}
             <div className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 rounded-xl flex items-center justify-center">
+                <div className="w-7 h-7 bg-brand-secondary dark:bg-brand-primary/40 text-brand-primary rounded-xl flex items-center justify-center">
                     <FilePlus2 size={15} />
                 </div>
                 <div>
-                    <p className="text-xs font-bold text-slate-700 dark:text-slate-200">PDF 合併工具</p>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500">PDF・PNG・JPG → 單一 PDF</p>
+                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100">PDF 合併工具</p>
+                    <p className="text-[10px] text-slate-600 dark:text-slate-300">PDF・PNG・JPG → 單一 PDF</p>
                 </div>
             </div>
 
@@ -148,14 +148,14 @@ const PdfMergeTool: React.FC = () => {
                     border-2 border-dashed rounded-2xl px-3 py-2.5 cursor-pointer
                     transition-all duration-200 select-none
                     ${isDragOver
-                        ? 'border-violet-400 bg-violet-50 dark:bg-violet-900/20 scale-[0.98]'
-                        : 'border-slate-200 dark:border-slate-700 hover:border-violet-300 dark:hover:border-violet-700 hover:bg-slate-50 dark:hover:bg-slate-800/50'}
+                        ? 'border-brand-primary bg-brand-secondary dark:bg-brand-primary/20 scale-[0.98]'
+                        : 'border-slate-200 dark:border-slate-700 hover:border-brand-primary/60 dark:hover:border-brand-primary hover:bg-slate-50 dark:hover:bg-slate-800/50'}
                 `}
             >
-                <FilePlus2 size={18} className={`shrink-0 ${isDragOver ? 'text-violet-500' : 'text-slate-300 dark:text-slate-600'}`} />
+                <FilePlus2 size={20} className={`shrink-0 ${isDragOver ? 'text-brand-primary' : 'text-slate-300 dark:text-slate-600'}`} />
                 <div className="flex flex-col min-w-0">
-                    <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">拖放或點擊選取</p>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500">支援 PDF · PNG · JPG</p>
+                    <p className="text-[12px] font-medium text-slate-600 dark:text-slate-300">拖放或點擊選取</p>
+                    <p className="text-[10px] text-slate-600 dark:text-slate-300">支援 PDF · PNG · JPG</p>
                 </div>
                 <input
                     ref={fileInputRef}
@@ -171,12 +171,12 @@ const PdfMergeTool: React.FC = () => {
             {items.length > 0 && (
                 <div className="flex flex-col gap-1.5">
                     <div className="flex items-center justify-between">
-                        <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
+                        <p className="text-[12px] uppercase tracking-wider font-bold text-slate-600 dark:text-slate-300">
                             合併順序（可拖曳調整）
                         </p>
                         <button
                             onClick={() => setItems([])}
-                            className="text-[10px] text-slate-400 hover:text-red-500 transition-colors"
+                            className="text-[12px] text-slate-600 dark:text-slate-300 hover:text-red-500 transition-colors"
                         >
                             清除全部
                         </button>
@@ -197,13 +197,13 @@ const PdfMergeTool: React.FC = () => {
                                         bg-slate-50 dark:bg-slate-800
                                         border transition-all duration-150 cursor-grab active:cursor-grabbing
                                         ${dragOverIdx === idx && draggedIdx !== idx
-                                            ? 'border-violet-400 dark:border-violet-600 bg-violet-50 dark:bg-violet-900/20'
+                                            ? 'border-brand-primary dark:border-brand-primary bg-brand-secondary dark:bg-brand-primary/20'
                                             : 'border-slate-200 dark:border-slate-700'}
                                         ${draggedIdx === idx ? 'opacity-40' : 'opacity-100'}
                                     `}
                                 >
                                     <GripVertical size={13} className="text-slate-300 dark:text-slate-600 shrink-0" />
-                                    <div className="flex items-center justify-center w-6 h-6 rounded-lg shrink-0 bg-violet-50 dark:bg-violet-900/40 text-violet-500 dark:text-violet-400">
+                                    <div className="flex items-center justify-center w-6 h-6 rounded-lg shrink-0 bg-brand-secondary dark:bg-brand-primary/40 text-brand-primary">
                                         {item.type === 'pdf' ? <FileText size={12} /> : <ImageIcon size={12} />}
                                     </div>
                                     <span className="text-[11px] text-slate-600 dark:text-slate-300 truncate flex-1 min-w-0">
@@ -226,7 +226,7 @@ const PdfMergeTool: React.FC = () => {
                         variant="filled"
                         onClick={handleMerge}
                         disabled={isMerging}
-                        className={`w-full justify-center bg-violet-600 hover:bg-violet-700 ${isMerging ? 'opacity-60' : ''}`}
+                        className={`w-full justify-center bg-brand-primary hover:bg-brand-primary/90 ${isMerging ? 'opacity-60' : ''}`}
                     >
                         {isMerging
                             ? <><Loader2 size={14} className="animate-spin" /> 合併中…</>

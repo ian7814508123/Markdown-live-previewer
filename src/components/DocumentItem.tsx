@@ -90,7 +90,7 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
             className={`
         group relative px-3 py-2.5 mx-2 rounded-2xl cursor-pointer transition-all
         ${isActive
-                    ? 'bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800'
+                    ? 'bg-brand-secondary dark:bg-brand-primary/30 border border-brand-primary/20 dark:border-brand-primary/50 shadow-sm'
                     : 'hover:bg-slate-100 dark:hover:bg-white/10 border border-transparent'
                 }
       `}
@@ -103,7 +103,7 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
 
                 <div className="flex items-start gap-2 flex-1 min-w-0">
                     {/* 模式圖示 */}
-                    <div className={`mt-0.5 shrink-0 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-600'}`}>
+                    <div className={`mt-0.5 shrink-0 ${isActive ? 'text-brand-primary' : 'text-slate-400 dark:text-slate-600'}`}>
                         {document.mode === 'mermaid' ? <FileCode2 size={16} /> : <FileText size={16} />}
                     </div>
 
@@ -117,13 +117,13 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
                                 onBlur={handleSave}
                                 onKeyDown={handleKeyDown}
                                 onClick={(e) => e.stopPropagation()}
-                                className="w-full px-2 py-0.5 text-sm font-medium bg-white dark:bg-slate-700 border border-indigo-300 dark:border-indigo-700 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-200"
+                                className="w-full px-2 py-0.5 text-sm font-medium bg-white dark:bg-slate-700 border border-brand-primary/30 dark:border-brand-primary/50 rounded focus:outline-none focus:ring-2 focus:ring-brand-primary text-slate-800 dark:text-slate-200"
                                 autoFocus
                             />
                         ) : (
                             <div
                                 className={`text-sm font-medium truncate ${isActive
-                                    ? 'text-indigo-700 dark:text-indigo-300'
+                                    ? 'text-brand-primary'
                                     : 'text-slate-700 dark:text-slate-300'
                                     }`}
                                 title={document.name}
@@ -155,7 +155,7 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
                                     setIsBacklinksOpen(!isBacklinksOpen);
                                 }}
                                 aria-label={`查看反向連結 (${backlinks.length} 個)`}
-                                className={`p-1.5 rounded-full transition-all ${isBacklinksOpen ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400' : 'text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
+                                className={`p-1.5 rounded-full transition-all ${isBacklinksOpen ? 'bg-brand-secondary text-brand-primary dark:bg-brand-primary/30' : 'text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
                                 title={`反向連結 (${backlinks.length})`}
                             >
                                 <LinkIcon size={14} />
@@ -196,7 +196,7 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
                                     e.stopPropagation();
                                     onSelectDocument(linkDoc.id);
                                 }}
-                                className="w-full flex items-center gap-2 px-2 py-1 rounded-lg text-[11px] text-slate-400 hover:text-indigo-600 dark:text-slate-500 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800/50 transition-all text-left"
+                                className="w-full flex items-center gap-2 px-2 py-1 rounded-lg text-[11px] text-slate-400 hover:text-brand-primary dark:text-slate-500 dark:hover:text-brand-primary hover:bg-white dark:hover:bg-slate-800/50 transition-all text-left"
                                 title={`跳轉至 ${linkDoc.name}`}
                             >
                                 <LinkIcon size={10} className="shrink-0 opacity-40" />

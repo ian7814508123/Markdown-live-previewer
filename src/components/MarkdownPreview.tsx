@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -9,6 +9,7 @@ import embed from 'vega-embed';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import SmilesDrawer from 'smiles-drawer';
+import { useImageStorage } from '../hooks/useImageStorage';
 
 interface MarkdownPreviewProps {
     content: string;
@@ -82,7 +83,7 @@ const ResizableWrapper: React.FC<{
                             type="range" min="30" max="100" step="5"
                             value={parseInt(width)}
                             onChange={(e) => onWidthChange(`${e.target.value}%`)}
-                            className={`w-16 h-1 rounded-lg appearance-none cursor-pointer accent-indigo-500`}
+                            className={`w-16 h-1 rounded-lg appearance-none cursor-pointer accent-brand-primary bg-slate-200 dark:bg-slate-700`}
                         />
                         <span className="text-[10px] font-mono min-w-[2.2rem] opacity-70">{width}</span>
                     </div>
@@ -94,7 +95,7 @@ const ResizableWrapper: React.FC<{
                             type="range" min="150" max="800" step="10"
                             value={height === 'auto' ? 800 : parseInt(height)}
                             onChange={(e) => onHeightChange(`${e.target.value}px`)}
-                            className={`w-16 h-1 rounded-lg appearance-none cursor-pointer accent-teal-500`}
+                            className={`w-16 h-1 rounded-lg appearance-none cursor-pointer accent-teal-500 bg-slate-200 dark:bg-slate-700`}
                         />
                         <span className="text-[10px] font-mono min-w-[2.2rem] opacity-70">{height === 'auto' ? 'Auto' : height}</span>
                     </div>
@@ -106,7 +107,7 @@ const ResizableWrapper: React.FC<{
                             type="range" min="0.5" max="2" step="0.1"
                             value={scale}
                             onChange={(e) => onScaleChange(parseFloat(e.target.value))}
-                            className={`w-16 h-1 rounded-lg appearance-none cursor-pointer accent-amber-500`}
+                            className={`w-16 h-1 rounded-lg appearance-none cursor-pointer accent-amber-500 bg-slate-200 dark:bg-slate-700`}
                         />
                         <span className="text-[10px] font-mono min-w-[2.2rem] opacity-70">{scale.toFixed(1)}x</span>
                     </div>
@@ -114,7 +115,7 @@ const ResizableWrapper: React.FC<{
                     {/* Reset Button */}
                     <button
                         onClick={onReset}
-                        className={`text-[9px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-indigo-500 hover:text-white transition-colors duration-200`}
+                        className={`text-[9px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-brand-primary hover:text-white transition-colors duration-200`}
                     >
                         RESET
                     </button>
@@ -220,7 +221,7 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo
             />
             {isPending && !error && (
                 <div className="absolute top-2 right-2">
-                    <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
                 </div>
             )}
             {error && (
@@ -282,7 +283,7 @@ const VegaBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(({
             />
             {isPending && (
                 <div className="absolute top-2 right-2">
-                    <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
                 </div>
             )}
         </ResizableWrapper>
@@ -383,14 +384,129 @@ const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(
             </div>
             {isPending && (
                 <div className="absolute top-2 right-2">
-                    <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
                 </div>
             )}
         </ResizableWrapper>
     );
 });
 
-// ─── WikiLink 元件（模組層級，確保 React.memo 真正生效）───────────────────────────
+// ─── 本地圖片元件：非同步從 IndexedDB 讀取 Data URL 並顯示 (按需載入) ──────────────────────
+interface LocalImageProps {
+    id: string;
+    alt?: string;
+    className?: string;
+}
+
+const LocalImage: React.FC<LocalImageProps & { getImage: (id: string) => Promise<string | null> }> = React.memo(({ id, alt, className, getImage }) => {
+    const [src, setSrc] = useState<string | null>(null);
+    const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
+
+    useEffect(() => {
+        let cancelled = false;
+        setStatus('loading');
+        getImage(id).then(dataUrl => {
+            if (cancelled) return;
+            if (dataUrl) {
+                setSrc(dataUrl);
+                setStatus('loaded');
+            } else {
+                setStatus('error');
+            }
+        }).catch(() => {
+            if (!cancelled) setStatus('error');
+        });
+        return () => { cancelled = true; };
+    }, [id, getImage]);
+
+    if (status === 'loading') {
+        return (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 text-xs animate-pulse">
+                <span className="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-600 animate-pulse inline-block" />
+                載入圖片中…
+            </span>
+        );
+    }
+
+    if (status === 'error' || !src) {
+        return (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40 text-red-500 text-xs">
+                ⚠️ 圖片不存在或已到期: {alt || id}
+            </span>
+        );
+    }
+
+    return <img src={src ?? undefined} alt={alt ?? ''} className={className ?? 'rounded-xl max-w-full h-auto'} />;
+
+});
+
+// ─── 可縮放圖片元件：整合 ResizableWrapper ───────────────────────────────────────────
+interface ResizableImageProps {
+    src: string;
+    alt?: string;
+    getImage: (id: string) => Promise<string | null>;
+    isDarkMode: boolean;
+}
+
+const ResizableImage: React.FC<ResizableImageProps> = ({ src, alt, getImage, isDarkMode }) => {
+    // ─── 狀態持久化：從 LocalStorage 讀取初始設定 ───────────────────────────────────────
+    const storageKey = useMemo(() => `mlp-img-size:${src}`, [src]);
+    const [initialSettings] = useState(() => {
+        try {
+            const saved = localStorage.getItem(storageKey);
+            return saved ? JSON.parse(saved) : null;
+        } catch (err) {
+            console.warn('[ResizableImage] 無法從 LocalStorage 讀取設定:', err);
+            return null;
+        }
+    });
+
+    const [width, setWidth] = useState(initialSettings?.width ?? '100%');
+    const [height, setHeight] = useState(initialSettings?.height ?? 'auto');
+    const [scale, setScale] = useState(initialSettings?.scale ?? 1);
+
+    // 當設定變動時，同步回 LocalStorage
+    useEffect(() => {
+        try {
+            localStorage.setItem(storageKey, JSON.stringify({ width, height, scale }));
+        } catch (err) {
+            console.warn('[ResizableImage] 無法寫入 LocalStorage:', err);
+        }
+    }, [width, height, scale, storageKey]);
+
+    const isLocal = src?.startsWith('img-local://');
+    const imgId = isLocal ? src.replace('img-local://', '') : '';
+
+    const handleReset = () => {
+        setWidth('100%');
+        setHeight('auto');
+        setScale(1);
+    };
+
+    return (
+        <ResizableWrapper
+            width={width}
+            height={height}
+            scale={scale}
+            onWidthChange={setWidth}
+            onHeightChange={setHeight}
+            onScaleChange={setScale}
+            onReset={handleReset}
+            isDarkMode={isDarkMode}
+        >
+            {isLocal ? (
+                <LocalImage id={imgId} alt={alt} getImage={getImage} />
+            ) : (
+                <img src={src} alt={alt} className="rounded-xl max-w-full h-auto" />
+            )}
+            <div className="absolute bottom-2 right-3 text-[10px] text-slate-400 dark:text-slate-600 font-mono select-none pointer-events-none opacity-0 group-hover/resizable:opacity-100 transition-opacity">
+                {isLocal ? 'LOCAL IMAGE' : 'IMAGE'}
+            </div>
+        </ResizableWrapper>
+    );
+};
+
+// ─── WikiLink 元件（模組層級，確保 React.memo 真正生效）──────────────────────────────
 interface WikiLinkProps {
     name: string;
     children: React.ReactNode;
@@ -426,7 +542,7 @@ const WikiLink: React.FC<WikiLinkProps> = React.memo(({ name, children, document
                     }
                 }
             }}
-            className={`px-1 py-0.5 rounded-md transition-all duration-200 ${exists ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border-b border-indigo-300 dark:border-indigo-700' : 'text-slate-400 dark:text-slate-500 bg-slate-100/50 dark:bg-slate-800/20 hover:bg-slate-200 dark:hover:bg-slate-800 border-b border-dashed border-slate-300 dark:border-slate-700 italic cursor-help'}`}
+            className={`px-1 py-0.5 rounded-md transition-all duration-200 ${exists ? 'text-brand-primary bg-brand-secondary/50 dark:bg-brand-primary/20 hover:bg-brand-secondary dark:hover:bg-brand-primary/40 border-b border-brand-primary/30 dark:border-brand-primary/70' : 'text-slate-400 dark:text-slate-500 bg-slate-100/50 dark:bg-slate-800/20 hover:bg-slate-200 dark:hover:bg-slate-800 border-b border-dashed border-slate-300 dark:border-slate-700 italic cursor-help'}`}
             title={exists ? `跳轉至: ${name}` : `文件不存在: ${name} (在目前資料夾中)`}
         >
             {children}
@@ -456,6 +572,8 @@ const MemoizedMathJax: React.FC<MemoizedMathJaxProps> = React.memo(({ content, i
 const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDarkMode, documents = [], onSelectDocument, onCreateMissing, currentDocId }) => {
     const isDark = isDarkMode;
     const [debouncedContent, setDebouncedContent] = useState(content);
+    // 在 MarkdownPreview 頂層呼叫一次，避免每個 LocalImage 獨立開啟 DB 連線
+    const { getImage } = useImageStorage();
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -464,6 +582,23 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
         }, 600);
         return () => clearTimeout(timer);
     }, [content]);
+
+    // ─── URI 轉換：允許自定義協定通過 react-markdown 的過濾 ───────────────────────────
+    const urlTransform = useCallback((uri: string) => {
+        // 放行我們的本地圖片協定
+        if (uri.startsWith('img-local://')) return uri;
+
+        // 其他常見的安全協定
+        const protocols = ['http', 'https', 'mailto', 'tel', '#'];
+        for (const protocol of protocols) {
+            if (uri.toLowerCase().startsWith(protocol)) return uri;
+        }
+
+        // 相對路徑也放行
+        if (uri.startsWith('/') || uri.startsWith('./') || uri.startsWith('../')) return uri;
+
+        return `about:blank`; // 過濾掉潛在不安全的連結
+    }, []);
 
 
     const remarkRehypeOptions = useMemo(() => ({
@@ -567,8 +702,21 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
                 );
             }
             return <a href={href} {...props} target="_blank" rel="noopener noreferrer" data-line={node?.position?.start?.line}>{children}</a>;
-        }
-    }), [isDark, documents, onSelectDocument, onCreateMissing, currentDocId]);
+        },
+        // ─── 圖片解析：支援本地與遠端，並提供縮放工具 ──────────────────────────────────────────
+        img: ({ node, src, alt, ...props }: any) => {
+            if (!src) return null;
+            return (
+                <ResizableImage
+                    key={src}
+                    src={src}
+                    alt={alt}
+                    getImage={getImage}
+                    isDarkMode={isDark}
+                />
+            );
+        },
+    }), [isDark, documents, onSelectDocument, onCreateMissing, currentDocId, getImage]);
 
     // 監聽圖片載入完成，若有必要可觸發同步刷新
     useEffect(() => {
@@ -586,12 +734,13 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
     }, [debouncedContent]);
 
     return (
-        <div className={`prose max-w-none p-8 select-text ${isDark ? 'prose-invert' : 'prose-slate'} prose-headings:font-bold prose-a:text-indigo-600 prose-img:rounded-xl prose-table:border-collapse prose-th:border prose-th:border-slate-300 dark:prose-th:border-slate-700 prose-th:p-2 prose-td:border prose-td:border-slate-300 dark:prose-td:border-slate-700 prose-td:p-2 print:p-0 print:max-w-none`}>
+        <div className={`prose max-w-none p-8 select-text ${isDark ? 'prose-invert' : 'prose-slate'} prose-headings:font-bold prose-a:text-brand-primary prose-img:rounded-xl prose-table:border-collapse prose-th:border prose-th:border-slate-300 dark:prose-th:border-slate-700 prose-th:p-2 prose-td:border prose-td:border-slate-300 dark:prose-td:border-slate-700 prose-td:p-2 print:p-0 print:max-w-none`}>
             <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkMath]}
                 rehypePlugins={[rehypeRaw]}
                 remarkRehypeOptions={remarkRehypeOptions}
                 components={components}
+                urlTransform={urlTransform}
             >
                 {debouncedContent}
             </ReactMarkdown>

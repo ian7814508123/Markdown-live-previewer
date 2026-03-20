@@ -165,8 +165,8 @@ const Header: React.FC<HeaderProps> = ({
 
             {/* Logo + 標題 */}
             <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200 dark:shadow-indigo-900/40">
-                    <img src="/image/markdown_liveditor.svg?v=2" alt="Logo" className="w-12 h-12" />
+                <div className="w-10 h-10 bg-brand-primary rounded-2xl flex items-center justify-center text-white overflow-hidden">
+                    <img src="/image/markdown_liveditor.svg?v=2" alt="Logo" className="w-10 h-10" />
                 </div>
                 <div>
                     <h1 className="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100">Markdown Live Previewer</h1>
@@ -187,7 +187,7 @@ const Header: React.FC<HeaderProps> = ({
                     <RippleButton variant="icon" onClick={(e) => toggleDarkMode(e)}
                         aria-label={isDarkMode ? '切換到亮色模式' : '切換到深色模式'}
                         title={isDarkMode ? '切換 到 亮色模式' : '切換 到 深色模式'}
-                        className="text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400">
+                        className="text-slate-500 dark:text-slate-400 hover:text-brand-primary">
                         {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
                     </RippleButton>
 
@@ -197,7 +197,7 @@ const Header: React.FC<HeaderProps> = ({
                     <RippleButton variant="icon" onClick={onOpenSettings}
                         aria-label="PDF 版面設定"
                         title="PDF 版面設定"
-                        className="text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400">
+                        className="text-slate-500 dark:text-slate-400 hover:text-brand-primary">
                         <Settings size={20} />
                     </RippleButton>
 
@@ -225,7 +225,7 @@ const Header: React.FC<HeaderProps> = ({
                                 <button key={t.value} onClick={() => { setTheme(t.value); setIsThemeMenuOpen(false); }}
                                     className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-all border
                                         ${t.value === theme
-                                            ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800 font-semibold'
+                                            ? 'bg-brand-secondary dark:bg-brand-primary/30 text-brand-primary border-brand-primary/20 dark:border-brand-primary/40 font-semibold'
                                             : 'text-slate-700 dark:text-slate-200 border-transparent hover:bg-slate-100 dark:hover:bg-white/10 hover:border-slate-200 dark:hover:border-white/15 font-medium'
                                         }`}>
                                     <span>{t.emoji}</span><span>{t.label}</span>
@@ -261,7 +261,7 @@ const Header: React.FC<HeaderProps> = ({
                                 'JPG 圖片', '壓縮')}
                             <div className="mx-4 my-1 border-t border-slate-100 dark:border-slate-700" />
                             {menuItem(() => handleExport(() => onExportImage('svg')),
-                                <div className="w-9 h-9 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center"><FileJson size={18} /></div>,
+                                <div className="w-9 h-9 bg-brand-secondary/60 dark:bg-brand-primary/30 text-brand-primary rounded-xl flex items-center justify-center"><FileJson size={18} /></div>,
                                 'SVG 向量', '解析度獨立')}
                             <div className="mx-4 my-1 border-t border-slate-100 dark:border-slate-700" />
                             {menuItem(() => handleExport(onDownloadMarkdown),
@@ -274,10 +274,10 @@ const Header: React.FC<HeaderProps> = ({
 
                             {/* 儲存庫合併快捷開關 */}
                             {isInFolder && onUpdatePrintSettings && printSettings && (
-                                <div className="mt-2 mx-1 p-4 bg-indigo-50/40 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100/50 dark:border-indigo-900/30 shadow-sm space-y-4 animate-in slide-in-from-top-2 duration-300">
+                                <div className="mt-2 mx-1 p-4 bg-brand-secondary/40 dark:bg-brand-primary/10 rounded-2xl border border-brand-primary/10 dark:border-brand-primary/30 shadow-sm space-y-4 animate-in slide-in-from-top-2 duration-300">
                                     <div className="flex items-center gap-2 mb-1">
-                                        <div className="p-1.5 bg-indigo-100/50 dark:bg-indigo-800/30 rounded-lg text-indigo-600"><Box size={15} /></div>
-                                        <p className="text-[12px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">儲存庫合併選項</p>
+                                        <div className="p-1.5 bg-brand-primary/10 dark:bg-brand-primary/30 rounded-lg text-brand-primary"><Box size={15} /></div>
+                                        <p className="text-[12px] font-bold text-brand-primary uppercase tracking-widest">儲存庫合併選項</p>
                                     </div>
 
                                     <label className="flex items-center justify-between cursor-pointer group">
@@ -287,13 +287,13 @@ const Header: React.FC<HeaderProps> = ({
                                         </div>
                                         <div
                                             onClick={(e) => { e.stopPropagation(); onUpdatePrintSettings({ mergeVaultOnMdExport: !printSettings.mergeVaultOnMdExport }); }}
-                                            className={`w-11 h-6 rounded-full transition-all relative ${printSettings.mergeVaultOnMdExport ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`}
+                                            className={`w-11 h-6 rounded-full transition-all relative ${printSettings.mergeVaultOnMdExport ? 'bg-brand-primary' : 'bg-slate-200 dark:bg-slate-700'}`}
                                         >
                                             <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${printSettings.mergeVaultOnMdExport ? 'left-6' : 'left-1'}`} />
                                         </div>
                                     </label>
 
-                                    <div className="h-px bg-indigo-100/50 dark:bg-indigo-800/20" />
+                                    <div className="h-px bg-brand-primary/10 dark:bg-brand-primary/20" />
 
                                     <label className="flex items-center justify-between cursor-pointer group">
                                         <div className="flex flex-col">
@@ -302,7 +302,7 @@ const Header: React.FC<HeaderProps> = ({
                                         </div>
                                         <div
                                             onClick={(e) => { e.stopPropagation(); onUpdatePrintSettings({ mergeVaultOnPdfExport: !printSettings.mergeVaultOnPdfExport }); }}
-                                            className={`w-11 h-6 rounded-full transition-all relative ${printSettings.mergeVaultOnPdfExport ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`}
+                                            className={`w-11 h-6 rounded-full transition-all relative ${printSettings.mergeVaultOnPdfExport ? 'bg-brand-primary' : 'bg-slate-200 dark:bg-slate-700'}`}
                                         >
                                             <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${printSettings.mergeVaultOnPdfExport ? 'left-6' : 'left-1'}`} />
                                         </div>
@@ -332,7 +332,7 @@ const Header: React.FC<HeaderProps> = ({
                     <RippleButton variant="icon" onClick={(e) => toggleDarkMode(e)}
                         aria-label={isDarkMode ? '切換到亮色模式' : '切換到深色模式'}
                         title={isDarkMode ? '切換 到 亮色模式' : '切換 到 深色模式'}
-                        className="text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400">
+                        className="text-slate-500 dark:text-slate-400 hover:text-brand-primary">
                         {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
                     </RippleButton>
 
@@ -342,7 +342,7 @@ const Header: React.FC<HeaderProps> = ({
                     <RippleButton variant="icon" onClick={onOpenSettings}
                         aria-label="偏好設定"
                         title="偏好設定"
-                        className="text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400">
+                        className="text-slate-500 dark:text-slate-400 hover:text-brand-primary">
                         <Settings size={20} />
                     </RippleButton>
 
@@ -353,10 +353,10 @@ const Header: React.FC<HeaderProps> = ({
                         style={{ position: 'relative', overflow: 'hidden' }}
                         className={`inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-semibold transition-all select-none
                             ${isSyncScroll
-                                ? 'bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 hover:bg-slate-200 dark:hover:bg-white/10'
+                                ? 'bg-slate-100 dark:bg-slate-800 text-brand-primary shadow-sm ring-1 ring-brand-primary/10'
                                 : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-slate-200'
                             }`}>
-                        <span className={`w-2 h-2 rounded-full shrink-0 transition-colors ${isSyncScroll ? 'bg-indigo-500 animate-pulse' : 'bg-slate-300 dark:bg-slate-600'}`} />
+                        <span className={`w-2 h-2 rounded-full shrink-0 transition-colors ${isSyncScroll ? 'bg-brand-primary animate-pulse' : 'bg-slate-300 dark:bg-slate-600'}`} />
                         同步滾動
                     </button>
 
@@ -400,10 +400,10 @@ const Header: React.FC<HeaderProps> = ({
 
                             {/* 儲存庫合併快捷開關 */}
                             {isInFolder && onUpdatePrintSettings && printSettings && (
-                                <div className="mt-2 mx-1 p-4 bg-indigo-50/40 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100/50 dark:border-indigo-900/30 shadow-sm space-y-4 animate-in slide-in-from-top-2 duration-300">
+                                <div className="mt-2 mx-1 p-4 bg-brand-secondary/40 dark:bg-brand-primary/10 rounded-2xl border border-brand-primary/10 dark:border-brand-primary/30 shadow-sm space-y-4 animate-in slide-in-from-top-2 duration-300">
                                     <div className="flex items-center gap-2 mb-1">
-                                        <div className="p-1.5 bg-indigo-100/50 dark:bg-indigo-800/30 rounded-lg text-indigo-600"><Box size={16} /></div>
-                                        <p className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">儲存庫合併選項</p>
+                                        <div className="p-1.5 bg-brand-primary/10 dark:bg-brand-primary/30 rounded-lg text-brand-primary"><Box size={16} /></div>
+                                        <p className="text-[10px] font-bold text-brand-primary uppercase tracking-widest">儲存庫合併選項</p>
                                     </div>
 
                                     <label className="flex items-center justify-between cursor-pointer group">
@@ -413,13 +413,13 @@ const Header: React.FC<HeaderProps> = ({
                                         </div>
                                         <div
                                             onClick={(e) => { e.stopPropagation(); onUpdatePrintSettings({ mergeVaultOnMdExport: !printSettings.mergeVaultOnMdExport }); }}
-                                            className={`w-11 h-6 rounded-full transition-all relative ${printSettings.mergeVaultOnMdExport ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`}
+                                            className={`w-11 h-6 rounded-full transition-all relative ${printSettings.mergeVaultOnMdExport ? 'bg-brand-primary' : 'bg-slate-200 dark:bg-slate-700'}`}
                                         >
                                             <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${printSettings.mergeVaultOnMdExport ? 'left-6' : 'left-1'}`} />
                                         </div>
                                     </label>
 
-                                    <div className="h-px bg-indigo-100/50 dark:bg-indigo-800/20" />
+                                    <div className="h-px bg-brand-primary/10 dark:bg-brand-primary/20" />
 
                                     <label className="flex items-center justify-between cursor-pointer group">
                                         <div className="flex flex-col">
@@ -428,7 +428,7 @@ const Header: React.FC<HeaderProps> = ({
                                         </div>
                                         <div
                                             onClick={(e) => { e.stopPropagation(); onUpdatePrintSettings({ mergeVaultOnPdfExport: !printSettings.mergeVaultOnPdfExport }); }}
-                                            className={`w-11 h-6 rounded-full transition-all relative ${printSettings.mergeVaultOnPdfExport ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`}
+                                            className={`w-11 h-6 rounded-full transition-all relative ${printSettings.mergeVaultOnPdfExport ? 'bg-brand-primary' : 'bg-slate-200 dark:bg-slate-700'}`}
                                         >
                                             <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${printSettings.mergeVaultOnPdfExport ? 'left-6' : 'left-1'}`} />
                                         </div>

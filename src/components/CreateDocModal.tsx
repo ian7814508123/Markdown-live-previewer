@@ -14,7 +14,7 @@ const MD_TEMPLATES = [
     { id: 'basic', name: '基礎文字', desc: '純淨的標題、列表與文字樣式', icon: File, color: 'text-blue-500', bg: 'bg-blue-100 dark:bg-blue-900/40' },
     { id: 'math', name: '數學化學', desc: 'LaTeX 公式與化學方程式', icon: Ruler, color: 'text-rose-500', bg: 'bg-rose-100 dark:bg-rose-900/40' },
     { id: 'charts', name: '數據圖表', desc: 'Vega-Lite 專業視覺化圖表', icon: BarChart2, color: 'text-emerald-500', bg: 'bg-emerald-100 dark:bg-emerald-900/40' },
-    { id: 'mermaid', name: '內嵌圖表', desc: '在文章中畫流程圖與時序圖', icon: GitBranch, color: 'text-indigo-500', bg: 'bg-indigo-100 dark:bg-indigo-900/40' },
+    { id: 'mermaid', name: '內嵌圖表', desc: '在文章中畫流程圖與時序圖', icon: GitBranch, color: 'text-brand-primary', bg: 'bg-brand-secondary/60 dark:bg-brand-primary/20' },
 ];
 
 const MMD_TEMPLATES = [
@@ -22,7 +22,7 @@ const MMD_TEMPLATES = [
     { id: 'flowchart', name: '流程圖', desc: 'Flowchart: 節點、判斷與路徑', icon: GitBranch, color: 'text-blue-500', bg: 'bg-blue-100 dark:bg-blue-900/40' },
     { id: 'sequence', name: '時序圖', desc: 'Sequence: 角交互、訊息傳遞', icon: FileText, color: 'text-rose-500', bg: 'bg-rose-100 dark:bg-rose-900/40' },
     { id: 'gantt', name: '甘特圖', desc: 'Gantt: 專案開發進度與排程', icon: BarChart2, color: 'text-emerald-500', bg: 'bg-emerald-100 dark:bg-emerald-900/40' },
-    { id: 'class', name: '類別圖', desc: 'Class: 物件導向、繼承關係', icon: File, color: 'text-indigo-500', bg: 'bg-indigo-100 dark:bg-indigo-900/40' },
+    { id: 'class', name: '類別圖', desc: 'Class: 物件導向、繼承關係', icon: File, color: 'text-brand-primary', bg: 'bg-brand-secondary/60 dark:bg-brand-primary/20' },
     { id: 'state', name: '狀態圖', desc: 'State: 生命週期、狀態移轉', icon: Ruler, color: 'text-purple-500', bg: 'bg-purple-100 dark:bg-purple-900/40' },
 ];
 
@@ -107,7 +107,7 @@ const CreateDocModal: React.FC<CreateDocModalProps> = ({ isOpen, onClose, onCrea
                                 <ChevronLeft size={20} />
                             </RippleButton>
                         ) : (
-                            <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center shadow-sm">
+                            <div className="w-10 h-10 bg-brand-secondary dark:bg-brand-primary/30 text-brand-primary rounded-2xl flex items-center justify-center shadow-sm">
                                 <Plus size={20} />
                             </div>
                         )}
@@ -144,7 +144,7 @@ const CreateDocModal: React.FC<CreateDocModalProps> = ({ isOpen, onClose, onCrea
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 placeholder="輸入名稱 (選填)"
-                                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
+                                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
                             />
                         </div>
 
@@ -190,7 +190,7 @@ const CreateDocModal: React.FC<CreateDocModalProps> = ({ isOpen, onClose, onCrea
                                     <t.icon size={20} />
                                 </div>
                                 <div className="min-w-0">
-                                    <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                                    <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-brand-primary transition-colors">
                                         {t.name}
                                     </h3>
                                     <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate">

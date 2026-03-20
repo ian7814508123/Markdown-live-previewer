@@ -45,3 +45,5 @@
 ---
 > [!TIP]
 > 建議在每次 Git Commit 並部署後，手動前往 [Google Search Console](https://search.google.com/search-console) 點擊「索取索引」，這能縮短搜尋結果更新的時間。
+
+

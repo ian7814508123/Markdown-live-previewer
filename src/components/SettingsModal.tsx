@@ -46,8 +46,8 @@ const PdfSettingsPanel: React.FC<{
                             className={[
                                 'flex flex-col items-center px-4 py-2.5 rounded-xl border text-xs font-semibold transition-all active:scale-95',
                                 value === opt.value
-                                    ? 'bg-indigo-50 dark:bg-indigo-900/40 border-indigo-200 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 shadow-sm'
-                                    : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-indigo-200 dark:hover:border-indigo-800',
+                                    ? 'bg-brand-secondary dark:bg-brand-primary/40 border-brand-primary/30 dark:border-brand-primary/70 text-brand-primary dark:text-brand-primary shadow-sm'
+                                    : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-brand-primary/20 dark:hover:border-brand-primary/80',
                             ].join(' ')}
                         >
                             <span>{opt.label}</span>
@@ -64,13 +64,13 @@ const PdfSettingsPanel: React.FC<{
             {/* 分組 A：視覺化預覽 */}
             <div className="p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
                 <div className="flex items-center gap-2 mb-1">
-                    <div className="p-1.5 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg text-indigo-500"><FileText size={16} /></div>
-                    <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">預覽行為</p>
+                    <div className="p-1.5 bg-brand-secondary/60 dark:bg-brand-primary/30 rounded-lg text-brand-primary"><FileText size={16} /></div>
+                    <p className="text-[10px] font-bold text-brand-primary uppercase tracking-widest">預覽行為</p>
                 </div>
 
                 <label className="flex items-center justify-between cursor-pointer group">
                     <div className="flex flex-col">
-                        <span className="text-xs font-bold text-slate-700 dark:text-slate-200 group-hover:text-indigo-600 transition-colors">顯示列印預覽</span>
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-200 group-hover:text-brand-primary transition-colors">顯示列印預覽</span>
                         <span className="text-[10px] text-slate-400 dark:text-slate-500">在編輯器旁模擬紙張邊界與分頁線</span>
                     </div>
                     <div
@@ -81,7 +81,7 @@ const PdfSettingsPanel: React.FC<{
                             if (nextShow) patch.scale = 'fit';
                             onChange(patch);
                         }}
-                        className={`w-11 h-6 rounded-full transition-all relative ${settings.showPrintPreview ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`}
+                        className={`w-11 h-6 rounded-full transition-all relative ${settings.showPrintPreview ? 'bg-brand-primary' : 'bg-slate-200 dark:bg-slate-700'}`}
                     >
                         <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${settings.showPrintPreview ? 'left-6' : 'left-1'}`} />
                     </div>
@@ -132,7 +132,7 @@ const PdfSettingsPanel: React.FC<{
                                     className={[
                                         'px-3 py-2 rounded-xl border text-xs font-bold transition-all',
                                         isActive
-                                            ? 'bg-indigo-50 dark:bg-indigo-900/40 border-indigo-200 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300'
+                                            ? 'bg-brand-secondary dark:bg-brand-primary/40 border-brand-primary/20 dark:border-brand-primary/70 text-brand-primary dark:text-brand-primary'
                                             : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300',
                                     ].join(' ')}
                                 >
@@ -145,9 +145,9 @@ const PdfSettingsPanel: React.FC<{
                         <div className="flex items-center gap-4 pt-1 px-1">
                             <input type="range" min={10} max={200} step={5} value={customScale}
                                 onChange={(e) => { const v = Number(e.target.value); setCustomScale(v); onChange({ scale: v }); }}
-                                className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                                className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-brand-primary"
                             />
-                            <span className="text-xs font-mono font-bold w-12 text-indigo-600 dark:text-indigo-400">{customScale}%</span>
+                            <span className="text-xs font-mono font-bold w-12 text-brand-primary">{customScale}%</span>
                         </div>
                     )}
                 </div>
@@ -164,8 +164,8 @@ const PdfSettingsPanel: React.FC<{
                 />
             </div>
 
-            <div className="rounded-2xl bg-indigo-50/30 dark:bg-slate-800/40 px-5 py-4 text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed border border-indigo-50/50 dark:border-slate-700/50">
-                <span className="font-bold text-indigo-600 dark:text-indigo-400">TIPS:</span> 設定即時生效。當您點選「下載 → 列印」時會套用此配置。匯出大型 Mermaid 圖表時，建議優先嘗試 <strong>A3 橫向 + 符合頁面</strong> 選項。
+            <div className="rounded-2xl bg-brand-secondary/30 dark:bg-brand-primary/10 px-5 py-4 text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed border border-brand-primary/15 dark:border-brand-primary/30">
+                <span className="font-bold text-brand-primary">TIPS:</span> 設定即時生效。當您點選「下載 → 列印」時會套用此配置。匯出大型 Mermaid 圖表時，建議優先嘗試 <strong>A3 橫向 + 符合頁面</strong> 選項。
             </div>
         </div>
     );
@@ -239,21 +239,21 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     <div className="flex p-1.5 bg-slate-100 dark:bg-slate-800/50 rounded-2xl w-full">
                         <button
                             onClick={() => setActiveTab('editor')}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'editor' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'editor' ? 'bg-white dark:bg-slate-700 text-brand-primary shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                         >
                             <Box size={14} />
                             編輯器設定
                         </button>
                         <button
                             onClick={() => setActiveTab('print')}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'print' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'print' ? 'bg-white dark:bg-slate-700 text-brand-primary shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                         >
                             <Printer size={14} />
                             列印與匯出
                         </button>
                         <button
                             onClick={() => setActiveTab('about')}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'about' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'about' ? 'bg-white dark:bg-slate-700 text-brand-primary shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                         >
                             <AlertCircle size={14} />
                             關於
@@ -265,13 +265,23 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
                     {activeTab === 'about' ? (
                         <div className="p-8 space-y-8">
-                            <div className="flex flex-col items-center text-center space-y-4">
-                                <div className="w-20 h-20 bg-indigo-600 rounded-[2.5rem] flex items-center justify-center text-white shadow-xl shadow-indigo-200 dark:shadow-indigo-900/40">
-                                    <img src="/image/markdown_liveditor.svg?v=2" alt="Logo" className="w-16 h-16" />
+                            <div className="flex flex-col items-center text-center space-y-6">
+                                <div className="
+                                    w-24 h-24 rounded-[2.5rem] flex items-center justify-center text-white overflow-hidden transform transition-transform hover:scale-[1.02] duration-300
+                                    /* 基礎漸層 (淺色模式) */
+                                    bg-gradient-to-br from-brand-primary to-brand-secondary 
+                                    /* 深色模式下的漸層修改 */
+                                    dark:from-brand-secondary dark:to-brand-accent
+                                    /* 其他深色模式樣式 */
+                                    shadow-xl shadow-slate-200 dark:shadow-black/70 
+                                    border-4 border-white dark:border-slate-800 
+                                    ring-1 ring-slate-100 dark:ring-slate-700/50
+                                    ">
+                                    <img src="/image/markdown_liveditor.svg?v=2" alt="Logo" className="w-16 h-16 drop-shadow-sm" />
                                 </div>
-                                <div className="pt-2">
+                                <div className="pt-0">
                                     <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Markdown Live Previewer</h3>
-                                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 lowercase tracking-widest mt-1">版本 1.3.0 </p>
+                                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 lowercase tracking-widest mt-1">版本 1.3.a </p>
                                 </div>
                                 <div className="px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-full text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
                                     授權：MIT 開源協議
@@ -280,7 +290,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
                             <div className="space-y-4">
                                 <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-                                    <Box size={16} className="text-indigo-500" />
+                                    <Box size={16} className="text-brand-primary opacity-80" />
                                     <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">第三方套件與致謝 (Credits)</h4>
                                 </div>
                                 <div className="grid grid-cols-1 gap-3">
@@ -296,18 +306,18 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                         { name: 'Vite', license: 'MIT', url: 'https://vitejs.dev' },
                                         { name: 'Tailwind CSS', license: 'MIT', url: 'https://tailwindcss.com' },
                                     ].map((pkg) => (
-                                        <div key={pkg.name} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-indigo-100 dark:hover:border-indigo-900/50 transition-colors">
+                                        <div key={pkg.name} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-brand-primary/20 dark:hover:border-brand-primary/40 transition-colors">
                                             <div className="flex flex-col">
                                                 <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{pkg.name}</span>
                                                 <span className="text-[9px] text-slate-400 dark:text-slate-500 uppercase font-black tracking-tighter">{pkg.license} License</span>
                                             </div>
-                                            <a href={pkg.url} target="_blank" rel="noopener noreferrer" className="text-[10px] font-black text-indigo-500 hover:text-indigo-600 transition-colors uppercase tracking-widest">網站</a>
+                                            <a href={pkg.url} target="_blank" rel="noopener noreferrer" className="text-[10px] font-black text-brand-primary hover:text-brand-accent transition-colors uppercase tracking-widest">網站</a>
                                         </div>
                                     ))}
                                 </div>
                             </div>
 
-                            <div className="rounded-2xl bg-indigo-50/30 dark:bg-slate-800/40 px-5 py-4 text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed border border-indigo-50/50 dark:border-slate-700/50 text-center">
+                            <div className="rounded-2xl bg-brand-secondary/30 dark:bg-brand-primary/10 px-5 py-4 text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed border border-brand-primary/15 dark:border-brand-primary/30 text-center">
                                 © 2026 HUANGJYUNYING. 本專案採 MIT 協議授權。使用本軟體即代表您同意其授權條款。
                             </div>
                         </div>
@@ -324,9 +334,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                                 value={jsonInput}
                                                 onChange={(e) => setJsonInput(e.target.value)}
                                                 className={`w-full min-h-[320px] p-5 font-mono text-xs bg-slate-50 dark:bg-slate-950 border-2 rounded-2xl resize-none focus:outline-none focus:ring-4 transition-all
-                                                    ${error
-                                                        ? 'border-red-200 focus:ring-red-100 dark:border-red-900/40'
-                                                        : 'border-slate-100 dark:border-slate-800 focus:ring-indigo-50 dark:focus:ring-indigo-900/20'
+                                                    ? 'border-red-200 focus:ring-red-100 dark:border-red-900/40'
+                                                        : 'border-slate-100 dark:border-slate-800 focus:ring-brand-secondary dark:focus:ring-brand-primary/20'
                                                     }
                                                     text-slate-700 dark:text-slate-300 custom-scrollbar shadow-inner`}
                                                 spellCheck={false}
@@ -341,13 +350,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     </div>
 
                                     <div className="flex items-center justify-between pb-8">
-                                        <RippleButton variant="text" onClick={() => confirm('確定要還原預設巨集設定嗎?') && onRestoreDefaults()} className="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 text-[10px] font-black uppercase tracking-widest">
+                                        <RippleButton variant="text" onClick={() => confirm('確定要還原預設巨集設定嗎?') && onRestoreDefaults()} className="text-slate-400 hover:text-brand-primary text-[10px] font-black uppercase tracking-widest">
                                             <RotateCcw size={14} />
                                             還原預設
                                         </RippleButton>
                                         <div className="flex items-center gap-4">
                                             <RippleButton variant="outlined" onClick={onClose} className="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest">取消</RippleButton>
-                                            <RippleButton variant="filled" onClick={handleSaveMacros} className={`px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg transition-all ${success ? 'bg-green-500 shadow-green-500/20' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/30'}`}>
+                                            <RippleButton variant="filled" onClick={handleSaveMacros} className={`px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg transition-all ${success ? 'bg-green-500 shadow-green-500/20' : 'bg-brand-primary hover:bg-brand-primary/90 shadow-brand-primary/20'}`}>
                                                 {success ? <Check size={16} /> : <Save size={16} />}
                                                 {success ? '已儲存' : '儲存變更'}
                                             </RippleButton>

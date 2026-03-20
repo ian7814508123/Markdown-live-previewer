@@ -171,7 +171,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                 {/* 標題列 (高度與主 Header 貼齊) */}
                 <div className="flex items-center justify-between px-6 h-16 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
                     <div className="flex items-center gap-2">
-                        <Files size={25} className="text-indigo-500 opacity-80" />
+                        <Files size={25} className="text-brand-primary opacity-80" />
                         <h2 className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">我的文檔</h2>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
@@ -244,14 +244,14 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                                                 className="space-y-0.5"
                                                 onDragOver={(e) => {
                                                     e.preventDefault();
-                                                    e.currentTarget.classList.add('bg-indigo-50/50', 'dark:bg-indigo-900/10');
+                                                    e.currentTarget.classList.add('bg-brand-secondary/50', 'dark:bg-brand-primary/10');
                                                 }}
                                                 onDragLeave={(e) => {
-                                                    e.currentTarget.classList.remove('bg-indigo-50/50', 'dark:bg-indigo-900/10');
+                                                    e.currentTarget.classList.remove('bg-brand-secondary/50', 'dark:bg-brand-primary/10');
                                                 }}
                                                 onDrop={(e) => {
                                                     e.preventDefault();
-                                                    e.currentTarget.classList.remove('bg-indigo-50/50', 'dark:bg-indigo-900/10');
+                                                    e.currentTarget.classList.remove('bg-brand-secondary/50', 'dark:bg-brand-primary/10');
                                                     const docId = e.dataTransfer.getData('text/plain');
                                                     if (docId) onMoveDocument(docId, folder.id);
                                                 }}
@@ -262,8 +262,8 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                                                     onDoubleClick={(e) => handleFolderDoubleClick(e, folder)}
                                                 >
                                                     <div className="flex items-center gap-2 overflow-hidden flex-1">
-                                                        {isExpanded ? <ChevronDown size={14} className="text-indigo-500 shrink-0" /> : <ChevronRight size={14} className="text-slate-400 shrink-0" />}
-                                                        <FolderOpen size={16} className={`${isExpanded ? 'text-indigo-500' : 'text-slate-400'} shrink-0`} />
+                                                        {isExpanded ? <ChevronDown size={14} className="text-brand-primary shrink-0" /> : <ChevronRight size={14} className="text-slate-400 shrink-0" />}
+                                                        <FolderOpen size={16} className={`${isExpanded ? 'text-brand-primary' : 'text-slate-400'} shrink-0`} />
                                                         {editingFolderId === folder.id ? (
                                                             <input
                                                                 type="text"
@@ -275,7 +275,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                                                                     if (e.key === 'Escape') setEditingFolderId(null);
                                                                 }}
                                                                 onClick={(e) => e.stopPropagation()}
-                                                                className="flex-1 px-1 py-0 text-xs font-bold bg-white dark:bg-slate-700 border border-indigo-300 dark:border-indigo-700 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-800 dark:text-slate-200"
+                                                                className="flex-1 px-1 py-0 text-xs font-bold bg-white dark:bg-slate-700 border border-brand-primary/30 dark:border-brand-primary/50 rounded focus:outline-none focus:ring-1 focus:ring-brand-primary text-slate-800 dark:text-slate-200"
                                                                 autoFocus
                                                             />
                                                         ) : (
@@ -316,7 +316,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                                                             ? 'opacity 0.3s ease 0.05s, transform 0.3s ease 0.05s'
                                                             : 'opacity 0.18s ease, transform 0.18s ease',
                                                     }}>
-                                                        <div className="pl-4 space-y-0.5 border-l-2 border-indigo-100/50 dark:border-indigo-900/30 ml-6 mb-2">
+                                                        <div className="pl-4 space-y-0.5 border-l-2 border-brand-primary/10 dark:border-brand-primary/30 ml-6 mb-2">
                                                             {folderDocs.length === 0 ? (
                                                                 <p className="px-4 py-2 text-[10px] text-slate-400 dark:text-slate-600 italic">無文件</p>
                                                             ) : (
@@ -396,9 +396,9 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                 <div className="mt-auto border-t border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800">
                     <button
                         onClick={() => setIsToolsOpen(true)}
-                        className="w-full flex items-center gap-2.5 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors group"
+                        className="w-full flex items-center gap-2.5 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-brand-primary transition-colors group"
                     >
-                        <Wrench size={14} className="text-slate-400 group-hover:text-indigo-500 transition-colors" />
+                        <Wrench size={14} className="text-slate-400 group-hover:text-brand-primary transition-colors" />
                         <span className="text-xs font-bold tracking-wide">更多工具</span>
                     </button>
 
@@ -414,7 +414,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                                 <div className="flex flex-col items-center">
                                     <div className="w-full h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-1">
                                         <div
-                                            className={`h-full transition-all duration-500 ${storageUsage > 80 ? 'bg-red-500' : storageUsage > 50 ? 'bg-amber-500' : 'bg-indigo-500'}`}
+                                            className={`h-full transition-all duration-500 ${storageUsage > 80 ? 'bg-red-500' : storageUsage > 50 ? 'bg-amber-500' : 'bg-brand-primary'}`}
                                             style={{ width: `${storageUsage}%` }}
                                         />
                                     </div>

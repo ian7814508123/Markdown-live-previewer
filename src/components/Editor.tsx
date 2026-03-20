@@ -81,13 +81,13 @@ const Editor = forwardRef<ReactCodeMirrorRef, EditorProps>(({
                                 className={`
                                     flex items-center gap-2 px-2.5 py-2 text-[10px] font-medium cursor-pointer transition-all relative group
                                     ${isActive
-                                        ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 rounded-t-xl shadow-[0_-8px_20px_rgba(0,0,0,0.04)] dark:shadow-[0_-8px_20px_rgba(0,0,0,0.15)] z-10 flex-[2_2_0%]'
+                                        ? 'bg-white dark:bg-slate-900 text-brand-primary rounded-t-xl shadow-[0_-8px_20px_rgba(0,0,0,0.04)] dark:shadow-[0_-8px_20px_rgba(0,0,0,0.15)] z-10 flex-[2_2_0%]'
                                         : 'text-slate-500 dark:text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 bg-slate-200/50 dark:bg-slate-800/30 rounded-t-lg mb-0.5 mx-0.5 flex-1'
                                     }
                                 `}
                                 style={{ minWidth: isActive ? '120px' : '44px', maxWidth: '180px' }}
                             >
-                                {doc.mode === 'mermaid' ? <FileCode size={12} className={isActive ? 'text-indigo-500' : 'opacity-60'} /> : <FileText size={12} className={isActive ? 'text-indigo-500' : 'opacity-60'} />}
+                                {doc.mode === 'mermaid' ? <FileCode size={12} className={isActive ? 'text-brand-primary' : 'opacity-60'} /> : <FileText size={12} className={isActive ? 'text-brand-primary' : 'opacity-60'} />}
                                 <span className={`truncate flex-1 ${isActive ? 'font-bold' : ''}`}>{doc.name}</span>
                                 <button
                                     onClick={(e) => onCloseTab?.(id, e)}
@@ -155,9 +155,9 @@ const Editor = forwardRef<ReactCodeMirrorRef, EditorProps>(({
                 ) : (
                     <div className="flex-1 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 p-8 space-y-6">
                         <div className="relative">
-                            <div className="absolute -inset-4 bg-indigo-500/10 dark:bg-indigo-400/5 rounded-full blur-2xl animate-pulse"></div>
+                            <div className="absolute -inset-4 bg-brand-primary/10 dark:bg-brand-primary/5 rounded-full blur-2xl animate-pulse"></div>
                             <div className="relative p-6 bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700">
-                                <FileSearch size={48} className="text-indigo-500 dark:text-indigo-400" />
+                                <FileSearch size={48} className="text-brand-primary" />
                             </div>
                         </div>
                         <div className="text-center space-y-2 max-w-xs">
@@ -168,7 +168,7 @@ const Editor = forwardRef<ReactCodeMirrorRef, EditorProps>(({
                         </div>
                         <button
                             onClick={onToggleSidebar}
-                            className="flex items-center gap-2 px-6 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-500/20 active:scale-95 transition-all"
+                            className="flex items-center gap-2 px-6 py-2.5 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-xl font-bold text-sm shadow-lg shadow-brand-primary/20 active:scale-95 transition-all"
                         >
                             <Menu size={18} />
                             開啟側邊欄

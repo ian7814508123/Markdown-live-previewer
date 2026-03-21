@@ -96,7 +96,8 @@
             "x64"
           ]
         }
-      ]
+      ],
+      "icon": "public/favicon.svg"
     },
     "nsis": {
       "oneClick": false,

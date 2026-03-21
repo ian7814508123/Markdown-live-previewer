@@ -10,6 +10,7 @@ import HistorySidebar from './src/components/HistorySidebar';
 import { ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import CreateDocModal from './src/components/CreateDocModal';
 import SettingsModal from './src/components/SettingsModal';
+import SEOContent from './src/components/SEOContent';
 import { usePanZoom } from './src/hooks/usePanZoom';
 import { useDocumentStorage } from './src/hooks/useDocumentStorage';
 import { useAppSettings } from './src/hooks/useAppSettings';
@@ -946,6 +947,8 @@ const App: React.FC = () => {
             />
           </div>
         </main>
+        {/* SEO Content - Hidden from visual display but visible to search engines */}
+        <SEOContent />
 
         {/* Settings Modal */}
         <SettingsModal

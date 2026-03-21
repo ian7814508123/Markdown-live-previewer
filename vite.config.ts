@@ -7,10 +7,11 @@ import { viteCommonjs } from '@originjs/vite-plugin-commonjs';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
+  const isElectron = process.env.VITE_ELECTRON === 'true';
   return {
-    base: '/',
+    base: isElectron ? './' : '/',
     server: {
-      port: 3000,
+      port: 5173,
       host: "0.0.0.0"
     },
     plugins: [

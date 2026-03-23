@@ -4,12 +4,14 @@ import { useImageStorage, formatExpiryDate, formatFileSize } from '../hooks/useI
 import RippleButton from './RippleButton';
 
 interface ImageUploaderToolProps {
+    /** 當前文檔內容，用於 LRU 淘汰判斷 */
+    currentDocContent?: string;
     /** 將 Markdown 語法插入編輯器游標位置的回呼 */
     onInsertIntoDoc: (text: string) => void;
 }
 
 /** 圖片上傳與管理工具面板 */
-const ImageUploaderTool: React.FC<ImageUploaderToolProps> = ({ onInsertIntoDoc }) => {
+const ImageUploaderTool: React.FC<ImageUploaderToolProps> = ({ currentDocContent = '', onInsertIntoDoc }) => {
     const { images, totalSizeMB, isAtLimit, uploadImage, getImage, deleteImage, maxImages, maxSizeMB, ttlDays } = useImageStorage();
 
     const [isDragging, setIsDragging] = useState(false);
@@ -31,11 +33,8 @@ const ImageUploaderTool: React.FC<ImageUploaderToolProps> = ({ onInsertIntoDoc }
         setUploadError(null);
         setEvictNotice(null);
 
-        // 取得當前文件內容（用於 LRU 引用判斷）
-        const editorContent = document.querySelector('.cm-content')?.textContent ?? '';
         const prevCount = images.length;
-
-        const result = await uploadImage(file, editorContent);
+        const result = await uploadImage(file, currentDocContent);
 
         setIsUploading(false);
 

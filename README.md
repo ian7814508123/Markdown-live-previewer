@@ -21,12 +21,18 @@ A professional, real-time editor for **Mermaid.js** diagrams and **Markdown** do
 ### 📝 Markdown Editor
 - **Full GFM Support**: Write standard GitHub Flavored Markdown.
 - **Rich Preview**: Immediate rendering of headers, lists, links, and code blocks.
-- **Export**: Save your work as `.md` files.
+- **MathJax & Mermaid**: Support for LaTeX formulas and Mermaid diagrams within Markdown.
+- **Export & Print**: 
+  - Save your work as `.md` files.
+  - **Print to PDF** with customizable margins and paper sizes.
+  - **Syntax Highlighting** preserved in print/PDF output.
 
 ### ⚡ Efficient Workflow
+- **Image Uploader**: Upload local images to IndexedDB and insert them directly into documents.
+- **Print & PDF Preview**: Visualize A4/Letter paper sizes with real-time page break indicators.
 - **Tab Indentation**: Supports 2-space indentation with the Tab key.
-- **Clean UI**: Minimalist, distraction-free interface.
-- **Local Execution**: Runs entirely in your browser/locally.
+- **Clean UI**: Minimalist, distraction-free interface with Material Design 3 aesthetics.
+- **Local Execution**: Runs entirely in your browser/locally with data persistence.
 
 ## Getting Started
 

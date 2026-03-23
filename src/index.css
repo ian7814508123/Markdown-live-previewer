@@ -361,6 +361,9 @@ mjx-container:not([display="true"]) {
     .prose-container {
         padding: 0 !important;
         margin: 0 !important;
+        overflow: visible !important;
+        height: auto !important;
+        min-height: auto !important;
     }
 
     .print-paper {
@@ -369,11 +372,22 @@ mjx-container:not([display="true"]) {
         box-shadow: none !important;
         margin: 0 !important;
         padding: 0 !important;
+        overflow: visible !important;
+        display: block !important;
     }
 
     /* 強制每個文件在新的一頁開始 */
     [id^="wikilink-"] {
         page-break-before: always !important;
+    }
+
+    /* 隱藏所有捲軸 */
+    * {
+        scrollbar-width: none !important;
+    }
+
+    ::-webkit-scrollbar {
+        display: none !important;
     }
 
     /* 隱藏預覽專用的指標 */

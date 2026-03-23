@@ -1,4 +1,29 @@
+# Allow all bots
 User-agent: *
 Allow: /
+Disallow: /node_modules/
+Disallow: /.git/
 
+# Specific rules for Google
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+# Crawl-delay for general bots (optional, for aggressive crawlers)
+# Crawl-delay: 1
+
+# Allow JSON-LD indexing
+Allow: /*.json
+
+# Block unwanted crawlers
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Crawl-delay: 5
+
+# Sitemap locations
 Sitemap: https://markdown-live-previewer.onrender.com/sitemap.xml

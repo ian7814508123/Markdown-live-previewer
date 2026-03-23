@@ -277,7 +277,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     border-4 border-white dark:border-slate-800 
                                     ring-1 ring-slate-100 dark:ring-slate-700/50
                                     ">
-                                    <img src="/image/markdown_liveditor.svg?v=2" alt="Logo" className="w-16 h-16 drop-shadow-sm" />
+                                    <img src="./image/markdown_liveditor.svg?v=2" alt="Logo" className="w-16 h-16 drop-shadow-sm" />
                                 </div>
                                 <div className="pt-0">
                                     <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Markdown Live Previewer</h3>

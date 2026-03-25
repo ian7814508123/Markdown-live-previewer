@@ -46,6 +46,7 @@ interface MarkdownPreviewSectionProps {
     onMouseLeave?: () => void;
     scrollRef: React.Ref<HTMLDivElement>;
     printSettings: any;
+    isPrinting?: boolean;
 }
 
 const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
@@ -62,6 +63,7 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
     onMouseLeave,
     scrollRef,
     printSettings,
+    isPrinting = false,
 }) => {
     // 當前文件物件
     const currentDoc = documents?.find((d: any) => d.id === currentDocId);
@@ -283,11 +285,13 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
                                         <MarkdownPreview
                                             content={docContent}
                                             theme={theme}
-                                            isDarkMode={isDarkMode && !showPrintPreview}
+                                            isDarkMode={isDarkMode}
                                             documents={documents}
                                             onSelectDocument={onSelectDocument}
                                             onCreateMissing={onCreateMissing}
                                             currentDocId={docId}
+                                            isPrinting={isPrinting}
+                                            showPrintPreview={showPrintPreview}
                                         />
                                         {/* 覆蓋層顯示分頁指示線 */}
                                         {showPrintPreview && (
@@ -338,6 +342,7 @@ interface PreviewPanelProps {
     // CSS 快取渲染用：所有已開啟分頁的 id 列表
     openDocIds?: string[];
     printSettings: any;
+    isPrinting?: boolean;
 }
 
 const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
@@ -367,6 +372,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
     currentDocId,
     openDocIds,
     printSettings,
+    isPrinting,
 }, ref) => {
 
     // DIFFERENT LAYOUT STRATEGY BASED ON MODE
@@ -392,6 +398,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
                 onMouseLeave={onMouseLeave}
                 scrollRef={ref}
                 printSettings={printSettings}
+                isPrinting={isPrinting}
             />
         );
     }

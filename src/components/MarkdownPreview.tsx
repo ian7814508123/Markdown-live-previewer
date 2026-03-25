@@ -8,7 +8,7 @@ import mermaid from 'mermaid';
 import embed from 'vega-embed';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import SmilesDrawer from 'smiles-drawer';
+import * as SmilesDrawer from 'smiles-drawer';
 import { useImageStorage } from '../hooks/useImageStorage';
 
 interface MarkdownPreviewProps {
@@ -19,6 +19,8 @@ interface MarkdownPreviewProps {
     onSelectDocument?: (docId: string) => void;
     onCreateMissing?: (name: string) => void;
     currentDocId?: string | null;
+    isPrinting?: boolean;
+    showPrintPreview?: boolean;
 }
 
 // ─── 輔助函式：簡單的字串雜湊 ──────────────────────────────────────────────────
@@ -32,6 +34,29 @@ const hashString = (str: string) => {
     }
     return Math.abs(hash).toString(36);
 };
+
+// ─── 持久化 Hook：用於記憶圖表縮放、寬度與高度 ──────────────────────────────────────
+function usePersistentCanvasSettings(storageKey: string, initialWidth: string = '100%', initialScale: number = 1) {
+    const [settings, setSettings] = useState(() => {
+        try {
+            const saved = localStorage.getItem(storageKey);
+            return saved ? JSON.parse(saved) : { width: initialWidth, height: 'auto', scale: initialScale };
+        } catch {
+            return { width: initialWidth, height: 'auto', scale: initialScale };
+        }
+    });
+
+    useEffect(() => {
+        localStorage.setItem(storageKey, JSON.stringify(settings));
+    }, [settings, storageKey]);
+
+    const updateWidth = useCallback((w: string) => setSettings((s: any) => ({ ...s, width: w })), []);
+    const updateHeight = useCallback((h: string) => setSettings((s: any) => ({ ...s, height: h })), []);
+    const updateScale = useCallback((sc: number) => setSettings((s: any) => ({ ...s, scale: sc })), []);
+    const reset = useCallback(() => setSettings({ width: initialWidth, height: 'auto', scale: initialScale }), [initialWidth, initialScale]);
+
+    return { ...settings, updateWidth, updateHeight, updateScale, reset };
+}
 
 // ─── 輔助組件：可調整寬度與高度的容器 ────────────────────────────────────────────────
 const ResizableWrapper: React.FC<{
@@ -133,7 +158,8 @@ mermaid.initialize({
     suppressError: true, // 關鍵：抑制預設錯誤提示
 });
 
-const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(({ code, isDarkMode }) => {
+const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: boolean; showPrintPreview?: boolean }> = React.memo(({ code, isDarkMode, isPrinting, showPrintPreview }) => {
+    const isDark = isDarkMode && !isPrinting && !showPrintPreview;
     const [svg, setSvg] = useState('');
     const [isPending, setIsPending] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -150,17 +176,24 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo
         return scaleMatch ? parseFloat(scaleMatch[1]) : 1;
     }, [code]);
 
-    const [width, setWidth] = useState(initialWidth);
-    const [height, setHeight] = useState('auto');
-    const [scale, setScale] = useState(initialScale);
+    const storageKey = useMemo(() => `chart-size-mermaid:${hashString(code)}`, [code]);
+    const { width, height, scale, updateWidth, updateHeight, updateScale, reset } = usePersistentCanvasSettings(
+        storageKey, 
+        initialWidth, 
+        initialScale
+    );
 
     useEffect(() => {
         isMounted.current = true;
         setIsPending(true);
         const timer = setTimeout(async () => {
             try {
-                // 先進行語法檢查
-                await mermaid.parse(code);
+                // 強力 Formal 模式判定：包含對原生列印狀態的即時偵測
+                const isNativePrint = typeof window !== 'undefined' && window.matchMedia('print').matches;
+                const forceLight = isPrinting || showPrintPreview || isNativePrint;
+                const effectiveIsDark = isDarkMode && !forceLight;
+
+                mermaid.initialize({ theme: effectiveIsDark ? 'dark' : 'default' });
 
                 const id = `mermaid-${hashString(code)}`;
                 const { svg: renderedSvg } = await mermaid.render(id, code);
@@ -168,12 +201,15 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo
                 if (isMounted.current) {
                     setSvg(renderedSvg);
                     setError(null);
+                    // 通知佈局已就緒（用於列印同步）
+                    window.dispatchEvent(new CustomEvent('content-layout-ready'));
                 }
             } catch (err: any) {
                 console.error('Mermaid render error:', err);
                 if (isMounted.current) {
                     setError(err.message || 'Syntax Error');
-                    // 如果渲染失敗，不更新 svg，保留上一個版本（或保持空白）
+                    // 即使出錯也通知，避免列印瑣死
+                    window.dispatchEvent(new CustomEvent('content-layout-ready'));
                 }
             } finally {
                 if (isMounted.current) {
@@ -181,17 +217,15 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo
                 }
             }
         }, 200);
-
+    
         return () => {
             isMounted.current = false;
             clearTimeout(timer);
         };
-    }, [code, isDarkMode]);
+    }, [code, isDark]);
 
     const handleReset = () => {
-        setWidth(initialWidth);
-        setHeight('auto');
-        setScale(initialScale);
+        reset();
     };
 
     if (!svg && error) {
@@ -208,15 +242,15 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo
             width={width}
             height={height}
             scale={scale}
-            onWidthChange={setWidth}
-            onHeightChange={setHeight}
-            onScaleChange={setScale}
+            onWidthChange={updateWidth}
+            onHeightChange={updateHeight}
+            onScaleChange={updateScale}
             onReset={handleReset}
             isDarkMode={isDarkMode}
         >
             <div
-                className={`flex justify-center bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200/50 dark:border-slate-700/50 overflow-auto transition-opacity duration-300 ${isPending ? 'opacity-50' : 'opacity-100'}`}
-                style={{ width: '100%', height: 'auto' }}
+                className={`diagram-block-container flex justify-center p-6 rounded-2xl shadow-sm border overflow-auto transition-opacity duration-300 ${isDark ? 'border-slate-700/50' : 'border-slate-200/50'} ${isPending ? 'opacity-50' : 'opacity-100'}`}
+                style={{ width: '100%', height: 'auto', backgroundColor: 'var(--code-bg)' }}
                 dangerouslySetInnerHTML={{ __html: svg }}
             />
             {isPending && !error && (
@@ -236,12 +270,12 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo
     );
 });
 
-const VegaBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(({ code, isDarkMode }) => {
+const VegaBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: boolean; showPrintPreview?: boolean }> = React.memo(({ code, isDarkMode, isPrinting, showPrintPreview }) => {
+    const isDark = isDarkMode && !isPrinting && !showPrintPreview;
     const ref = useRef<HTMLDivElement>(null);
     const [isPending, setIsPending] = useState(false);
-    const [width, setWidth] = useState('100%');
-    const [height, setHeight] = useState('auto');
-    const [scale, setScale] = useState(1);
+    const storageKey = useMemo(() => `chart-size-vega:${hashString(code)}`, [code]);
+    const { width, height, scale, updateWidth, updateHeight, updateScale, reset } = usePersistentCanvasSettings(storageKey);
 
     useEffect(() => {
         setIsPending(true);
@@ -249,37 +283,33 @@ const VegaBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(({
             if (!ref.current) return;
             try {
                 const spec = JSON.parse(code);
-                await embed(ref.current, spec, { actions: false, theme: isDarkMode ? 'dark' : 'vox' });
+                await embed(ref.current, spec, { actions: false, theme: isDark ? 'dark' : 'vox' });
             } catch (err) {
                 console.error('Vega render error:', err);
             } finally {
                 setIsPending(false);
+                // 通知佈局已就緒
+                window.dispatchEvent(new CustomEvent('content-layout-ready'));
             }
         }, 250);
         return () => clearTimeout(timer);
-    }, [code, isDarkMode]);
-
-    const handleReset = () => {
-        setWidth('100%');
-        setHeight('auto');
-        setScale(1);
-    };
+    }, [code, isDark]);
 
     return (
         <ResizableWrapper
             width={width}
             height={height}
             scale={scale}
-            onWidthChange={setWidth}
-            onHeightChange={setHeight}
-            onScaleChange={setScale}
-            onReset={handleReset}
+            onWidthChange={updateWidth}
+            onHeightChange={updateHeight}
+            onScaleChange={updateScale}
+            onReset={reset}
             isDarkMode={isDarkMode}
         >
             <div
                 ref={ref}
-                className={`overflow-auto bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200/50 dark:border-slate-700/50 transition-opacity duration-300 ${isPending ? 'opacity-50' : 'opacity-100'}`}
-                style={{ width: '100%', height: 'auto' }}
+                className={`diagram-block-container overflow-auto p-6 rounded-2xl shadow-sm border transition-opacity duration-300 ${isDark ? 'border-slate-700/50' : 'border-slate-200/50'} ${isPending ? 'opacity-50' : 'opacity-100'}`}
+                style={{ width: '100%', height: 'auto', backgroundColor: 'var(--code-bg)' }}
             />
             {isPending && (
                 <div className="absolute top-2 right-2">
@@ -290,13 +320,13 @@ const VegaBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(({
     );
 });
 
-const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(({ code, isDarkMode }) => {
+const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: boolean; showPrintPreview?: boolean }> = React.memo(({ code, isDarkMode, isPrinting, showPrintPreview }) => {
+    const isDark = isDarkMode && !isPrinting && !showPrintPreview;
     const svgRef = useRef<HTMLDivElement>(null);
     const [error, setError] = useState<string | null>(null);
     const [isPending, setIsPending] = useState(false);
-    const [width, setWidth] = useState('100%');
-    const [height, setHeight] = useState('auto');
-    const [scale, setScale] = useState(1);
+    const storageKey = useMemo(() => `chart-size-smiles:${hashString(code)}`, [code]);
+    const { width, height, scale, updateWidth, updateHeight, updateScale, reset } = usePersistentCanvasSettings(storageKey);
 
     useEffect(() => {
         setIsPending(true);
@@ -330,7 +360,7 @@ const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(
                         svgEl.setAttribute('viewBox', '0 0 200 100');
                         svgEl.style.maxHeight = '100%';
                         svgRef.current.appendChild(svgEl);
-                        drawer.draw(tree, svgEl, isDarkMode ? 'dark' : 'light');
+                        drawer.draw(tree, svgEl, isDark ? 'dark' : 'light');
                         setError(null);
                     },
                     (err: any) => {
@@ -343,16 +373,12 @@ const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(
                 setError(err?.message || '渲染失敗');
             } finally {
                 setIsPending(false);
+                // 通知佈局已就緒
+                window.dispatchEvent(new CustomEvent('content-layout-ready'));
             }
         }, 600);
         return () => clearTimeout(timer);
-    }, [code, isDarkMode]);
-
-    const handleReset = () => {
-        setWidth('100%');
-        setHeight('auto');
-        setScale(1);
-    };
+    }, [code, isDark]);
 
     if (error) {
         return (
@@ -368,16 +394,16 @@ const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(
             width={width}
             height={height}
             scale={scale}
-            onWidthChange={setWidth}
-            onHeightChange={setHeight}
-            onScaleChange={setScale}
-            onReset={handleReset}
+            onWidthChange={updateWidth}
+            onHeightChange={updateHeight}
+            onScaleChange={updateScale}
+            onReset={reset}
             isDarkMode={isDarkMode}
         >
             <div
                 ref={svgRef}
-                className={`flex justify-center items-center min-h-[200px] bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200/50 dark:border-slate-700/50 overflow-auto transition-opacity duration-300 ${isPending ? 'opacity-50' : 'opacity-100'}`}
-                style={{ width: '100%', height: 'auto' }}
+                className={`diagram-block-container flex justify-center items-center min-h-[200px] p-4 rounded-2xl shadow-sm border overflow-auto transition-opacity duration-300 ${isDark ? 'border-slate-700/50' : 'border-slate-200/50'} ${isPending ? 'opacity-50' : 'opacity-100'}`}
+                style={{ width: '100%', height: 'auto', backgroundColor: 'var(--code-bg)' }}
             />
             <div className="absolute bottom-2 right-3 text-[10px] text-slate-400 dark:text-slate-600 font-mono select-none">
                 SMILES
@@ -413,8 +439,13 @@ const LocalImage: React.FC<LocalImageProps & { getImage: (id: string) => Promise
             } else {
                 setStatus('error');
             }
+            // 通知佈局已就緒
+            window.dispatchEvent(new CustomEvent('content-layout-ready'));
         }).catch(() => {
-            if (!cancelled) setStatus('error');
+            if (!cancelled) {
+                setStatus('error');
+                window.dispatchEvent(new CustomEvent('content-layout-ready'));
+            }
         });
         return () => { cancelled = true; };
     }, [id, getImage]);
@@ -450,48 +481,21 @@ interface ResizableImageProps {
 
 const ResizableImage: React.FC<ResizableImageProps> = ({ src, alt, getImage, isDarkMode }) => {
     // ─── 狀態持久化：從 LocalStorage 讀取初始設定 ───────────────────────────────────────
-    const storageKey = useMemo(() => `mlp-img-size:${src}`, [src]);
-    const [initialSettings] = useState(() => {
-        try {
-            const saved = localStorage.getItem(storageKey);
-            return saved ? JSON.parse(saved) : null;
-        } catch (err) {
-            console.warn('[ResizableImage] 無法從 LocalStorage 讀取設定:', err);
-            return null;
-        }
-    });
-
-    const [width, setWidth] = useState(initialSettings?.width ?? '100%');
-    const [height, setHeight] = useState(initialSettings?.height ?? 'auto');
-    const [scale, setScale] = useState(initialSettings?.scale ?? 1);
-
-    // 當設定變動時，同步回 LocalStorage
-    useEffect(() => {
-        try {
-            localStorage.setItem(storageKey, JSON.stringify({ width, height, scale }));
-        } catch (err) {
-            console.warn('[ResizableImage] 無法寫入 LocalStorage:', err);
-        }
-    }, [width, height, scale, storageKey]);
+    const storageKey = useMemo(() => `chart-size-img:${src}`, [src]);
+    const { width, height, scale, updateWidth, updateHeight, updateScale, reset } = usePersistentCanvasSettings(storageKey);
 
     const isLocal = src?.startsWith('img-local://');
     const imgId = isLocal ? src.replace('img-local://', '') : '';
-
-    const handleReset = () => {
-        setWidth('100%');
-        setHeight('auto');
-        setScale(1);
-    };
 
     return (
         <ResizableWrapper
             width={width}
             height={height}
             scale={scale}
-            onWidthChange={setWidth}
-            onHeightChange={setHeight}
-            onScaleChange={setScale}
-            onReset={handleReset}
+            onWidthChange={updateWidth}
+            onHeightChange={updateHeight}
+            onScaleChange={updateScale}
+            onReset={reset}
             isDarkMode={isDarkMode}
         >
             {isLocal ? (
@@ -569,8 +573,10 @@ const MemoizedMathJax: React.FC<MemoizedMathJaxProps> = React.memo(({ content, i
     );
 });
 
-const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDarkMode, documents = [], onSelectDocument, onCreateMissing, currentDocId }) => {
-    const isDark = isDarkMode;
+const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDarkMode, documents = [], onSelectDocument, onCreateMissing, currentDocId, isPrinting, showPrintPreview }) => {
+    // 關鍵修正：判斷當前是否處於「需要白色底」的狀態
+    const isActuallyPrinting = isPrinting || !!document.querySelector('.show-print-preview');
+    const shouldShowDark = isDarkMode && !isActuallyPrinting;
     const [debouncedContent, setDebouncedContent] = useState(content);
     // 在 MarkdownPreview 頂層呼叫一次，避免每個 LocalImage 獨立開啟 DB 連線
     const { getImage } = useImageStorage();
@@ -619,6 +625,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
     }), []);
 
     const components = useMemo(() => ({
+        pre: ({ children }: any) => <>{children}</>, // 移除外層 pre，消除雙層容器基礎
         code({ node, inline, className, children, ...props }: any) {
             const match = /language-(\w+)/.exec(className || '');
             const language = match ? match[1] : '';
@@ -626,18 +633,31 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
             const stableKey = hashString(codeString);
             const line = node?.position?.start?.line;
 
+            // 核心修正：明確定義列印時要使用的樣式物件
+            // 只要正在列印或開啟列印預覽，無視深色模式，強制使用淺色主題 (vs)
+            const syntaxStyle = isActuallyPrinting ? vs : (shouldShowDark ? vscDarkPlus : vs);
+
             if (!inline) {
-                if (language === 'mermaid') return <div data-line={line}><MermaidBlock key={stableKey} code={codeString} isDarkMode={isDark} /></div>;
-                if (language === 'vega' || language === 'vega-lite') return <div data-line={line}><VegaBlock key={stableKey} code={codeString} isDarkMode={isDark} /></div>;
-                if (language === 'smiles') return <div data-line={line}><SmilesBlock key={stableKey} code={codeString} isDarkMode={isDark} /></div>;
+                if (language === 'mermaid') return <div data-line={line}><MermaidBlock key={stableKey} code={codeString} isDarkMode={isDarkMode} isPrinting={isPrinting} showPrintPreview={showPrintPreview} /></div>;
+                if (language === 'vega' || language === 'vega-lite') return <div data-line={line}><VegaBlock key={stableKey} code={codeString} isDarkMode={isDarkMode} isPrinting={isPrinting} showPrintPreview={showPrintPreview} /></div>;
+                if (language === 'smiles') return <div data-line={line}><SmilesBlock key={stableKey} code={codeString} isDarkMode={isDarkMode} isPrinting={isPrinting} showPrintPreview={showPrintPreview} /></div>;
 
                 return (
-                    <div data-line={line}>
+                    <div data-line={line} className="code-block-wrapper">
                         <SyntaxHighlighter
                             key={stableKey}
                             language={language || 'text'}
-                            style={isDark ? vscDarkPlus : vs}
-                            customStyle={{ borderRadius: '0.75rem', padding: '1rem', marginTop: '1.5rem', marginBottom: '1.5rem', fontSize: '0.875rem', lineHeight: '1.5' }}
+                            style={syntaxStyle}
+                            customStyle={{ 
+                                margin: '1.5rem 0',   // 在內層補償外層 pre 消失後的間距
+                                padding: '1rem',      // 統一由這裡控制內邊距
+                                fontSize: '0.875rem', 
+                                lineHeight: '1.5',
+                                backgroundColor: 'var(--code-bg)',
+                                borderRadius: '0.5rem',
+                                border: '1px solid var(--code-border)',
+                                filter: 'invert(0)', // 強制不反轉
+                            }}
                             showLineNumbers={true}
                             wrapLines={true}
                         >
@@ -668,7 +688,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
                 const stableKey = hashString(mathContent);
                 return (
                     <div key={stableKey} className="my-4 overflow-x-auto" style={{ whiteSpace: 'nowrap' }} data-line={node?.position?.start?.line}>
-                        <MemoizedMathJax content={mathContent} isDarkMode={isDark} />
+                        <MemoizedMathJax content={mathContent} isDarkMode={shouldShowDark} />
                     </div>
                 );
             }
@@ -680,7 +700,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
                 const stableKey = hashString(mathContent);
                 return (
                     <span key={stableKey} className="math-inline" style={{ whiteSpace: 'nowrap' }} data-line={node?.position?.start?.line}>
-                        <MemoizedMathJax content={mathContent} inline isDarkMode={isDark} />
+                        <MemoizedMathJax content={mathContent} inline isDarkMode={shouldShowDark} />
                     </span>
                 );
             }
@@ -712,11 +732,11 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
                     src={src}
                     alt={alt}
                     getImage={getImage}
-                    isDarkMode={isDark}
+                    isDarkMode={shouldShowDark}
                 />
             );
         },
-    }), [isDark, documents, onSelectDocument, onCreateMissing, currentDocId, getImage]);
+    }), [shouldShowDark, isActuallyPrinting, documents, onSelectDocument, onCreateMissing, currentDocId, getImage]);
 
     // 監聽圖片載入完成，若有必要可觸發同步刷新
     useEffect(() => {
@@ -734,7 +754,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
     }, [debouncedContent]);
 
     return (
-        <div className={`prose max-w-none p-8 select-text ${isDark ? 'prose-invert' : 'prose-slate'} prose-headings:font-bold prose-a:text-brand-primary prose-img:rounded-xl prose-table:border-collapse prose-th:border prose-th:border-slate-300 dark:prose-th:border-slate-700 prose-th:p-2 prose-td:border prose-td:border-slate-300 dark:prose-td:border-slate-700 prose-td:p-2 print:p-0 print:max-w-none`}>
+        <div className={`prose max-w-none p-8 select-text ${shouldShowDark ? 'prose-invert' : 'prose-slate'} prose-headings:font-bold prose-a:text-brand-primary prose-img:rounded-xl prose-table:border-collapse prose-th:border prose-th:border-slate-300 dark:prose-th:border-slate-700 prose-th:p-2 prose-td:border prose-td:border-slate-300 dark:prose-td:border-slate-700 prose-td:p-2 print:p-0 print:max-w-none print:bg-white`}>
             <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkMath]}
                 rehypePlugins={[rehypeRaw]}

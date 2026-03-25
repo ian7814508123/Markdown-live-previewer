@@ -131,6 +131,7 @@ const App: React.FC = () => {
   const [initialDocName, setInitialDocName] = useState('');
   const [pendingFolderId, setPendingFolderId] = useState<string | null>(null);
   const [openDocIds, setOpenDocIds] = useState<string[]>([]);
+  const [isPrinting, setIsPrinting] = useState(false);
 
   const { settings, updateMacros, updatePrintSettings, restoreDefaults } = useAppSettings();
 
@@ -243,7 +244,7 @@ const App: React.FC = () => {
 
     const editorView = editorRef.current.view;
     const diff = targetScrollTop.current - currentScrollTop.current;
-    
+
     if (Math.abs(diff) < 0.8) { // 稍微放寬判定範圍
       currentScrollTop.current = targetScrollTop.current;
       rafId.current = null;
@@ -266,12 +267,12 @@ const App: React.FC = () => {
     if (!isSyncScroll || mode !== 'markdown') return;
     if (!editorRef.current?.view) return;
     if (scrollSource.current === 'preview' && !isHoveringEditor.current) return;
-    
+
     scrollSource.current = 'editor';
 
     const editorView = editorRef.current.view;
     const scrollDOM = editorView.scrollDOM;
-    
+
     // 取得當前編輯器頂部的行號
     // CodeMirror 6: 使用 visualLineAtHeight 取得高度對應的行區塊
     const lineBlock = editorView.lineBlockAtHeight(scrollDOM.scrollTop);
@@ -333,7 +334,7 @@ const App: React.FC = () => {
 
     if (editorRef.current?.view) {
       const editorView = editorRef.current.view;
-      
+
       // 在預覽區尋找目前在頂部的元素
       const elements = Array.from(target.querySelectorAll('[data-line]'));
       if (elements.length === 0) {
@@ -345,7 +346,7 @@ const App: React.FC = () => {
         let topElement = null;
         const containerRect = target.getBoundingClientRect();
         const containerTop = containerRect.top;
-        
+
         for (const el of elements) {
           const rect = el.getBoundingClientRect();
           // 如果元素的頂部剛好在容器頂部附近（或稍微超出）
@@ -360,11 +361,11 @@ const App: React.FC = () => {
           // 向上搜尋最近的 [data-doc-id] 容器
           const paper = topElement.closest('.print-paper');
           const newDocId = paper?.getAttribute('data-doc-id');
-          
+
           if (newDocId && newDocId !== currentDocId) {
-             // 防止循環觸發：標記為捲動導致的切換
-             // 確保 switchDocument 不會導致 previewPanel 重新跳轉導致死循環
-             handleDocumentSwitch(newDocId);
+            // 防止循環觸發：標記為捲動導致的切換
+            // 確保 switchDocument 不會導致 previewPanel 重新跳轉導致死循環
+            handleDocumentSwitch(newDocId);
           }
 
           const lineNumber = parseInt(topElement.getAttribute('data-line') || '1');
@@ -372,7 +373,7 @@ const App: React.FC = () => {
             const line = editorView.state.doc.line(lineNumber);
             // 取得該行在編輯器中的高度位置
             targetScrollTop.current = editorView.lineBlockAt(line.from).top;
-          } catch(e) {
+          } catch (e) {
             // 如果行號不存在（例如切換中的不一致狀態），退回百分比
             const percentage = target.scrollTop / (target.scrollHeight - target.clientHeight || 1);
             targetScrollTop.current = percentage * (editorView.scrollDOM.scrollHeight - editorView.scrollDOM.clientHeight);
@@ -380,8 +381,8 @@ const App: React.FC = () => {
         } else {
           // 如果沒找到（可能在銜接處），試圖讀取目前最顯眼的紙張
           const visiblePaper = Array.from(target.querySelectorAll('.print-paper')).find(p => {
-             const rect = p.getBoundingClientRect();
-             return rect.top >= containerTop - 50 && rect.top <= containerTop + target.clientHeight / 2;
+            const rect = p.getBoundingClientRect();
+            return rect.top >= containerTop - 50 && rect.top <= containerTop + target.clientHeight / 2;
           });
           const newDocId = visiblePaper?.getAttribute('data-doc-id');
           if (newDocId && newDocId !== currentDocId) handleDocumentSwitch(newDocId);
@@ -554,10 +555,10 @@ const App: React.FC = () => {
   };
 
   /** 統一下載 / 列印：注入 @page CSS 後呼叫 window.print() */
-  const handlePrint = (printMode: EditorMode) => {
+  const handlePrint = useCallback((printMode: EditorMode) => {
     const { paperSize, orientation, scale, margin } = settings.printSettings;
     const marginMap: Record<string, string> = { normal: '1.5cm', narrow: '0.5cm', none: '0' };
-    
+
     // 縮放與佈局樣式
     let additionalCSS = '';
     if (printMode === 'mermaid') {
@@ -568,16 +569,11 @@ const App: React.FC = () => {
     } else {
       // Markdown 模式：當開啟列印預覽時，我們需要確保列印時捨棄所有 UI，只留紙張
       additionalCSS = `
-        /* 基礎佈局解除限制 */
-        html, body, #root, .app-container { height: auto !important; overflow: visible !important; position: static !important; }
-        
-        .preview-panel { 
-            background: white !important; 
-            padding: 0 !important; 
-            height: auto !important; 
-            overflow: visible !important; 
-            position: static !important;
-            display: block !important;
+        /* 強制所有背景為白色，文字為黑色 */
+        html, body, .preview-panel, .print-paper, .prose {
+            background-color: white !important;
+            color: black !important;
+            color-scheme: light !important;
         }
 
         /* 內容容器展開 */
@@ -612,6 +608,7 @@ const App: React.FC = () => {
             display: block !important;
             overflow: visible !important;
             border: none !important;
+            background-color: white !important;
         }
 
         .prose-container {
@@ -628,26 +625,32 @@ const App: React.FC = () => {
             height: auto !important;
             overflow: visible !important;
             display: block !important;
+            background-color: white !important;
+            color: black !important;
         }
 
-        /* 代碼區塊：自動折行，避免截斷，允許跨頁 */
-        pre, code {
+        /* 修正程式碼區塊：強制淺色底色，無視深色模式設定 */
+        .prose pre, .prose code {
+            background-color: #f8f9fa !important;
+            color: #333 !important;
+            border: 1px solid #ddd !important;
             white-space: pre-wrap !important;
             word-break: break-all !important;
             overflow: visible !important;
             max-width: 100% !important;
-            height: auto !important;
-            max-height: none !important;
             display: block !important;
+            filter: invert(0) !important;
+            text-shadow: none !important;
         }
 
         /* 語法高亮插件內部的 pre 可能有自己的樣式 */
         .prose pre {
             overflow: visible !important;
             white-space: pre-wrap !important;
+            filter: invert(0) !important;
         }
 
-        /* 圖表與媒體：自適應寬度 */
+        /* 確保圖表在列印時不被濾鏡反轉 (針對深色模式) */
         svg, img, canvas, .mermaid, .vega-embed, .smiles-drawer {
             max-width: 100% !important;
             height: auto !important;
@@ -656,11 +659,33 @@ const App: React.FC = () => {
             margin-left: auto !important;
             margin-right: auto !important;
             page-break-inside: avoid !important; /* 媒體元件盡量不跨頁 */
+            background-color: transparent !important;
+            filter: none !important;
+        }
+
+        /* 讓 Mermaid 文字在列印時變為純黑 */
+        .mermaid .label text, .mermaid .edgeLabel, .mermaid .node text {
+            fill: black !important;
+            color: black !important;
+        }
+
+        .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon, .mermaid .node path {
+            fill: #fff !important;
+            stroke: #000 !important;
+        }
+        .mermaid .edgePath path {
+            stroke: #000 !important;
+        }
+
+        /* 針對 Vega/Canvas 的文字顏色 (如果有的話) */
+        .vega-embed canvas {
+            background-color: white !important;
         }
 
         /* 內容區塊間隔優化：段落與標題允許在中間分頁，但盡量保持標題與內容在一起 */
         .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
             page-break-after: avoid !important;
+            color: black !important;
         }
 
         .prose p, .prose li, .prose pre, .prose blockquote {
@@ -670,6 +695,17 @@ const App: React.FC = () => {
         /* 隱藏捲軸與不必要元素 */
         * { scrollbar-width: none !important; }
         ::-webkit-scrollbar { display: none !important; }
+
+        pre, code {
+        background: transparent !important; border: none !important;
+        }
+
+        /* 針對 react-syntax-highlighter 產生的 div 容器進行修正 */
+        .prose div[style*="background-color"] {
+        background-color: #f8f9fa !important;
+        border: 1px solid #ddd !important;
+        padding: 1em !important;
+        }
       `;
     }
 
@@ -697,14 +733,64 @@ const App: React.FC = () => {
       }
     `;
     document.head.appendChild(style);
-    window.print();
 
-    const cleanup = () => {
+    // 1. 強制進入列印模式（這會觸發 MarkdownPreview 重新渲染為淺色）
+    flushSync(() => {
+      setIsPrinting(true);
+    });
+
+    // 2. 計算需要等待的目標數量 (Mermaid, Vega, Smiles, Images)
+    const componentsToWait = document.querySelectorAll(
+      '.mermaid, .vega-embed, .smiles-drawer, img'
+    ).length;
+
+    let readyCount = 0;
+
+    const finalizePrint = () => {
+      window.print();
+      setIsPrinting(false);
       document.getElementById('app-print-override')?.remove();
     };
 
-    window.addEventListener('afterprint', cleanup, { once: true });
-  };
+    // 如果畫面上沒有複雜圖表，直接列印
+    if (componentsToWait === 0) {
+      setTimeout(finalizePrint, 100);
+      return;
+    }
+
+    // 3. 定義處理函式
+    const onReady = () => {
+      readyCount++;
+      if (readyCount >= componentsToWait) {
+        window.removeEventListener('content-layout-ready', onReady);
+        // 給瀏覽器一點時間完成最後的 Paint
+        setTimeout(finalizePrint, 500);
+      }
+    };
+
+    window.addEventListener('content-layout-ready', onReady);
+
+    // 安全閥：避免因為某張圖片載入失敗導致永遠無法列印
+    setTimeout(() => {
+      window.removeEventListener('content-layout-ready', onReady);
+      if (readyCount < componentsToWait) {
+        finalizePrint();
+      }
+    }, 5000);
+  }, [mode, settings.printSettings, isDarkMode]);
+
+  // 攔截 Ctrl + P (原生列印捷徑)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+        e.preventDefault(); // 攔截瀏覽器預設列印
+        handlePrint(mode); // 改執行我們受控的列印邏輯
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handlePrint, mode]);
 
   const downloadMarkdown = () => {
     let contentToDownload = code;
@@ -717,7 +803,7 @@ const App: React.FC = () => {
         contentToDownload = vaultDocs
           .map(d => `--- \n# ${d.name}\n\n${d.content}`)
           .join('\n\n');
-        
+
         const folder = folders.find(f => f.id === currentDocument.folderId);
         fileName = folder ? `${sanitizeFileName(folder.name)}-full` : `${fileName}-merged`;
       }
@@ -894,17 +980,17 @@ const App: React.FC = () => {
     if (!editorRef.current?.view) return;
     const view = editorRef.current.view;
     const pos = view.state.selection.main.anchor;
-    
+
     // 取得插入前的內容
     const before = view.state.doc.sliceString(0, pos);
     const after = view.state.doc.sliceString(pos);
-    
+
     // 確保插入的內容前後有適當的換行
     const prefix = before.length > 0 && !before.endsWith('\n\n') ? (before.endsWith('\n') ? '\n' : '\n\n') : '';
     const suffix = after.length > 0 && !after.startsWith('\n') ? '\n\n' : '\n';
-    
+
     const insertText = prefix + text + suffix;
-    
+
     view.dispatch({
       changes: { from: pos, insert: insertText },
       selection: { anchor: pos + insertText.length }
@@ -1043,11 +1129,11 @@ const App: React.FC = () => {
               copied={copied}
               onScroll={handleEditorScroll}
               isDarkMode={isDarkMode}
-              onMouseEnter={() => { 
+              onMouseEnter={() => {
                 isHoveringEditor.current = true;
                 if (!rafId.current) scrollSource.current = null;
               }}
-              onMouseLeave={() => { 
+              onMouseLeave={() => {
                 isHoveringEditor.current = false;
               }}
               onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}

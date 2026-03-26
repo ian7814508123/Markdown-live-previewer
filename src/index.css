@@ -27,6 +27,13 @@
         /* 程式碼與圖表變數 (淺色預設) */
         --code-bg: #f8f9fa;
         --code-border: #e2e8f0;
+
+        /* Mermaid 專用變數 (淺色預設) */
+        --mermaid-node-bg: #f1f5f9;
+        --mermaid-node-text: #1e293b;
+        --mermaid-node-border: #cbd5e1;
+        --mermaid-line: #64748b;
+        --mermaid-edge-bg: #ffffff;
     }
 
     .dark {
@@ -43,22 +50,41 @@
         /* 程式碼與圖表變數 (深色預設) */
         --code-bg: #1e1e1e;
         --code-border: #334155;
+
+        /* Mermaid 專用變數 (深色預設) */
+        --mermaid-node-bg: #1e293b;
+        --mermaid-node-text: #f1f5f9;
+        --mermaid-node-border: #334155;
+        --mermaid-line: #94a3b8;
+        --mermaid-edge-bg: #1e293b;
     }
 
-    /* 列印與模擬預覽時強力強制鎖定為白底 */
     .show-print-preview,
     .show-print-preview * {
         --code-bg: #f8f9fa !important;
         --code-border: #ddd !important;
+        
+        /* Mermaid 鎖定 */
+        --mermaid-node-bg: #f1f5f9 !important;
+        --mermaid-node-text: #1e293b !important;
+        --mermaid-node-border: #cbd5e1 !important;
+        --mermaid-line: #64748b !important;
+        --mermaid-edge-bg: #ffffff !important;
     }
 
     @media print {
-
         *,
         ::before,
         ::after {
             --code-bg: #f8f9fa !important;
             --code-border: #ddd !important;
+
+            /* Mermaid 列印鎖定 */
+            --mermaid-node-bg: #f1f5f9 !important;
+            --mermaid-node-text: #1e293b !important;
+            --mermaid-node-border: #cbd5e1 !important;
+            --mermaid-line: #64748b !important;
+            --mermaid-edge-bg: #ffffff !important;
         }
     }
 }
@@ -513,6 +539,30 @@ pre[style] {
 .smiles-drawer svg {
     background-color: transparent !important;
     filter: invert(0) !important;
+}
+
+/* 強制覆蓋 Mermaid SVG 內部的節點顏色 (與變數同步) */
+.mermaid .node rect,
+.mermaid .node circle,
+.mermaid .node ellipse,
+.mermaid .node polygon,
+.mermaid .node path {
+    fill: var(--mermaid-node-bg) !important;
+    stroke: var(--mermaid-node-border) !important;
+}
+
+.mermaid .label text,
+.mermaid .edgeLabel text {
+    fill: var(--mermaid-node-text) !important;
+}
+
+.mermaid .edgePath path {
+    stroke: var(--mermaid-line) !important;
+}
+
+.mermaid .marker {
+    fill: var(--mermaid-line) !important;
+    stroke: var(--mermaid-line) !important;
 }
 
 /* 4. 確保邊界調整出的空間也是白色的 */

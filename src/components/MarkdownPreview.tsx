@@ -8,7 +8,7 @@ import mermaid from 'mermaid';
 import embed from 'vega-embed';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import * as SmilesDrawer from 'smiles-drawer';
+import SmilesDrawer from 'smiles-drawer';
 import { useImageStorage } from '../hooks/useImageStorage';
 
 interface MarkdownPreviewProps {
@@ -188,12 +188,12 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: b
         setIsPending(true);
         const timer = setTimeout(async () => {
             try {
-                // 強力 Formal 模式判定：包含對原生列印狀態的即時偵測
-                const isNativePrint = typeof window !== 'undefined' && window.matchMedia('print').matches;
-                const forceLight = isPrinting || showPrintPreview || isNativePrint;
-                const effectiveIsDark = isDarkMode && !forceLight;
-
-                mermaid.initialize({ theme: effectiveIsDark ? 'dark' : 'default' });
+                // 恢復標準主題（避免 var() 語法錯誤），後續由 CSS 同步覆蓋
+                const isDark = isDarkMode && !isPrinting && !showPrintPreview;
+                mermaid.initialize({ 
+                    theme: isDark ? 'dark' : 'neutral',
+                    fontFamily: 'Inter, system-ui, sans-serif'
+                });
 
                 const id = `mermaid-${hashString(code)}`;
                 const { svg: renderedSvg } = await mermaid.render(id, code);

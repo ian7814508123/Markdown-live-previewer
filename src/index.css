@@ -533,10 +533,11 @@ pre[style] {
     }
 }
 
-/* 3. 確保圖表（Mermaid/Vega）背景也是白的 */
+/* 3. 確保圖表（Mermaid/Vega/ABC）背景也是白的 */
 .mermaid svg,
 .vega-embed canvas,
-.smiles-drawer svg {
+.smiles-drawer svg,
+.abcjs-inner-container svg {
     background-color: transparent !important;
     filter: invert(0) !important;
 }
@@ -747,3 +748,17 @@ body,
 .dark .show-print-preview .preview-panel>div.flex-1 {
     background-color: #0f172a;
 }
+
+/* ── 自訂 abcjs 深淺色/列印適應 ── */
+.dark .abcjs-inner-container svg path,
+.dark .abcjs-inner-container svg text {
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}
+@media print {
+  .abcjs-inner-container svg path,
+  .abcjs-inner-container svg text {
+    fill: #000 !important;
+    stroke: #000 !important;
+  }
+}

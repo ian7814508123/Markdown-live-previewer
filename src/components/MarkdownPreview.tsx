@@ -25,7 +25,7 @@ interface MarkdownPreviewProps {
 
 // ─── 輔助函式：簡單的字串雜湊 ──────────────────────────────────────────────────
 // 用於生成基於內容的穩定 Key，防止 React 在內容未變時重新掛載組件
-const hashString = (str: string) => {
+export const hashString = (str: string) => {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
         const char = str.charCodeAt(i);
@@ -36,7 +36,7 @@ const hashString = (str: string) => {
 };
 
 // ─── 持久化 Hook：用於記憶圖表縮放、寬度與高度 ──────────────────────────────────────
-function usePersistentCanvasSettings(storageKey: string, initialWidth: string = '100%', initialScale: number = 1) {
+export function usePersistentCanvasSettings(storageKey: string, initialWidth: string = '100%', initialScale: number = 1) {
     const [settings, setSettings] = useState(() => {
         try {
             const saved = localStorage.getItem(storageKey);
@@ -59,7 +59,7 @@ function usePersistentCanvasSettings(storageKey: string, initialWidth: string = 
 }
 
 // ─── 輔助組件：可調整寬度與高度的容器 ────────────────────────────────────────────────
-const ResizableWrapper: React.FC<{
+export const ResizableWrapper: React.FC<{
     children: React.ReactNode;
     width: string;
     height: string;
@@ -417,6 +417,8 @@ const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: bo
     );
 });
 
+const AbcBlock = React.lazy(() => import('./AbcBlock'));
+
 // ─── 本地圖片元件：非同步從 IndexedDB 讀取 Data URL 並顯示 (按需載入) ──────────────────────
 interface LocalImageProps {
     id: string;
@@ -641,6 +643,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
                 if (language === 'mermaid') return <div data-line={line}><MermaidBlock key={stableKey} code={codeString} isDarkMode={isDarkMode} isPrinting={isPrinting} showPrintPreview={showPrintPreview} /></div>;
                 if (language === 'vega' || language === 'vega-lite') return <div data-line={line}><VegaBlock key={stableKey} code={codeString} isDarkMode={isDarkMode} isPrinting={isPrinting} showPrintPreview={showPrintPreview} /></div>;
                 if (language === 'smiles') return <div data-line={line}><SmilesBlock key={stableKey} code={codeString} isDarkMode={isDarkMode} isPrinting={isPrinting} showPrintPreview={showPrintPreview} /></div>;
+                if (language === 'abc') return <React.Suspense fallback={<div className="p-4 flex justify-center items-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs">樂譜加載中...</div>}><div data-line={line}><AbcBlock key={stableKey} code={codeString} isDarkMode={isDarkMode} isPrinting={isPrinting} showPrintPreview={showPrintPreview} /></div></React.Suspense>;
 
                 return (
                     <div data-line={line} className="code-block-wrapper">

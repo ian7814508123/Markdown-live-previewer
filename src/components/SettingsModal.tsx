@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, RotateCcw, AlertCircle, Check, FileText, Printer, Box } from 'lucide-react';
+import { X, Save, RotateCcw, AlertCircle, Check, FileText, Printer, Box, Sparkles, ChevronLeft } from 'lucide-react';
 import RippleButton from './RippleButton';
 import { PrintSettings } from '../hooks/useAppSettings';
 
@@ -187,6 +187,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     const [jsonInput, setJsonInput] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
+    const [showChangelog, setShowChangelog] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
@@ -264,9 +265,48 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 {/* 內容區 */}
                 <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
                     {activeTab === 'about' ? (
-                        <div className="p-8 space-y-8">
-                            <div className="flex flex-col items-center text-center space-y-6">
-                                <div className="
+                        showChangelog ? (
+                            <div className="p-8 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+                                    <RippleButton variant="icon" onClick={() => setShowChangelog(false)} className="w-8 h-8 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-full">
+                                        <ChevronLeft size={20} />
+                                    </RippleButton>
+                                    <div>
+                                        <h3 className="text-xl font-black text-slate-800 dark:text-slate-100">發行說明 (What's New)</h3>
+                                        <p className="text-[10px] font-bold text-brand-primary lowercase tracking-widest mt-0.5">Version 3.0.a</p>
+                                    </div>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="p-5 bg-gradient-to-br from-indigo-50 to-white dark:from-slate-800 dark:to-slate-800/50 rounded-2xl border border-indigo-100/50 dark:border-slate-700/50 shadow-sm">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="p-2 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-500 dark:text-indigo-400 rounded-xl">
+                                                <Sparkles size={18} />
+                                            </div>
+                                            <h4 className="text-base font-bold text-slate-800 dark:text-slate-100">音樂樂譜渲染 (abc notation)</h4>
+                                        </div>
+                                        <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed ml-11">
+                                            現在您可以直接在 Markdown 文件中使用 <code className="px-1 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-[10px] font-mono mx-1">abc</code> 語法區塊來編寫傳統五線譜！系統會自動將其渲染為高解析度、可自由縮放的高品質向量樂譜，並深度優化深色模式與文件列印的顯示效果。
+                                        </p>
+                                    </div>
+                                    <div className="p-5 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="p-2 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-xl">
+                                                <Check size={18} />
+                                            </div>
+                                            <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200">體驗優化與修正</h4>
+                                        </div>
+                                        <ul className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed ml-11 list-disc list-outside space-y-1.5 pl-4 opacity-90">
+                                            <li>改善列印模式，強制將包含圖表與樂譜在內的所有元件配色還原為高對比黑色。</li>
+                                            <li>在「新增文檔」選單追加了「音樂樂譜」範本，便於快速建立教學文件。</li>
+                                            <li>更新了設定面板中的版本號與開源致謝名單。</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="p-8 space-y-8 animate-in fade-in duration-300">
+                                <div className="flex flex-col items-center text-center space-y-6">
+                                    <div className="
                                     w-24 h-24 rounded-[2.5rem] flex items-center justify-center text-white overflow-hidden transform transition-transform hover:scale-[1.02] duration-300
                                     /* 基礎漸層 (淺色模式) */
                                     bg-gradient-to-br from-brand-primary to-brand-secondary 
@@ -277,50 +317,62 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     border-4 border-white dark:border-slate-800 
                                     ring-1 ring-slate-100 dark:ring-slate-700/50
                                     ">
-                                    <img src="./image/markdown_liveditor.svg?v=2" alt="Logo" className="w-16 h-16 drop-shadow-sm" />
-                                </div>
-                                <div className="pt-0">
-                                    <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Markdown Live Previewer</h3>
-                                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 lowercase tracking-widest mt-1">版本 2.6.a </p>
-                                </div>
-                                <div className="px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-full text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-                                    授權：MIT 開源協議
-                                </div>
-                            </div>
-
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-                                    <Box size={16} className="text-brand-primary opacity-80" />
-                                    <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">第三方套件與致謝 (Credits)</h4>
-                                </div>
-                                <div className="grid grid-cols-1 gap-3">
-                                    {[
-                                        { name: 'React', license: 'MIT', url: 'https://react.dev' },
-                                        { name: 'CodeMirror', license: 'MIT', url: 'https://codemirror.net' },
-                                        { name: 'Mermaid', license: 'MIT', url: 'https://mermaid.js.org' },
-                                        { name: 'MathJax', license: 'Apache-2.0', url: 'https://www.mathjax.org' },
-                                        { name: 'Lucide Icons', license: 'ISC', url: 'https://lucide.dev' },
-                                        { name: 'Vega / Vega-Lite', license: 'BSD-3-Clause', url: 'https://vega.github.io' },
-                                        { name: 'SheetJS', license: 'Apache-2.0', url: 'https://sheetjs.com' },
-                                        { name: 'PDF-lib', license: 'MIT', url: 'https://pdf-lib.js.org' },
-                                        { name: 'Vite', license: 'MIT', url: 'https://vitejs.dev' },
-                                        { name: 'Tailwind CSS', license: 'MIT', url: 'https://tailwindcss.com' },
-                                    ].map((pkg) => (
-                                        <div key={pkg.name} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-brand-primary/20 dark:hover:border-brand-primary/40 transition-colors">
-                                            <div className="flex flex-col">
-                                                <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{pkg.name}</span>
-                                                <span className="text-[9px] text-slate-400 dark:text-slate-500 uppercase font-black tracking-tighter">{pkg.license} License</span>
-                                            </div>
-                                            <a href={pkg.url} target="_blank" rel="noopener noreferrer" className="text-[10px] font-black text-brand-primary hover:text-brand-accent transition-colors uppercase tracking-widest">網站</a>
+                                        <img src="./image/markdown_liveditor.svg?v=2" alt="Logo" className="w-16 h-16 drop-shadow-sm" />
+                                    </div>
+                                    <div className="pt-0">
+                                        <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Markdown Live Previewer</h3>
+                                        <div className="flex items-center justify-center gap-2 mt-2">
+                                            <p className="text-1xl font-bold text-slate-400 dark:text-slate-250 lowercase tracking-widest">版本 3.0.a</p>
+                                            <button
+                                                onClick={() => setShowChangelog(true)}
+                                                className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 rounded-lg text-[10px] font-black hover:bg-amber-200 dark:hover:bg-amber-900/60 transition-colors"
+                                            >
+                                                <Sparkles size={12} />
+                                                發行說明
+                                            </button>
                                         </div>
-                                    ))}
-                                </div>
-                            </div>
+                                    </div>
 
-                            <div className="rounded-2xl bg-brand-secondary/30 dark:bg-brand-primary/10 px-5 py-4 text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed border border-brand-primary/15 dark:border-brand-primary/30 text-center">
-                                © 2026 HUANGJYUNYING. 本專案採 MIT 協議授權。使用本軟體即代表您同意其授權條款。
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                                        <Box size={16} className="text-brand-primary opacity-80" />
+                                        <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">第三方套件與致謝 (Credits)</h4>
+                                    </div>
+                                    <div className="grid grid-cols-1 gap-3">
+                                        {[
+                                            { name: 'React', license: 'MIT', url: 'https://react.dev' },
+                                            { name: 'CodeMirror', license: 'MIT', url: 'https://codemirror.net' },
+                                            { name: 'Mermaid', license: 'MIT', url: 'https://mermaid.js.org' },
+                                            { name: 'MathJax', license: 'Apache-2.0', url: 'https://www.mathjax.org' },
+                                            { name: 'Lucide Icons', license: 'ISC', url: 'https://lucide.dev' },
+                                            { name: 'Vega / Vega-Lite', license: 'BSD-3-Clause', url: 'https://vega.github.io' },
+                                            { name: 'SheetJS', license: 'Apache-2.0', url: 'https://sheetjs.com' },
+                                            { name: 'PDF-lib', license: 'MIT', url: 'https://pdf-lib.js.org' },
+                                            { name: 'abcjs', license: 'MIT', url: 'https://paulrosen.github.io/abcjs/' },
+                                            { name: 'SmilesDrawer', license: 'MIT', url: 'https://github.com/reymendes/smilesDrawer' },
+                                            { name: 'Vite', license: 'MIT', url: 'https://vitejs.dev' },
+                                            { name: 'Tailwind CSS', license: 'MIT', url: 'https://tailwindcss.com' },
+                                        ].map((pkg) => (
+                                            <div key={pkg.name} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-brand-primary/20 dark:hover:border-brand-primary/40 transition-colors">
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{pkg.name}</span>
+                                                    <span className="text-[9px] text-slate-400 dark:text-slate-500 uppercase font-black tracking-tighter">{pkg.license} License</span>
+                                                </div>
+                                                <a href={pkg.url} target="_blank" rel="noopener noreferrer" className="text-[10px] font-black text-brand-primary hover:text-brand-accent transition-colors uppercase tracking-widest">網站</a>
+                                            </div>
+                                        ))}
+
+                                    </div>
+                                </div>
+
+                                <div className="rounded-2xl bg-brand-secondary/30 dark:bg-brand-primary/10 px-5 py-4 text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed border border-brand-primary/15 dark:border-brand-primary/30 text-center">
+                                    © 2026 HUANGJYUNYING. 授權：MIT 開源協議。使用本軟體即代表您同意其授權條款。
+                                </div>
+
                             </div>
-                        </div>
+                        )
                     ) : activeTab === 'print' ? (
                         <PdfSettingsPanel settings={currentPrintSettings} onChange={onSavePrintSettings} isStandalone={isStandalone} />
                     ) : (

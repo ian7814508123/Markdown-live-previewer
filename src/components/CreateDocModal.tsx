@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Plus, FileText, Image as ImageIcon, ChevronLeft, Zap, File, Ruler, BarChart2, GitBranch } from 'lucide-react';
+import { X, Plus, FileText, Image as ImageIcon, ChevronLeft, Zap, File, Ruler, BarChart2, GitBranch, Music } from 'lucide-react';
 import RippleButton from './RippleButton';
 
 interface CreateDocModalProps {
@@ -15,6 +15,7 @@ const MD_TEMPLATES = [
     { id: 'math', name: '數學化學', desc: 'LaTeX 公式與化學方程式', icon: Ruler, color: 'text-rose-500', bg: 'bg-rose-100 dark:bg-rose-900/40' },
     { id: 'charts', name: '數據圖表', desc: 'Vega-Lite 專業視覺化圖表', icon: BarChart2, color: 'text-emerald-500', bg: 'bg-emerald-100 dark:bg-emerald-900/40' },
     { id: 'mermaid', name: '內嵌圖表', desc: '在文章中畫流程圖與時序圖', icon: GitBranch, color: 'text-brand-primary', bg: 'bg-brand-secondary/60 dark:bg-brand-primary/20' },
+    { id: 'markdown-abc', name: '音樂樂譜', desc: '支援 abc notation 五線譜渲染', icon: Music, color: 'text-indigo-500', bg: 'bg-indigo-100 dark:bg-indigo-900/40' },
 ];
 
 const MMD_TEMPLATES = [

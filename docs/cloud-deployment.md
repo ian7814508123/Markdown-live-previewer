@@ -228,6 +228,8 @@ https://markdown-previewer-xxxx.onrender.com
 2. 在你的 DNS 提供商(如 Cloudflare、GoDaddy)添加 CNAME 記錄
 3. 等待 DNS 生效(通常幾分鐘)
 
+**詳細教學**: 請參考 [🌐 DNS 設定與網域驗證指南](DNS-VERIFICATION.md)
+
 ---
 
 ## ❓ GitHub Pages 替代方案

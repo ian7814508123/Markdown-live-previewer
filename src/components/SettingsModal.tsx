@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, RotateCcw, AlertCircle, Check, FileText, Printer, Box, Sparkles, ChevronLeft } from 'lucide-react';
+import { X, Save, RotateCcw, AlertCircle, Check, FileText, Printer, Box, PackagePlus, ChevronLeft } from 'lucide-react';
 import RippleButton from './RippleButton';
 import { PrintSettings } from '../hooks/useAppSettings';
 
@@ -273,14 +273,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     </RippleButton>
                                     <div>
                                         <h3 className="text-xl font-black text-slate-800 dark:text-slate-100">發行說明 (What's New)</h3>
-                                        <p className="text-[10px] font-bold text-brand-primary lowercase tracking-widest mt-0.5">Version 3.0.a</p>
+                                        <p className="text-[10px] font-bold text-brand-primary lowercase tracking-widest mt-0.5">Version 3.1.a</p>
                                     </div>
                                 </div>
                                 <div className="space-y-4">
                                     <div className="p-5 bg-gradient-to-br from-indigo-50 to-white dark:from-slate-800 dark:to-slate-800/50 rounded-2xl border border-indigo-100/50 dark:border-slate-700/50 shadow-sm">
                                         <div className="flex items-center gap-3 mb-3">
                                             <div className="p-2 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-500 dark:text-indigo-400 rounded-xl">
-                                                <Sparkles size={18} />
+                                                <PackagePlus size={18} />
                                             </div>
                                             <h4 className="text-base font-bold text-slate-800 dark:text-slate-100">音樂樂譜渲染 (abc notation)</h4>
                                         </div>
@@ -298,7 +298,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                         <ul className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed ml-11 list-disc list-outside space-y-1.5 pl-4 opacity-90">
                                             <li>改善列印模式，強制將包含圖表與樂譜在內的所有元件配色還原為高對比黑色。</li>
                                             <li>在「新增文檔」選單追加了「音樂樂譜」範本，便於快速建立教學文件。</li>
-                                            <li>更新了設定面板中的版本號與開源致謝名單。</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -322,12 +321,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     <div className="pt-0">
                                         <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Markdown Live Previewer</h3>
                                         <div className="flex items-center justify-center gap-2 mt-2">
-                                            <p className="text-1xl font-bold text-slate-400 dark:text-slate-250 lowercase tracking-widest">版本 3.0.a</p>
+                                            <p className="text-1xl font-bold text-slate-400 dark:text-slate-250 lowercase tracking-widest">版本 3.1.a</p>
                                             <button
                                                 onClick={() => setShowChangelog(true)}
-                                                className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 rounded-lg text-[10px] font-black hover:bg-amber-200 dark:hover:bg-amber-900/60 transition-colors"
+                                                className="flex items-center gap-1.5 px-2.5 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-500 dark:text-indigo-600 rounded-lg text-[10px] font-black hover:bg-indigo-200 dark:hover:bg-indigo-800/60 transition-colors"
                                             >
-                                                <Sparkles size={12} />
                                                 發行說明
                                             </button>
                                         </div>

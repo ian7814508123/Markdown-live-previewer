@@ -288,12 +288,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                             現在您可以直接在 Markdown 文件中使用 <code className="px-1 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-[10px] font-mono mx-1">abc</code> 語法區塊來編寫傳統五線譜！系統會自動將其渲染為高解析度、可自由縮放的高品質向量樂譜，並深度優化深色模式與文件列印的顯示效果。
                                         </p>
                                     </div>
-                                    <div className="p-5 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+                                    <div className="p-5 bg-gradient-to-br from-indigo-50 to-white dark:from-slate-800 dark:to-slate-800/50 rounded-2xl border border-indigo-100/50 dark:border-slate-700/50 shadow-sm">
                                         <div className="flex items-center gap-3 mb-3">
                                             <div className="p-2 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-xl">
                                                 <Check size={18} />
                                             </div>
-                                            <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">體驗優化與修正</h4>
+                                            <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">體驗優化與修正</h4>
                                         </div>
                                         <ul className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed ml-11 list-disc list-outside space-y-1.5 pl-4 opacity-90">
                                             <li>改善列印模式，強制將包含圖表與樂譜在內的所有元件配色還原為高對比黑色。</li>

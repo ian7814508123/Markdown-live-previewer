@@ -273,7 +273,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     </RippleButton>
                                     <div>
                                         <h3 className="text-xl font-black text-slate-800 dark:text-slate-100">發行內容 (What's New)</h3>
-                                        <p className="text-[10px] font-bold text-brand-primary lowercase tracking-widest mt-0.5">Version 3.1.b</p>
+                                        <p className="text-[10px] font-bold text-brand-primary lowercase tracking-widest mt-0.5">Version 3.2.b</p>
                                     </div>
                                 </div>
                                 <div className="space-y-4">
@@ -298,6 +298,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                         <ul className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed ml-11 list-disc list-outside space-y-1.5 pl-4 opacity-90">
                                             <li>改善列印模式，強制將包含圖表與樂譜在內的所有元件配色還原為高對比黑色。</li>
                                             <li>在「新增文檔」選單追加了「音樂樂譜」範本，便於快速建立教學文件。</li>
+                                            <li>優化表格產生器,可直接從外部試算表複製表格並轉換成markdown語法。</li>
                                             <li>修正元件樣式。</li>
                                         </ul>
                                     </div>
@@ -322,7 +323,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     <div className="pt-0">
                                         <h3 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">Markdown Live Previewer</h3>
                                         <div className="flex items-center justify-center gap-2 mt-2">
-                                            <p className="text-1xl font-bold text-slate-600 dark:text-slate-300 lowercase tracking-widest">版本 3.1.b</p>
+                                            <p className="text-1xl font-bold text-slate-600 dark:text-slate-300 lowercase tracking-widest">版本 3.2.b</p>
                                             <button
                                                 onClick={() => setShowChangelog(true)}
                                                 className="flex items-center gap-1.5 px-2.5 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-500 dark:text-indigo-600 rounded-lg text-[10px] font-black hover:bg-indigo-200 dark:hover:bg-indigo-800/60 transition-colors"

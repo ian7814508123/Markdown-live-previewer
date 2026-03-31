@@ -266,13 +266,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
                     {activeTab === 'about' ? (
                         showChangelog ? (
-                            <div className="p-8 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            <div key="about-changelog" className="p-8 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                                 <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
                                     <RippleButton variant="icon" onClick={() => setShowChangelog(false)} className="w-8 h-8 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-full">
                                         <ChevronLeft size={20} />
                                     </RippleButton>
                                     <div>
-                                        <h3 className="text-xl font-black text-slate-800 dark:text-slate-100">發行說明 (What's New)</h3>
+                                        <h3 className="text-xl font-black text-slate-800 dark:text-slate-100">發行內容 (What's New)</h3>
                                         <p className="text-[10px] font-bold text-brand-primary lowercase tracking-widest mt-0.5">Version 3.1.b</p>
                                     </div>
                                 </div>
@@ -304,7 +304,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                 </div>
                             </div>
                         ) : (
-                            <div className="p-8 space-y-8 animate-in fade-in duration-300">
+                            <div key="about-main" className="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
                                 <div className="flex flex-col items-center text-center space-y-6">
                                     <div className="
                                     w-24 h-24 rounded-[2.5rem] flex items-center justify-center text-white overflow-hidden transform transition-transform hover:scale-[1.02] duration-300
@@ -327,7 +327,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                                 onClick={() => setShowChangelog(true)}
                                                 className="flex items-center gap-1.5 px-2.5 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-500 dark:text-indigo-600 rounded-lg text-[10px] font-black hover:bg-indigo-200 dark:hover:bg-indigo-800/60 transition-colors"
                                             >
-                                                發行說明
+                                                發行內容
                                             </button>
                                         </div>
                                     </div>
@@ -373,9 +373,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                             </div>
                         )
                     ) : activeTab === 'print' ? (
-                        <PdfSettingsPanel settings={currentPrintSettings} onChange={onSavePrintSettings} isStandalone={isStandalone} />
+                        <PdfSettingsPanel key="print" settings={currentPrintSettings} onChange={onSavePrintSettings} isStandalone={isStandalone} />
                     ) : (
-                        <div className="flex flex-col">
+                        <div key="editor" className="flex flex-col">
                             {mode === 'markdown' ? (
                                 <div className="flex flex-col p-8 pt-0">
                                     <div className="mb-4">

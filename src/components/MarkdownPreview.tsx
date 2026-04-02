@@ -71,21 +71,20 @@ export const ResizableWrapper: React.FC<{
     isDarkMode: boolean;
 }> = ({ children, width, height, scale, onWidthChange, onHeightChange, onScaleChange, onReset, isDarkMode }) => {
     return (
-        <div className="relative group/resizable my-8 print:my-4 print:p-0 print:w-full">
+        <div className="relative group/resizable my-8 print:my-4 print:p-0">
             <div
-                className="mx-auto transition-all duration-300 ease-in-out relative flex justify-center print:!max-h-none print:!overflow-visible print:w-full"
+                className="mx-auto transition-all duration-300 ease-in-out relative flex justify-center"
                 style={{
                     width,
                     maxHeight: height === 'auto' ? 'none' : height,
-                    overflow: height === 'auto' ? 'visible' : 'auto'
+                    overflow: height === 'auto' ? 'visible' : 'hidden'
                 }}
             >
                 <div
-                    className="print:![transform:none] print:![zoom:var(--print-scale)] print:w-full"
+                    className="print:![transform:none] print:![zoom:var(--print-scale)] w-full"
                     style={{
                         transform: `scale(${scale})`,
                         transformOrigin: 'top center',
-                        width: '100%',
                         display: 'flex',
                         justifyContent: 'center',
                         '--print-scale': scale
@@ -426,16 +425,26 @@ interface LocalImageProps {
     className?: string;
 }
 
+// 建立一個輕量的記憶體快取，避免每次 markdown re-render 時都產生非同步讀取的落差(bounce)
+const memoryImageCache = new Map<string, string>();
+
 const LocalImage: React.FC<LocalImageProps & { getImage: (id: string) => Promise<string | null> }> = React.memo(({ id, alt, className, getImage }) => {
-    const [src, setSrc] = useState<string | null>(null);
-    const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
+    const cached = memoryImageCache.get(id);
+    const [src, setSrc] = useState<string | null>(cached || null);
+    const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>(cached ? 'loaded' : 'loading');
 
     useEffect(() => {
+        if (cached) {
+            window.dispatchEvent(new CustomEvent('content-layout-ready'));
+            return;
+        }
+
         let cancelled = false;
         setStatus('loading');
         getImage(id).then(dataUrl => {
             if (cancelled) return;
             if (dataUrl) {
+                memoryImageCache.set(id, dataUrl);
                 setSrc(dataUrl);
                 setStatus('loaded');
             } else {
@@ -454,10 +463,12 @@ const LocalImage: React.FC<LocalImageProps & { getImage: (id: string) => Promise
 
     if (status === 'loading') {
         return (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 text-xs animate-pulse">
-                <span className="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-600 animate-pulse inline-block" />
-                載入圖片中…
-            </span>
+            <div className={`flex flex-col items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800/50 animate-pulse w-full min-h-[150px] ${className || ''}`}>
+                <span className="flex items-center gap-2 text-slate-400 dark:text-slate-500 text-xs">
+                    <span className="w-3 h-3 rounded-full border-2 border-slate-400 border-t-transparent animate-spin inline-block" />
+                    載入圖片中…
+                </span>
+            </div>
         );
     }
 

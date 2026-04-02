@@ -58,6 +58,20 @@ export function usePersistentCanvasSettings(storageKey: string, initialWidth: st
     return { ...settings, updateWidth, updateHeight, updateScale, reset };
 }
 
+// ─── 通用防抖 Hook：用於延遲重型渲染 ──────────────────────────────────────────────
+export function useDebounce<T>(value: T, delay: number): T {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedValue(value);
+        }, delay);
+        return () => clearTimeout(handler);
+    }, [value, delay]);
+
+    return debouncedValue;
+}
+
 // ─── 輔助組件：可調整寬度與高度的容器 ────────────────────────────────────────────────
 export const ResizableWrapper: React.FC<{
     children: React.ReactNode;
@@ -182,7 +196,15 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: b
         initialScale
     );
 
+    // 套用通用的 Debounce (300ms)
+    const debouncedCode = useDebounce(code, 300);
+
     useEffect(() => {
+        if (!debouncedCode) {
+            setSvg('');
+            return;
+        }
+
         isMounted.current = true;
         setIsPending(true);
         const timer = setTimeout(async () => {
@@ -194,8 +216,8 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: b
                     fontFamily: 'Inter, system-ui, sans-serif'
                 });
 
-                const id = `mermaid-${hashString(code)}`;
-                const { svg: renderedSvg } = await mermaid.render(id, code);
+                const id = `mermaid-${hashString(debouncedCode)}`;
+                const { svg: renderedSvg } = await mermaid.render(id, debouncedCode);
 
                 if (isMounted.current) {
                     setSvg(renderedSvg);
@@ -215,13 +237,13 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: b
                     setIsPending(false);
                 }
             }
-        }, 200);
+        }, 50); // 內部的渲染延時縮短，主要由外部 useDebounce 控制
     
         return () => {
             isMounted.current = false;
             clearTimeout(timer);
         };
-    }, [code, isDark]);
+    }, [debouncedCode, isDark]);
 
     const handleReset = () => {
         reset();
@@ -276,12 +298,15 @@ const VegaBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: bool
     const storageKey = useMemo(() => `chart-size-vega:${hashString(code)}`, [code]);
     const { width, height, scale, updateWidth, updateHeight, updateScale, reset } = usePersistentCanvasSettings(storageKey);
 
+    const debouncedCode = useDebounce(code, 400);
+
     useEffect(() => {
+        if (!debouncedCode) return;
         setIsPending(true);
         const timer = setTimeout(async () => {
             if (!ref.current) return;
             try {
-                const spec = JSON.parse(code);
+                const spec = JSON.parse(debouncedCode);
                 await embed(ref.current, spec, { actions: false, theme: isDark ? 'dark' : 'vox' });
             } catch (err) {
                 console.error('Vega render error:', err);
@@ -290,9 +315,9 @@ const VegaBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: bool
                 // 通知佈局已就緒
                 window.dispatchEvent(new CustomEvent('content-layout-ready'));
             }
-        }, 250);
+        }, 50);
         return () => clearTimeout(timer);
-    }, [code, isDark]);
+    }, [debouncedCode, isDark]);
 
     return (
         <ResizableWrapper
@@ -327,7 +352,10 @@ const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: bo
     const storageKey = useMemo(() => `chart-size-smiles:${hashString(code)}`, [code]);
     const { width, height, scale, updateWidth, updateHeight, updateScale, reset } = usePersistentCanvasSettings(storageKey);
 
+    const debouncedCode = useDebounce(code, 500);
+
     useEffect(() => {
+        if (!debouncedCode) return;
         setIsPending(true);
         setError(null);
         const timer = setTimeout(() => {
@@ -348,7 +376,7 @@ const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: bo
                 });
 
                 SmilesDrawer.parse(
-                    code.trim(),
+                    debouncedCode.trim(),
                     (tree: any) => {
                         if (!svgRef.current) return;
                         // 僅在準備好繪製時才清除舊內容，減少閃爍
@@ -375,9 +403,9 @@ const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: bo
                 // 通知佈局已就緒
                 window.dispatchEvent(new CustomEvent('content-layout-ready'));
             }
-        }, 600);
+        }, 50);
         return () => clearTimeout(timer);
-    }, [code, isDark]);
+    }, [debouncedCode, isDark]);
 
     if (error) {
         return (
@@ -575,14 +603,28 @@ interface MemoizedMathJaxProps {
 }
 
 const MemoizedMathJax: React.FC<MemoizedMathJaxProps> = React.memo(({ content, inline, isDarkMode }) => {
+    // 為數學公式加入內部 Debounce，避免公式隨著打字不斷抖動
+    const debouncedContent = useDebounce(content, 300);
+    const [isPending, setIsPending] = useState(false);
+
+    useEffect(() => {
+        if (content !== debouncedContent) {
+            setIsPending(true);
+        } else {
+            setIsPending(false);
+        }
+    }, [content, debouncedContent]);
+
     return (
-        <MathJax
-            renderMode="pre"
-            inline={inline}
-            dynamic={true}
-            text={content}
-            typesettingOptions={{ fn: 'tex2chtml' }}
-        />
+        <div className={`transition-opacity duration-300 ${isPending ? 'opacity-40' : 'opacity-100'}`}>
+            <MathJax
+                renderMode="pre"
+                inline={inline}
+                dynamic={true}
+                text={debouncedContent}
+                typesettingOptions={{ fn: 'tex2chtml' }}
+            />
+        </div>
     );
 });
 
@@ -598,7 +640,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
         const timer = setTimeout(() => {
             const processed = content.replace(/\[\[(.*?)\]\]/g, '[$1](#wikilink-$1)');
             setDebouncedContent(processed);
-        }, 600);
+        }, 200); // 縮短頂層延時至 200ms 以提供即時反饋
         return () => clearTimeout(timer);
     }, [content]);
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import abcjs from 'abcjs';
-import { usePersistentCanvasSettings, ResizableWrapper, hashString } from './MarkdownPreview';
+import { usePersistentCanvasSettings, ResizableWrapper, hashString, useDebounce } from './MarkdownPreview';
 
 interface AbcBlockProps {
     code: string;
@@ -31,7 +31,11 @@ const AbcBlock: React.FC<AbcBlockProps> = React.memo(({ code, isDarkMode, isPrin
     const storageKey = useMemo(() => `chart-size-abc:${hashString(code)}`, [code]);
     const { width, height, scale, updateWidth, updateHeight, updateScale, reset } = usePersistentCanvasSettings(storageKey, initialWidth, initialScale);
 
+    // 通用 Debounce (400ms)
+    const debouncedCode = useDebounce(code, 400);
+
     useEffect(() => {
+        if (!debouncedCode) return;
         setIsPending(true);
         setError(null);
         const timer = setTimeout(() => {
@@ -39,7 +43,7 @@ const AbcBlock: React.FC<AbcBlockProps> = React.memo(({ code, isDarkMode, isPrin
             try {
                 // 設定 responsive: 'resize' 以便自動填滿容器寬度
                 // 外層會交由 ResizableWrapper 縮放
-                abcjs.renderAbc(paperRef.current, code, {
+                abcjs.renderAbc(paperRef.current, debouncedCode, {
                     responsive: 'resize'
                 });
                 setError(null);
@@ -51,10 +55,10 @@ const AbcBlock: React.FC<AbcBlockProps> = React.memo(({ code, isDarkMode, isPrin
                 // 通知外層預覽區佈局可能改變，可重新計算滾動或 PDF 列印位置
                 window.dispatchEvent(new CustomEvent('content-layout-ready'));
             }
-        }, 300); // 加上 Debounce 避免打字輸入時過度渲染
+        }, 50); // 縮短內部延時
         
         return () => clearTimeout(timer);
-    }, [code, isDark]);
+    }, [debouncedCode, isDark]);
 
     if (error) {
         return (

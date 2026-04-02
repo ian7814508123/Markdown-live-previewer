@@ -653,6 +653,7 @@ const App: React.FC = () => {
         /* 確保圖表在列印時不被濾鏡反轉 (針對深色模式) */
         svg, img, canvas, .mermaid, .vega-embed, .smiles-drawer {
             max-width: 100% !important;
+            width: auto !important; /* 優先保留原始寬度，配合 ResizableWrapper 的 W:% 限制 */
             height: auto !important;
             overflow: visible !important;
             display: block !important;
@@ -661,6 +662,22 @@ const App: React.FC = () => {
             page-break-inside: avoid !important; /* 媒體元件盡量不跨頁 */
             background-color: transparent !important;
             filter: none !important;
+        }
+
+        /* 針對各類圖表容器的 SVG/IMG 強制縮放 (圖表這類元件通常需要填滿容器) */
+        .diagram-block-container svg, 
+        .diagram-block-container canvas,
+        .abcjs-wrapper svg {
+            width: 100% !important;
+            height: auto !important;
+            max-width: 100% !important;
+        }
+
+        /* 內容圖片保持原始比例，僅受 max-width 約束 */
+        .prose img {
+            width: auto !important;
+            max-width: 100% !important;
+            height: auto !important;
         }
 
         /* 讓 Mermaid 文字在列印時變為純黑 */

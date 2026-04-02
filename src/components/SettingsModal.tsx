@@ -300,6 +300,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                             <li>在「新增文檔」選單追加了「音樂樂譜」範本，便於快速建立教學文件。</li>
                                             <li>優化表格產生器,可直接從外部試算表複製表格並轉換成markdown語法。</li>
                                             <li>修正元件樣式。</li>
+                                            <li>列印時可以支援內嵌圖表縮放設定了。</li>
                                         </ul>
                                     </div>
                                 </div>

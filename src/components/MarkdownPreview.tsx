@@ -171,6 +171,17 @@ mermaid.initialize({
     suppressError: true, // 關鍵：抑制預設錯誤提示
 });
 
+/** 
+ * 淨化 Mermaid 生成的 SVG 字串
+ * 移除固定的 width 和 height 屬性，改由 CSS 控制，以實現自適應縮放
+ */
+const cleanMermaidSvg = (svgHtml: string) => {
+    return svgHtml
+        .replace(/width=".*?"/i, 'width="100%"')
+        .replace(/height=".*?"/i, 'height="auto"')
+        .replace(/style="max-width:.*?"/i, 'style="max-width: 100%"');
+};
+
 const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: boolean; showPrintPreview?: boolean }> = React.memo(({ code, isDarkMode, isPrinting, showPrintPreview }) => {
     const isDark = isDarkMode && !isPrinting && !showPrintPreview;
     const [svg, setSvg] = useState('');
@@ -220,7 +231,8 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: b
                 const { svg: renderedSvg } = await mermaid.render(id, debouncedCode);
 
                 if (isMounted.current) {
-                    setSvg(renderedSvg);
+                    // 對 SVG 進行處理，確保其能自適應 ResizableWrapper 的寬度
+                    setSvg(cleanMermaidSvg(renderedSvg));
                     setError(null);
                     // 通知佈局已就緒（用於列印同步）
                     window.dispatchEvent(new CustomEvent('content-layout-ready'));

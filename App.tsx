@@ -11,6 +11,7 @@ import { ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import CreateDocModal from './src/components/CreateDocModal';
 import SettingsModal from './src/components/SettingsModal';
 import SEOContent from './src/components/SEOContent';
+import Footer from './src/components/Footer';
 import { usePanZoom } from './src/hooks/usePanZoom';
 import { useDocumentStorage } from './src/hooks/useDocumentStorage';
 import { useAppSettings } from './src/hooks/useAppSettings';
@@ -719,6 +720,7 @@ const App: React.FC = () => {
 
         /* 針對 react-syntax-highlighter 產生的 div 容器進行修正 */
         .prose div[style*="background-color"] {
+        .card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; }
         background-color: #f8f9fa !important;
         border: 1px solid #ddd !important;
         padding: 1em !important;
@@ -1197,6 +1199,10 @@ const App: React.FC = () => {
             />
           </div>
         </main>
+
+        {/* 可見的頁腳 - 增加 AdSense 文字密度與連結 */}
+        <Footer />
+
         {/* SEO Content - Hidden from visual display but visible to search engines */}
         <SEOContent />
 

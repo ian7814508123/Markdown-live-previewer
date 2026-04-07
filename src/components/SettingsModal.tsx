@@ -273,7 +273,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     </RippleButton>
                                     <div>
                                         <h3 className="text-xl font-black text-slate-800 dark:text-slate-100">發行內容 (What's New)</h3>
-                                        <p className="text-[10px] font-bold text-brand-primary lowercase tracking-widest mt-0.5">Version 3.2.b</p>
+                                        <p className="text-[10px] font-bold text-brand-primary lowercase tracking-widest mt-0.5">Version 3.3.b</p>
                                     </div>
                                 </div>
                                 <div className="space-y-4">
@@ -324,7 +324,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     <div className="pt-0">
                                         <h3 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">Markdown Live Previewer</h3>
                                         <div className="flex items-center justify-center gap-2 mt-2">
-                                            <p className="text-1xl font-bold text-slate-600 dark:text-slate-300 lowercase tracking-widest">版本 3.2.b</p>
+                                            <p className="text-1xl font-bold text-slate-600 dark:text-slate-300 lowercase tracking-widest">版本 3.3.b</p>
                                             <button
                                                 onClick={() => setShowChangelog(true)}
                                                 className="flex items-center gap-1.5 px-2.5 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-500 dark:text-indigo-600 rounded-lg text-[10px] font-black hover:bg-indigo-200 dark:hover:bg-indigo-800/60 transition-colors"
@@ -336,12 +336,37 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
                                 </div>
 
+                                <div className="space-y-6">
+                                    <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                                        <FileText size={16} className="text-brand-primary opacity-80" />
+                                        <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">功能特色 (Features)</h4>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
+                                        <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+                                            <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">即時預覽與編輯</h5>
+                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">支持 GFM 標準與即時同步滾動，提供極速的 Markdown 編輯體驗。</p>
+                                        </div>
+                                        <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+                                            <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">專業圖表渲染</h5>
+                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">內建 Mermaid (流程圖、時序圖) 與 Vega-Lite 數據可視化支持。</p>
+                                        </div>
+                                        <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+                                            <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">科學公式與計算</h5>
+                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">完美支援 LaTeX 數學公式、化學符號及樂譜渲染。</p>
+                                        </div>
+                                        <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+                                            <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">隱私與安全</h5>
+                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">100% 瀏覽器本地運行，不對外傳輸您的任何文檔數據。</p>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
                                         <Box size={16} className="text-brand-primary opacity-80" />
                                         <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">第三方套件與致謝 (Credits)</h4>
                                     </div>
-                                    <div className="grid grid-cols-1 gap-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         {[
                                             { name: 'React', license: 'MIT', url: 'https://react.dev' },
                                             { name: 'CodeMirror', license: 'MIT', url: 'https://codemirror.net' },
@@ -356,7 +381,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                             { name: 'Vite', license: 'MIT', url: 'https://vitejs.dev' },
                                             { name: 'Tailwind CSS', license: 'MIT', url: 'https://tailwindcss.com' },
                                         ].map((pkg) => (
-                                            <div key={pkg.name} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-brand-primary/20 dark:hover:border-brand-primary/40 transition-colors">
+                                            <div key={pkg.name} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-brand-primary/20 dark:hover:border-brand-primary/40 transition-colors text-left">
                                                 <div className="flex flex-col">
                                                     <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{pkg.name}</span>
                                                     <span className="text-[9px] text-slate-400 dark:text-slate-500 uppercase font-black tracking-tighter">{pkg.license} License</span>
@@ -364,12 +389,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                                 <a href={pkg.url} target="_blank" rel="noopener noreferrer" className="text-[10px] font-black text-brand-primary hover:text-brand-accent transition-colors uppercase tracking-widest">網站</a>
                                             </div>
                                         ))}
-
                                     </div>
                                 </div>
 
                                 <div className="rounded-2xl bg-brand-secondary/30 dark:bg-brand-primary/10 px-5 py-4 text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed border border-brand-primary/15 dark:border-brand-primary/30 text-center">
-                                    © 2026 HUANGJYUNYING. 授權：MIT 開源協議。使用本軟體即代表您同意其授權條款。
+                                    © 2026 HUANGJYUNYING. 授權：MIT 開源協議。使用本軟體即代表您同意其<a href="/privacy.html" className="mx-1 underline">隱私政策</a>與<a href="/terms.html" className="mx-1 underline">服務條款</a>。
                                 </div>
 
                             </div>

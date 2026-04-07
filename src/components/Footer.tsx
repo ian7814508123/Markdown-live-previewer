@@ -5,7 +5,7 @@ const Footer: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(true);
 
   return (
-    <footer className={`w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 transition-all duration-500 ease-in-out relative z-40 ${isCollapsed ? 'py-2 px-6' : 'py-8 px-6'}`}>
+    <footer className={`w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 transition-all duration-500 ease-in-out relative z-40 print:hidden ${isCollapsed ? 'py-2 px-6' : 'py-8 px-6'}`}>
       
       {/* 展開/收合切換按鈕 - 放在右上角或中央 */}
       <button 

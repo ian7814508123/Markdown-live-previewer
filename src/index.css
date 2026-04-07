@@ -602,7 +602,14 @@ body,
     page-break-before: always !important;
 }
 
-/* 隱藏所有捲軸 */
+@media print {
+    /* 隱藏頁腳與不必要的頁面元素 */
+    footer,
+    .page-break-indicator {
+        display: none !important;
+    }
+}
+
 * {
     scrollbar-width: none !important;
 }

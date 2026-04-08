@@ -1,121 +1,66 @@
-# Mermaid Lens Pro
+# 🧜‍♀️ Markdown Live Previewer
 
-A professional, real-time editor for **Mermaid.js** diagrams and **Markdown** documentation.
+**專業、實時、隱私優先的 Mermaid 圖表與 Markdown 編輯器**
 
-<div align="center">
-  <!-- You can replace this with a screenshot of the new UI later -->
-  <h3>Live Editor • Dual Mode • High-Res Export</h3>
-</div>
+---
 
-## Features
+## 🌟 為什麼選擇 Markdown Live Previewer？
 
-### 🧜‍♀️ Mermaid Diagram Editor
-- **Real-time Rendering**: Instantly visualize flowcharts, sequence diagrams, gantt charts, and more.
-- **Smart Controls**: Drag to pan, Ctrl+Scroll to zoom.
-- **Theme Support**: Switch between Default, Neutral, Dark, and Forest themes.
-- **Export Options**: 
-  - **PNG** (High Fidelity)
-  - **JPG** (Compressed)
-  - **SVG** (Vector / Resolution Independent)
+Markdown Live Previewer 不僅僅是一個編輯器，它是您技術文檔撰寫的高效伴侶。我們將強大的功能與簡潔的設計結合，為您提供無懈可擊的創作體驗。
 
-### 📝 Markdown Editor
-- **Full GFM Support**: Write standard GitHub Flavored Markdown.
-- **Rich Preview**: Immediate rendering of headers, lists, links, and code blocks.
-- **Export**: Save your work as `.md` files.
+### 1️⃣ **實時預覽 (Real-time Preview)**
+*   **毫秒級反應**: 隨打即看，編輯器與預覽窗格完美同步。
+*   **同步滾動**: 雙向同步滾動，讓您在長文檔中也能輕鬆定位其位置。
 
-### ⚡ Efficient Workflow
-- **Tab Indentation**: Supports 2-space indentation with the Tab key.
-- **Clean UI**: Minimalist, distraction-free interface.
-- **Local Execution**: Runs entirely in your browser/locally.
+### 2️⃣ **強大的 Mermaid 圖表支援**
+*   **全圖表支持**: 流程圖、時序圖、甘特圖、類圖、狀態圖、實體關係圖、用戶旅程圖。
+*   **交互式縮放**: 支援 Ctrl+滑鼠滾輪縮放與拖曳平移，細節一覽無遺。
+*   **高質量導出**: 支援 PNG、JPG 及 SVG 向量格式，滿足各種報告需求。
 
-## Getting Started
+### 3️⃣ **卓越的 Markdown 體驗**
+*   **完整 GFM 支援**: 支援 GitHub Style 的所有語法。
+*   **數學公式**: 完美渲染 LaTeX 公式 (MathJax 4)。
+*   **音樂樂譜**: 內建 abc notation 語法渲染，輕鬆為音樂創作排版 (基於 abcjs)。
+*   **雙向連結 (WikiLinks)**: 適合建立個人知識庫。
+*   **資料視覺化**: 支援 Vega-Lite 交互式圖表。
 
-### Prerequisites
-- Node.js (v16 or higher recommended)
+### 4️⃣ **資料隱私與效能**
+*   **全本地運行**: 所有數據僅存儲在您的瀏覽器，無須上傳雲端，保護商業機密。
+*   **離線可用**: 只要開啟過一次，即可在無網路環境下繼續創作。
 
-### Installation
+---
 
-1. Clone the repository (if applicable) or download the source.
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+## 📸 核心工具 (Power Tools)
 
-### Running Locally
+*   **Excel 轉 Markdown 表格**: 直接貼上試算表，自動轉換。
+*   **PDF 管理工具**: 一鍵將多個編輯中的 Markdown 文件合併導出為 PDF。
+*   **高階列印優化**: 針對 A4/Letter 紙張優化，支援分頁預覽與內容自動分面。
+*   **圖片優化上傳**: 本地壓縮上傳，快速插入文檔。
 
-Start the development server:
-```bash
-npm run dev
-```
-如果要打開網際網路存取(不安全), 在vite.config.ts中的server段落加上host: "0.0.0.0"
-Open your browser to `http://localhost:5173` (or the port shown in your terminal).
+---
 
-## Usage
+## 🎯 適合誰使用？
 
-1. **Switch Modes**: Use the toggle in the top header to switch between `Mermaid` and `Markdown` modes.
-   > **Note**: Switching modes will reset the current editor content.
-2. **Editing**: Type on the left panel.
-3. **Preview**: See the result on the right panel.
-4. **Download**: Click the **Download** button in the header to save your creation.
+*   **👨‍💻 軟體工程師**: 撰寫系統架構圖與技術文檔。
+*   **📊 數據分析師**: 使用 Vega-Lite 快速展示數據洞察。
+*   **🎓 學生與研究人員**: 整理複雜的數學公式與邏輯流程。
+*   **📝 技術作者**: 創作高品質的部落格文章與教學手冊。
 
+---
 
+## 📚 延伸閱讀 (Documentation)
 
+*   [🛠️ 開發與部署指南](docs/DEVELOPMENT.md) - 安裝、指令與多平台部屬。
+*   [🎯 SEO 核心指南](docs/SEO-GUIDE.md) - 了解應用的搜尋引擎推廣架構。
+*   [♻️ 維護與檢查清單](docs/SEO-MAINTENANCE.md) - 日常維護、故障排除。
+*   [🗺️ 專案地圖](docs/PROJECT-INDEX.md) - 快速了解檔案結構與索引。
 
-## Deployment & Preview
+---
 
-This project is configured with a specific `base` path for GitHub Pages deployment.
+## ⚖️ 授權 (License)
 
-### 🔧 Development (Local)
-Runs on `http://localhost:3000/` (Root path).
-```bash
-npm run dev
-```
+本專案採用 [MIT License](LICENSE)。
 
-### 🚀 Production Preview (Local)
-To verify the production build locally, use the `preview` command.
-**Do not use `npx serve dist`** directly, as it doesn't handle the base path configuration correctly.
+---
 
-```bash
-npm run build
-npm run preview
-```
-This will start a server at `http://localhost:4173/Markdown-live-previewer/`.
-
-### 🐳 Docker Deployment (推薦用於生產環境)
-
-使用 Docker 部署可以獲得一致的運行環境，適合生產環境使用。
-
-**快速啟動**：
-```bash
-docker-compose up -d
-```
-訪問 `http://localhost:8080`
-
-**詳細說明**請參考 [Docker 部署指南](docs/docker-deployment.md)。
-
-### ☁️ 雲端部署 (推薦用於公開存取)
-
-如果需要讓其他人也能存取你的應用,推薦使用免費的雲端平台:
-
-- **Render** (最推薦): 永久免費,零配置,自動 HTTPS
-- **Railway**: 簡單易用,每月 $5 免費額度  
-- **Fly.io**: 高性能,免費 3 個 VM
-- **Google Cloud Run**: Serverless,按使用計費
-
-**完整教學**請參考 [雲端部署指南](docs/cloud-deployment.md)。
-
-### 📦 Deployment (GitHub Pages)
-The `vite.config.ts` is configured to set the base path to `/Markdown-live-previewer/` when running `vite build`.
-
-1.  **Build**: `npm run build`
-2.  **Deploy**: Push the `dist` folder to your `gh-pages` branch (or configure GitHub Actions).
-
-**Note on Styling**:
-Production builds include specific CSS overrides in `public/index.css` to ensure MathJax equations render correctly without unwanted line breaks. Always verify with `npm run preview` before deploying.
-
-## License
-
-This project is licensed under the [MIT License](LICENSE). 
-
-For a complete list of third-party dependencies and their licenses, please refer to [docs/dependencies.md](docs/dependencies.md) or check the **About** tab in the application settings.
-
+**⭐ 覺得好用嗎？歡迎在 GitHub 點個 Star 支持我們！**

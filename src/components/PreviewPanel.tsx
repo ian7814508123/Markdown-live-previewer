@@ -46,6 +46,7 @@ interface MarkdownPreviewSectionProps {
     onMouseLeave?: () => void;
     scrollRef: React.Ref<HTMLDivElement>;
     printSettings: any;
+    isPrinting?: boolean;
 }
 
 const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
@@ -62,6 +63,7 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
     onMouseLeave,
     scrollRef,
     printSettings,
+    isPrinting = false,
 }) => {
     // 當前文件物件
     const currentDoc = documents?.find((d: any) => d.id === currentDocId);
@@ -231,7 +233,7 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
 
     return (
         <section
-            className={`flex-1 flex flex-col bg-slate-100 dark:bg-slate-950 relative overflow-hidden group/preview transition-colors duration-200 preview-panel ${showPrintPreview ? 'show-print-preview' : ''}`}
+            className={`flex-1 flex flex-col bg-slate-100 dark:bg-slate-950 relative overflow-hidden group/preview transition-colors duration-200 preview-panel print:overflow-visible print:bg-white print:h-auto ${showPrintPreview ? 'show-print-preview' : ''}`}
             onMouseEnter={() => {
                 isHoveringInternal.current = true;
                 if (onMouseEnter) onMouseEnter();
@@ -241,9 +243,9 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
                 if (onMouseLeave) onMouseLeave();
             }}
         >
-            <div className={`flex-1 relative ${showPrintPreview ? 'overflow-auto custom-scrollbar p-12' : 'overflow-hidden'}`} ref={showPrintPreview ? (node => { containerRef.current = node; if (typeof scrollRef === 'function') scrollRef(node); else if (scrollRef) (scrollRef as any).current = node; }) : undefined} onScroll={showPrintPreview ? onScroll : undefined}>
+            <div className={`flex-1 relative ${showPrintPreview ? 'overflow-auto custom-scrollbar p-12' : 'overflow-hidden'} print:overflow-visible print:h-auto print:static print:p-0`} ref={showPrintPreview ? (node => { containerRef.current = node; if (typeof scrollRef === 'function') scrollRef(node); else if (scrollRef) (scrollRef as any).current = node; }) : undefined} onScroll={showPrintPreview ? onScroll : undefined}>
                 <div
-                    className={`mx-auto transition-all duration-300 origin-top-left ${showPrintPreview ? 'print-outer-wrapper' : 'print:print-outer-wrapper max-w-[850px] relative h-full flex flex-col gap-8'}`}
+                    className={`mx-auto transition-all duration-300 origin-top-left ${showPrintPreview ? 'print-outer-wrapper' : 'print:print-outer-wrapper max-w-[850px] relative h-full flex flex-col gap-8 print:block print:h-auto print:max-w-none'}`}
                     style={showPrintPreview ? {
                         width: paperPx.w * activeScale,
                         height: 'auto',
@@ -251,7 +253,7 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
                     } : {}}
                 >
                     <div
-                        className={showPrintPreview ? 'print-preview-container origin-top-left flex flex-col gap-8' : 'print:print-preview-container print:gap-0 w-full h-full flex flex-col gap-8'}
+                        className={showPrintPreview ? 'print-preview-container origin-top-left flex flex-col gap-8 print:block print:h-auto' : 'print:print-preview-container print:gap-0 w-full h-full flex flex-col gap-8 print:block print:h-auto'}
                         style={showPrintPreview ? {
                             transform: `scale(${activeScale})`,
                             width: paperPx.w,
@@ -277,17 +279,19 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
                                     data-doc-id={docId}
                                     ref={!showPrintPreview && isActive ? (scrollRef as React.Ref<HTMLDivElement>) : undefined}
                                     onScroll={!showPrintPreview && isActive ? onScroll : undefined}
-                                    className={`${showPrintPreview ? 'print-paper bg-white shadow-2xl mx-auto paper-' + paperSize.toLowerCase() + ' paper-' + orientation + ' margin-' + margin : 'print:print-paper print:paper-' + paperSize.toLowerCase() + ' print:paper-' + orientation + ' print:margin-' + margin + ' absolute inset-0 overflow-auto custom-scrollbar p-8 bg-white dark:bg-slate-900 shadow-inner'} transition-all duration-300 print:max-w-none print:w-full print:shadow-none print:bg-white print:p-0 print:border-none print:rounded-none print:static print:inset-auto print:h-auto ${isVisibleOnScreen ? 'block' : 'hidden'} ${!isVisibleOnScreen && isVisibleInPrint ? 'print:block' : ''} ${!isActive && (!showPrintPreview && !isVisibleInPrint) ? 'tab-inactive' : ''} ${isActive && showPrintPreview ? 'ring-4 ring-brand-primary/50' : ''}`}
+                                    className={`${showPrintPreview ? 'print-paper bg-white shadow-2xl mx-auto paper-' + paperSize.toLowerCase() + ' paper-' + orientation + ' margin-' + margin : 'print:print-paper print:paper-' + paperSize.toLowerCase() + ' print:paper-' + orientation + ' print:margin-' + margin + ' absolute inset-0 overflow-auto custom-scrollbar p-8 bg-white dark:bg-slate-900 shadow-inner'} transition-all duration-300 print:max-w-none print:w-full print:shadow-none print:bg-white print:p-0 print:border-none print:rounded-none print:static print:inset-auto print:h-auto print:overflow-visible ${isVisibleOnScreen ? 'block' : 'hidden'} ${!isVisibleOnScreen && isVisibleInPrint ? 'print:block' : ''} ${!isActive && (!showPrintPreview && !isVisibleInPrint) ? 'tab-inactive' : ''} ${isActive && showPrintPreview ? 'ring-4 ring-brand-primary/50' : ''}`}
                                 >
                                     <div className={showPrintPreview ? 'prose-container relative' : 'print:prose-container max-w-[850px] mx-auto min-h-full bg-white dark:bg-slate-900 p-12 shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-none dark:border dark:border-slate-800 rounded-sm print:shadow-none print:border-none print:p-0 print:bg-white'}>
                                         <MarkdownPreview
                                             content={docContent}
                                             theme={theme}
-                                            isDarkMode={isDarkMode && !showPrintPreview}
+                                            isDarkMode={isDarkMode}
                                             documents={documents}
                                             onSelectDocument={onSelectDocument}
                                             onCreateMissing={onCreateMissing}
                                             currentDocId={docId}
+                                            isPrinting={isPrinting}
+                                            showPrintPreview={showPrintPreview}
                                         />
                                         {/* 覆蓋層顯示分頁指示線 */}
                                         {showPrintPreview && (
@@ -338,6 +342,7 @@ interface PreviewPanelProps {
     // CSS 快取渲染用：所有已開啟分頁的 id 列表
     openDocIds?: string[];
     printSettings: any;
+    isPrinting?: boolean;
 }
 
 const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
@@ -367,6 +372,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
     currentDocId,
     openDocIds,
     printSettings,
+    isPrinting,
 }, ref) => {
 
     // DIFFERENT LAYOUT STRATEGY BASED ON MODE
@@ -392,6 +398,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
                 onMouseLeave={onMouseLeave}
                 scrollRef={ref}
                 printSettings={printSettings}
+                isPrinting={isPrinting}
             />
         );
     }

@@ -8,7 +8,7 @@ const MAX_IMAGES = 50;                      // 最大圖片數量上限
 const TTL_DAYS = 15;                         // 圖片時效（天）
 const MAX_SIZE_PER_IMAGE_MB = 10;             // 單張圖片大小上限（MB）
 const MAX_SIZE_BYTES = MAX_SIZE_PER_IMAGE_MB * 1024 * 1024;
-const TTL_MS = TTL_DAYS * 1 * 1 * 1 * 1000;
+const TTL_MS = TTL_DAYS * 24 * 60 * 60 * 1000;
 
 // ─── 型別定義 ────────────────────────────────────────────────────────────────
 export interface ImageRecord {

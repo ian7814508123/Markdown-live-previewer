@@ -11,6 +11,7 @@ import { ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import CreateDocModal from './src/components/CreateDocModal';
 import SettingsModal from './src/components/SettingsModal';
 import SEOContent from './src/components/SEOContent';
+import Footer from './src/components/Footer';
 import { usePanZoom } from './src/hooks/usePanZoom';
 import { useDocumentStorage } from './src/hooks/useDocumentStorage';
 import { useAppSettings } from './src/hooks/useAppSettings';
@@ -131,6 +132,7 @@ const App: React.FC = () => {
   const [initialDocName, setInitialDocName] = useState('');
   const [pendingFolderId, setPendingFolderId] = useState<string | null>(null);
   const [openDocIds, setOpenDocIds] = useState<string[]>([]);
+  const [isPrinting, setIsPrinting] = useState(false);
 
   const { settings, updateMacros, updatePrintSettings, restoreDefaults } = useAppSettings();
 
@@ -243,7 +245,7 @@ const App: React.FC = () => {
 
     const editorView = editorRef.current.view;
     const diff = targetScrollTop.current - currentScrollTop.current;
-    
+
     if (Math.abs(diff) < 0.8) { // 稍微放寬判定範圍
       currentScrollTop.current = targetScrollTop.current;
       rafId.current = null;
@@ -266,19 +268,19 @@ const App: React.FC = () => {
     if (!isSyncScroll || mode !== 'markdown') return;
     if (!editorRef.current?.view) return;
     if (scrollSource.current === 'preview' && !isHoveringEditor.current) return;
-    
+
     scrollSource.current = 'editor';
 
     const editorView = editorRef.current.view;
     const scrollDOM = editorView.scrollDOM;
-    
+
     // 取得當前編輯器頂部的行號
     // CodeMirror 6: 使用 visualLineAtHeight 取得高度對應的行區塊
     const lineBlock = editorView.lineBlockAtHeight(scrollDOM.scrollTop);
     const lineNumber = editorView.state.doc.lineAt(lineBlock.from).number;
 
     if (previewRef.current) {
-      // 在預覽區尋找具有 data-line 的元素
+      // 取得合併模式下所有可能的 [data-line] 元素 (包含其他文件的)
       const elements = Array.from(previewRef.current.querySelectorAll('[data-line]'));
       if (elements.length === 0) {
         // 退回百分比模式
@@ -286,9 +288,13 @@ const App: React.FC = () => {
         targetScrollTop.current = percentage * (previewRef.current.scrollHeight - previewRef.current.clientHeight);
       } else {
         // 尋找最接近且小於或等於 lineNumber 的元素
+        // 優先在「當前活動文件」中尋找，確保精確度
+        const currentDocPapers = previewRef.current.querySelectorAll(`.print-paper[data-doc-id="${currentDocId}"] [data-line]`);
+        const searchElements = currentDocPapers.length > 0 ? Array.from(currentDocPapers) : elements;
+
         let targetElement = null;
-        for (let i = elements.length - 1; i >= 0; i--) {
-          const el = elements[i];
+        for (let i = searchElements.length - 1; i >= 0; i--) {
+          const el = searchElements[i];
           const elLine = parseInt(el.getAttribute('data-line') || '0');
           if (elLine <= lineNumber) {
             targetElement = el as HTMLElement;
@@ -297,11 +303,17 @@ const App: React.FC = () => {
         }
 
         if (targetElement) {
-          // 計算目標位置：元素的 offsetTop 減去容器的 offsetTop
-          targetScrollTop.current = targetElement.offsetTop - (previewRef.current.offsetTop || 0);
+          // 計算目標位置：元素的 offsetTop 減去預覽區容器的頂部位置
+          // 注意：offsetTop 是相對於最近的 offsetParent 的距離
+          // 在合併模式下，targetElement.offsetTop 可能相對於 .print-paper
+          // 因此需要疊加計算各層的 offsetTop 或是使用 getBoundingClientRect()
+          const containerRect = previewRef.current.getBoundingClientRect();
+          const targetRect = targetElement.getBoundingClientRect();
+          targetScrollTop.current = previewRef.current.scrollTop + (targetRect.top - containerRect.top);
         } else {
-          // 如果找不到（在文件開頭），則滾到最上面
-          targetScrollTop.current = 0;
+          // 如果找不到（在文件開頭），滾向該文件的紙張頂部
+          const paper = previewRef.current.querySelector(`.print-paper[data-doc-id="${currentDocId}"]`) as HTMLElement;
+          targetScrollTop.current = paper ? paper.offsetTop : 0;
         }
       }
 
@@ -323,7 +335,7 @@ const App: React.FC = () => {
 
     if (editorRef.current?.view) {
       const editorView = editorRef.current.view;
-      
+
       // 在預覽區尋找目前在頂部的元素
       const elements = Array.from(target.querySelectorAll('[data-line]'));
       if (elements.length === 0) {
@@ -333,23 +345,49 @@ const App: React.FC = () => {
       } else {
         // 尋找目前可見區塊中最上方的帶有 data-line 的元素
         let topElement = null;
-        const containerTop = target.getBoundingClientRect().top;
-        
+        const containerRect = target.getBoundingClientRect();
+        const containerTop = containerRect.top;
+
         for (const el of elements) {
           const rect = el.getBoundingClientRect();
-          if (rect.top >= containerTop - 20) { // 稍微給一點緩衝
+          // 如果元素的頂部剛好在容器頂部附近（或稍微超出）
+          if (rect.top >= containerTop - 10 && rect.top <= containerTop + 100) {
             topElement = el;
             break;
           }
         }
 
+        // 自動切換文件 (跨文件同步滾動核心)
         if (topElement) {
+          // 向上搜尋最近的 [data-doc-id] 容器
+          const paper = topElement.closest('.print-paper');
+          const newDocId = paper?.getAttribute('data-doc-id');
+
+          if (newDocId && newDocId !== currentDocId) {
+            // 防止循環觸發：標記為捲動導致的切換
+            // 確保 switchDocument 不會導致 previewPanel 重新跳轉導致死循環
+            handleDocumentSwitch(newDocId);
+          }
+
           const lineNumber = parseInt(topElement.getAttribute('data-line') || '1');
-          const line = editorView.state.doc.line(lineNumber);
-          // 取得該行在編輯器中的高度位置
-          targetScrollTop.current = editorView.lineBlockAt(line.from).top;
+          try {
+            const line = editorView.state.doc.line(lineNumber);
+            // 取得該行在編輯器中的高度位置
+            targetScrollTop.current = editorView.lineBlockAt(line.from).top;
+          } catch (e) {
+            // 如果行號不存在（例如切換中的不一致狀態），退回百分比
+            const percentage = target.scrollTop / (target.scrollHeight - target.clientHeight || 1);
+            targetScrollTop.current = percentage * (editorView.scrollDOM.scrollHeight - editorView.scrollDOM.clientHeight);
+          }
         } else {
-          // 如果沒找到，可能在最底部，退回百分比
+          // 如果沒找到（可能在銜接處），試圖讀取目前最顯眼的紙張
+          const visiblePaper = Array.from(target.querySelectorAll('.print-paper')).find(p => {
+            const rect = p.getBoundingClientRect();
+            return rect.top >= containerTop - 50 && rect.top <= containerTop + target.clientHeight / 2;
+          });
+          const newDocId = visiblePaper?.getAttribute('data-doc-id');
+          if (newDocId && newDocId !== currentDocId) handleDocumentSwitch(newDocId);
+
           const percentage = target.scrollTop / (target.scrollHeight - target.clientHeight || 1);
           targetScrollTop.current = percentage * (editorView.scrollDOM.scrollHeight - editorView.scrollDOM.clientHeight);
         }
@@ -518,10 +556,10 @@ const App: React.FC = () => {
   };
 
   /** 統一下載 / 列印：注入 @page CSS 後呼叫 window.print() */
-  const handlePrint = (printMode: EditorMode) => {
+  const handlePrint = useCallback((printMode: EditorMode) => {
     const { paperSize, orientation, scale, margin } = settings.printSettings;
     const marginMap: Record<string, string> = { normal: '1.5cm', narrow: '0.5cm', none: '0' };
-    
+
     // 縮放與佈局樣式
     let additionalCSS = '';
     if (printMode === 'mermaid') {
@@ -532,10 +570,161 @@ const App: React.FC = () => {
     } else {
       // Markdown 模式：當開啟列印預覽時，我們需要確保列印時捨棄所有 UI，只留紙張
       additionalCSS = `
-        .preview-panel { background: white !important; padding: 0 !important; }
-        .print-outer-wrapper { width: 100% !important; height: auto !important; min-height: auto !important; transform: none !important; margin: 0 !important; padding: 0 !important; }
-        .print-preview-container { transform: none !important; width: 100% !important; gap: 0 !important; }
-        .print-paper { box-shadow: none !important; margin: 0 !important; width: 100% !important; min-height: none !important; }
+        /* 強制所有背景為白色，文字為黑色 */
+        html, body, .preview-panel, .print-paper, .prose {
+            background-color: white !important;
+            color: black !important;
+            color-scheme: light !important;
+        }
+
+        /* 內容容器展開 */
+        .print-outer-wrapper { 
+            width: 100% !important; 
+            height: auto !important; 
+            min-height: auto !important; 
+            transform: none !important; 
+            margin: 0 !important; 
+            padding: 0 !important; 
+            position: static !important;
+            display: block !important;
+            overflow: visible !important;
+        }
+        
+        .print-preview-container { 
+            transform: none !important; 
+            width: 100% !important; 
+            gap: 0 !important; 
+            display: block !important;
+            height: auto !important;
+            overflow: visible !important;
+        }
+
+        .print-paper { 
+            box-shadow: none !important; 
+            margin: 0 !important; 
+            width: 100% !important; 
+            height: auto !important;
+            min-height: auto !important; 
+            position: static !important;
+            display: block !important;
+            overflow: visible !important;
+            border: none !important;
+            background-color: white !important;
+        }
+
+        .prose-container {
+            height: auto !important;
+            min-height: auto !important;
+            overflow: visible !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: block !important;
+        }
+
+        .prose {
+            max-width: none !important;
+            height: auto !important;
+            overflow: visible !important;
+            display: block !important;
+            background-color: white !important;
+            color: black !important;
+        }
+
+        /* 修正程式碼區塊：強制淺色底色，無視深色模式設定 */
+        .prose pre, .prose code {
+            background-color: #f8f9fa !important;
+            color: #333 !important;
+            border: 1px solid #ddd !important;
+            white-space: pre-wrap !important;
+            word-break: break-all !important;
+            overflow: visible !important;
+            max-width: 100% !important;
+            display: block !important;
+            filter: invert(0) !important;
+            text-shadow: none !important;
+        }
+
+        /* 語法高亮插件內部的 pre 可能有自己的樣式 */
+        .prose pre {
+            overflow: visible !important;
+            white-space: pre-wrap !important;
+            filter: invert(0) !important;
+        }
+
+        /* 確保圖表在列印時不被濾鏡反轉 (針對深色模式) */
+        svg, img, canvas, .mermaid, .vega-embed, .smiles-drawer {
+            max-width: 100% !important;
+            width: auto !important; /* 優先保留原始寬度，配合 ResizableWrapper 的 W:% 限制 */
+            height: auto !important;
+            overflow: visible !important;
+            display: block !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            page-break-inside: avoid !important; /* 媒體元件盡量不跨頁 */
+            background-color: transparent !important;
+            filter: none !important;
+        }
+
+        /* 針對各類圖表容器的 SVG/IMG 強制縮放 (圖表這類元件通常需要填滿容器) */
+        .diagram-block-container svg, 
+        .diagram-block-container canvas,
+        .abcjs-wrapper svg {
+            width: 100% !important;
+            height: auto !important;
+            max-width: 100% !important;
+        }
+
+        /* 內容圖片保持原始比例，僅受 max-width 約束 */
+        .prose img {
+            width: auto !important;
+            max-width: 100% !important;
+            height: auto !important;
+        }
+
+        /* 讓 Mermaid 文字在列印時變為純黑 */
+        .mermaid .label text, .mermaid .edgeLabel, .mermaid .node text {
+            fill: black !important;
+            color: black !important;
+        }
+
+        .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon, .mermaid .node path {
+            fill: #fff !important;
+            stroke: #000 !important;
+        }
+        .mermaid .edgePath path {
+            stroke: #000 !important;
+        }
+
+        /* 針對 Vega/Canvas 的文字顏色 (如果有的話) */
+        .vega-embed canvas {
+            background-color: white !important;
+        }
+
+        /* 內容區塊間隔優化：段落與標題允許在中間分頁，但盡量保持標題與內容在一起 */
+        .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+            page-break-after: avoid !important;
+            color: black !important;
+        }
+
+        .prose p, .prose li, .prose pre, .prose blockquote {
+            page-break-inside: auto !important;
+        }
+
+        /* 隱藏捲軸與不必要元素 */
+        * { scrollbar-width: none !important; }
+        ::-webkit-scrollbar { display: none !important; }
+
+        pre, code {
+        background: transparent !important; border: none !important;
+        }
+
+        /* 針對 react-syntax-highlighter 產生的 div 容器進行修正 */
+        .prose div[style*="background-color"] {
+        .card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; }
+        background-color: #f8f9fa !important;
+        border: 1px solid #ddd !important;
+        padding: 1em !important;
+        }
       `;
     }
 
@@ -544,20 +733,83 @@ const App: React.FC = () => {
     style.textContent = `
       @media print {
         @page { size: ${paperSize} ${orientation}; margin: ${marginMap[margin] ?? '1.5cm'}; }
-        header, aside, .tab-bar, section:not(.preview-panel), .status-bar, .floating-controls { display: none !important; }
-        .preview-panel { overflow: visible !important; width: 100% !important; height: auto !important; position: static !important; }
+        header, footer, aside, .tab-bar, section:not(.preview-panel), .status-bar, .floating-controls { display: none !important; }
+        .preview-panel { 
+          overflow: visible !important; 
+          width: 100% !important; 
+          height: auto !important; 
+          position: static !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          color-adjust: exact !important;
+        }
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          color-adjust: exact !important;
+        }
         ${additionalCSS}
       }
     `;
     document.head.appendChild(style);
-    window.print();
 
-    const cleanup = () => {
+    // 1. 強制進入列印模式（這會觸發 MarkdownPreview 重新渲染為淺色）
+    flushSync(() => {
+      setIsPrinting(true);
+    });
+
+    // 2. 計算需要等待的目標數量 (Mermaid, Vega, Smiles, Images)
+    const componentsToWait = document.querySelectorAll(
+      '.mermaid, .vega-embed, .smiles-drawer, img'
+    ).length;
+
+    let readyCount = 0;
+
+    const finalizePrint = () => {
+      window.print();
+      setIsPrinting(false);
       document.getElementById('app-print-override')?.remove();
     };
 
-    window.addEventListener('afterprint', cleanup, { once: true });
-  };
+    // 如果畫面上沒有複雜圖表，直接列印
+    if (componentsToWait === 0) {
+      setTimeout(finalizePrint, 100);
+      return;
+    }
+
+    // 3. 定義處理函式
+    const onReady = () => {
+      readyCount++;
+      if (readyCount >= componentsToWait) {
+        window.removeEventListener('content-layout-ready', onReady);
+        // 給瀏覽器一點時間完成最後的 Paint
+        setTimeout(finalizePrint, 500);
+      }
+    };
+
+    window.addEventListener('content-layout-ready', onReady);
+
+    // 安全閥：避免因為某張圖片載入失敗導致永遠無法列印
+    setTimeout(() => {
+      window.removeEventListener('content-layout-ready', onReady);
+      if (readyCount < componentsToWait) {
+        finalizePrint();
+      }
+    }, 5000);
+  }, [mode, settings.printSettings, isDarkMode]);
+
+  // 攔截 Ctrl + P (原生列印捷徑)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+        e.preventDefault(); // 攔截瀏覽器預設列印
+        handlePrint(mode); // 改執行我們受控的列印邏輯
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handlePrint, mode]);
 
   const downloadMarkdown = () => {
     let contentToDownload = code;
@@ -570,7 +822,7 @@ const App: React.FC = () => {
         contentToDownload = vaultDocs
           .map(d => `--- \n# ${d.name}\n\n${d.content}`)
           .join('\n\n');
-        
+
         const folder = folders.find(f => f.id === currentDocument.folderId);
         fileName = folder ? `${sanitizeFileName(folder.name)}-full` : `${fileName}-merged`;
       }
@@ -747,17 +999,17 @@ const App: React.FC = () => {
     if (!editorRef.current?.view) return;
     const view = editorRef.current.view;
     const pos = view.state.selection.main.anchor;
-    
+
     // 取得插入前的內容
     const before = view.state.doc.sliceString(0, pos);
     const after = view.state.doc.sliceString(pos);
-    
+
     // 確保插入的內容前後有適當的換行
     const prefix = before.length > 0 && !before.endsWith('\n\n') ? (before.endsWith('\n') ? '\n' : '\n\n') : '';
     const suffix = after.length > 0 && !after.startsWith('\n') ? '\n\n' : '\n';
-    
+
     const insertText = prefix + text + suffix;
-    
+
     view.dispatch({
       changes: { from: pos, insert: insertText },
       selection: { anchor: pos + insertText.length }
@@ -896,11 +1148,11 @@ const App: React.FC = () => {
               copied={copied}
               onScroll={handleEditorScroll}
               isDarkMode={isDarkMode}
-              onMouseEnter={() => { 
+              onMouseEnter={() => {
                 isHoveringEditor.current = true;
                 if (!rafId.current) scrollSource.current = null;
               }}
-              onMouseLeave={() => { 
+              onMouseLeave={() => {
                 isHoveringEditor.current = false;
               }}
               onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -947,6 +1199,10 @@ const App: React.FC = () => {
             />
           </div>
         </main>
+
+        {/* 可見的頁腳 - 增加 AdSense 文字密度與連結 */}
+        <Footer />
+
         {/* SEO Content - Hidden from visual display but visible to search engines */}
         <SEOContent />
 

@@ -15,17 +15,77 @@
 @layer base {
     :root {
         color-scheme: light;
-        --brand-primary: #005B94;      /* 調整後稍淺的染料靛青：主色 */
-        --brand-secondary: #F0F9FF;    /* 極細微的天藍：輔助背景 */
-        --brand-accent: #0284C7;       /* 亮藍：互動強調 */
-        --brand-surface: #F8FAFC;      /* 極淺灰藍：介面底色 */
+        --brand-primary: #005B94;
+        /* 調整後稍淺的染料靛青：主色 */
+        --brand-secondary: #F0F9FF;
+        /* 極細微的天藍：輔助背景 */
+        --brand-accent: #0284C7;
+        /* 亮藍：互動強調 */
+        --brand-surface: #F8FAFC;
+        /* 極淺灰藍：介面底色 */
+
+        /* 程式碼與圖表變數 (淺色預設) */
+        --code-bg: #f8f9fa;
+        --code-border: #e2e8f0;
+
+        /* Mermaid 專用變數 (淺色預設) */
+        --mermaid-node-bg: #f1f5f9;
+        --mermaid-node-text: #1e293b;
+        --mermaid-node-border: #cbd5e1;
+        --mermaid-line: #64748b;
+        --mermaid-edge-bg: #ffffff;
     }
+
     .dark {
         color-scheme: dark;
-        --brand-primary: #38BDF8;      /* 亮靛青：深色模式下的透亮主色 */
-        --brand-secondary: #00416A;    /* 染料靛青：深色模式下的容器背景 */
-        --brand-accent: #7DD3FC;       /* 極亮藍：深色模式互動 */
-        --brand-surface: #0F172A;      /* 深藍黑：深色模式底色 */
+        --brand-primary: #38BDF8;
+        /* 亮靛青：深色模式下的透亮主色 */
+        --brand-secondary: #00416A;
+        /* 染料靛青：深色模式下的容器背景 */
+        --brand-accent: #7DD3FC;
+        /* 極亮藍：深色模式互動 */
+        --brand-surface: #0F172A;
+        /* 深藍黑：深色模式底色 */
+
+        /* 程式碼與圖表變數 (深色預設) */
+        --code-bg: #1e1e1e;
+        --code-border: #334155;
+
+        /* Mermaid 專用變數 (深色預設) */
+        --mermaid-node-bg: #1e293b;
+        --mermaid-node-text: #f1f5f9;
+        --mermaid-node-border: #334155;
+        --mermaid-line: #94a3b8;
+        --mermaid-edge-bg: #1e293b;
+    }
+
+    .show-print-preview,
+    .show-print-preview * {
+        --code-bg: #f8f9fa !important;
+        --code-border: #ddd !important;
+        
+        /* Mermaid 鎖定 */
+        --mermaid-node-bg: #f1f5f9 !important;
+        --mermaid-node-text: #1e293b !important;
+        --mermaid-node-border: #cbd5e1 !important;
+        --mermaid-line: #64748b !important;
+        --mermaid-edge-bg: #ffffff !important;
+    }
+
+    @media print {
+        *,
+        ::before,
+        ::after {
+            --code-bg: #f8f9fa !important;
+            --code-border: #ddd !important;
+
+            /* Mermaid 列印鎖定 */
+            --mermaid-node-bg: #f1f5f9 !important;
+            --mermaid-node-text: #1e293b !important;
+            --mermaid-node-border: #cbd5e1 !important;
+            --mermaid-line: #64748b !important;
+            --mermaid-edge-bg: #ffffff !important;
+        }
     }
 }
 
@@ -334,9 +394,6 @@ body {
     /* Level 5 */
 }
 
-/* Print Styles Override (Consolidated) */
-/* Print Styles handled by Tailwind classes in components */
-
 /* MathJax Override for Production Build */
 mjx-container[display="true"] {
     display: block;
@@ -353,36 +410,229 @@ mjx-container:not([display="true"]) {
  * 確保多分頁情境下 window.print() 只輸出當前文件，而非所有開啟的分頁
  * ─────────────────────────────────────────────────────────────────────── */
 @media print {
-    .tab-inactive {
-        display: none !important;
+
+    /* 1. 全域強制顏色與背景重置 */
+    :root,
+    .dark {
+        --brand-surface: #ffffff !important;
+        background-color: white !important;
+        color-scheme: light !important;
+        /* 強制回歸淺色配色方案 */
     }
 
-    /* 重置預覽模擬用的邊距與樣式 */
-    .prose-container {
-        padding: 0 !important;
+    /* 即使 html 標籤帶有 .dark，列印時也要強制回歸淺色 */
+    html.dark body {
+        background-color: white !important;
+    }
+
+    /* 2. 徹底消除程式碼區塊與圖表的冗餘邊框 */
+    .prose pre {
         margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        background: none !important;
+        overflow: visible !important;
     }
 
-    .print-paper {
+    /* 處理正常的 code 標籤 (行內程式碼) */
+    .prose :not(pre)>code {
+        background-color: #f1f5f9 !important;
+        border: 1px solid #cbd5e1 !important;
+        padding: 0.125rem 0.4rem !important;
+        border-radius: 4px !important;
+        font-weight: 500 !important;
+    }
+
+    /* 全部區塊標籤強制回歸白底 (Formal) */
+    .prose .diagram-block-container,
+    .prose div[style*="background-color"],
+    .prose .code-block-wrapper pre {
+        background-color: var(--code-bg) !important;
+        border: 1px solid var(--code-border) !important;
+        border-radius: 6px !important;
+        padding: 1rem !important;
+        margin: 1.5rem 0 !important;
         width: 100% !important;
-        min-height: auto !important;
         box-shadow: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
     }
+}
 
-    /* 強制每個文件在新的一頁開始 */
-    [id^="wikilink-"] {
-        page-break-before: always !important;
+/* 預覽模式優化 */
+.prose pre {
+    background: transparent !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* 針對行內代碼的基礎美化 */
+.prose :not(pre)>code {
+    @apply rounded-md border border-slate-200 dark:border-slate-700;
+    @apply bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 font-medium;
+}
+
+/* 內層高亮容器與圖表容器：統一套用變數系統 */
+.prose .diagram-block-container,
+.prose div[style*="background-color"],
+.prose .code-block-wrapper pre {
+    border-radius: 0.5rem !important;
+    border: 1px solid var(--code-border) !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+    border-color: var(--code-border) !important;
+    background-color: var(--code-bg) !important;
+    margin: 1.5rem 0 !important;
+    padding: 1rem !important;
+    display: block !important;
+    width: 100% !important;
+}
+
+/* 針對圖表容器特定的間距優化 (ResizableWrapper 已給間距) */
+.prose .diagram-block-container,
+.prose div[style*="background-color"] {
+    margin: 0 !important;
+}
+
+/* 針對 react-syntax-highlighter 產生的 pre 標籤 (優化) */
+pre[style] {
+    background-color: var(--code-bg) !important;
+    color: inherit !important;
+    transition: background-color 0.2s ease;
+}
+
+.show-print-preview pre[style] {
+    background-color: var(--code-bg) !important;
+    color: #333 !important;
+}
+
+@media print {
+    pre[style] {
+        background-color: var(--code-bg) !important;
+        color: #333 !important;
     }
+}
 
-    /* 隱藏預覽專用的指標 */
+/* 針對 SyntaxHighlighter 產生的行號 */
+.react-syntax-highlighter-line-number {
+    color: #999 !important;
+}
+
+/* 列印與模擬預覽時強力強制鎖定為白底*/
+.show-print-preview,
+.show-print-preview * {
+    --code-bg: #f8f9fa !important;
+    --code-border: #ddd !important;
+}
+
+@media print {
+
+    *,
+    ::before,
+    ::after {
+        --code-bg: #f8f9fa !important;
+        --code-border: #ddd !important;
+    }
+}
+
+/* 3. 確保圖表（Mermaid/Vega/ABC）背景也是白的 */
+.mermaid svg,
+.vega-embed canvas,
+.smiles-drawer svg,
+.abcjs-inner-container svg {
+    background-color: transparent !important;
+    filter: invert(0) !important;
+}
+
+/* 強制覆蓋 Mermaid SVG 內部的節點顏色 (與變數同步) */
+.mermaid .node rect,
+.mermaid .node circle,
+.mermaid .node ellipse,
+.mermaid .node polygon,
+.mermaid .node path {
+    fill: var(--mermaid-node-bg) !important;
+    stroke: var(--mermaid-node-border) !important;
+}
+
+.mermaid .label text,
+.mermaid .edgeLabel text {
+    fill: var(--mermaid-node-text) !important;
+}
+
+.mermaid .edgePath path {
+    stroke: var(--mermaid-line) !important;
+}
+
+.mermaid .marker {
+    fill: var(--mermaid-line) !important;
+    stroke: var(--mermaid-line) !important;
+}
+
+/* 4. 確保邊界調整出的空間也是白色的 */
+body,
+.app-container,
+.preview-panel {
+    background-color: white !important;
+}
+
+.tab-inactive {
+    display: none !important;
+}
+
+/* 重置預覽模擬用的邊距與樣式 */
+.prose-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    height: auto !important;
+    min-height: auto !important;
+}
+
+.print-paper {
+    width: 100% !important;
+    min-height: auto !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    display: block !important;
+    background-color: white !important;
+}
+
+/* 強制每個文件在新的一頁開始 */
+[id^="wikilink-"] {
+    page-break-before: always !important;
+}
+
+@media print {
+    /* 隱藏頁腳與不必要的頁面元素 */
+    footer,
     .page-break-indicator {
         display: none !important;
     }
 }
 
+* {
+    scrollbar-width: none !important;
+}
+
+::-webkit-scrollbar {
+    display: none !important;
+}
+
+/* 隱藏預覽專用的指標 */
+.page-break-indicator {
+    display: none !important;
+}
+
+
+
 /* ── 列印預覽模式 (Print Preview Simulation) ────────────────────────────── */
+
+/* 模擬預覽模式下的強制修正 */
+.show-print-preview .print-paper,
+.show-print-preview .prose-container {
+    background-color: white !important;
+    color: black !important;
+}
 
 /* 模擬 A4 紙張的基礎樣式 */
 .print-paper {
@@ -505,3 +755,17 @@ mjx-container:not([display="true"]) {
 .dark .show-print-preview .preview-panel>div.flex-1 {
     background-color: #0f172a;
 }
+
+/* ── 自訂 abcjs 深淺色/列印適應 ── */
+.dark .abcjs-inner-container svg path,
+.dark .abcjs-inner-container svg text {
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}
+@media print {
+  .abcjs-inner-container svg path,
+  .abcjs-inner-container svg text {
+    fill: #000 !important;
+    stroke: #000 !important;
+  }
+}

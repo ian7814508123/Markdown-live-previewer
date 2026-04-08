@@ -19,11 +19,13 @@ interface MarkdownPreviewProps {
     onSelectDocument?: (docId: string) => void;
     onCreateMissing?: (name: string) => void;
     currentDocId?: string | null;
+    isPrinting?: boolean;
+    showPrintPreview?: boolean;
 }
 
 // ─── 輔助函式：簡單的字串雜湊 ──────────────────────────────────────────────────
 // 用於生成基於內容的穩定 Key，防止 React 在內容未變時重新掛載組件
-const hashString = (str: string) => {
+export const hashString = (str: string) => {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
         const char = str.charCodeAt(i);
@@ -33,8 +35,45 @@ const hashString = (str: string) => {
     return Math.abs(hash).toString(36);
 };
 
+// ─── 持久化 Hook：用於記憶圖表縮放、寬度與高度 ──────────────────────────────────────
+export function usePersistentCanvasSettings(storageKey: string, initialWidth: string = '100%', initialScale: number = 1) {
+    const [settings, setSettings] = useState(() => {
+        try {
+            const saved = localStorage.getItem(storageKey);
+            return saved ? JSON.parse(saved) : { width: initialWidth, height: 'auto', scale: initialScale };
+        } catch {
+            return { width: initialWidth, height: 'auto', scale: initialScale };
+        }
+    });
+
+    useEffect(() => {
+        localStorage.setItem(storageKey, JSON.stringify(settings));
+    }, [settings, storageKey]);
+
+    const updateWidth = useCallback((w: string) => setSettings((s: any) => ({ ...s, width: w })), []);
+    const updateHeight = useCallback((h: string) => setSettings((s: any) => ({ ...s, height: h })), []);
+    const updateScale = useCallback((sc: number) => setSettings((s: any) => ({ ...s, scale: sc })), []);
+    const reset = useCallback(() => setSettings({ width: initialWidth, height: 'auto', scale: initialScale }), [initialWidth, initialScale]);
+
+    return { ...settings, updateWidth, updateHeight, updateScale, reset };
+}
+
+// ─── 通用防抖 Hook：用於延遲重型渲染 ──────────────────────────────────────────────
+export function useDebounce<T>(value: T, delay: number): T {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedValue(value);
+        }, delay);
+        return () => clearTimeout(handler);
+    }, [value, delay]);
+
+    return debouncedValue;
+}
+
 // ─── 輔助組件：可調整寬度與高度的容器 ────────────────────────────────────────────────
-const ResizableWrapper: React.FC<{
+export const ResizableWrapper: React.FC<{
     children: React.ReactNode;
     width: string;
     height: string;
@@ -46,21 +85,20 @@ const ResizableWrapper: React.FC<{
     isDarkMode: boolean;
 }> = ({ children, width, height, scale, onWidthChange, onHeightChange, onScaleChange, onReset, isDarkMode }) => {
     return (
-        <div className="relative group/resizable my-8 print:my-4 print:p-0 print:w-full">
+        <div className="relative group/resizable my-8 print:my-4 print:p-0">
             <div
-                className="mx-auto transition-all duration-300 ease-in-out relative flex justify-center print:!max-h-none print:!overflow-visible print:w-full"
+                className="mx-auto transition-all duration-300 ease-in-out relative flex justify-center"
                 style={{
                     width,
                     maxHeight: height === 'auto' ? 'none' : height,
-                    overflow: height === 'auto' ? 'visible' : 'auto'
+                    overflow: height === 'auto' ? 'visible' : 'hidden'
                 }}
             >
                 <div
-                    className="print:![transform:none] print:![zoom:var(--print-scale)] print:w-full"
+                    className="print:![transform:none] print:![zoom:var(--print-scale)] w-full"
                     style={{
                         transform: `scale(${scale})`,
                         transformOrigin: 'top center',
-                        width: '100%',
                         display: 'flex',
                         justifyContent: 'center',
                         '--print-scale': scale
@@ -133,7 +171,19 @@ mermaid.initialize({
     suppressError: true, // 關鍵：抑制預設錯誤提示
 });
 
-const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(({ code, isDarkMode }) => {
+/** 
+ * 淨化 Mermaid 生成的 SVG 字串
+ * 移除固定的 width 和 height 屬性，改由 CSS 控制，以實現自適應縮放
+ */
+const cleanMermaidSvg = (svgHtml: string) => {
+    return svgHtml
+        .replace(/width=".*?"/i, 'width="100%"')
+        .replace(/height=".*?"/i, 'height="auto"')
+        .replace(/style="max-width:.*?"/i, 'style="max-width: 100%"');
+};
+
+const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: boolean; showPrintPreview?: boolean }> = React.memo(({ code, isDarkMode, isPrinting, showPrintPreview }) => {
+    const isDark = isDarkMode && !isPrinting && !showPrintPreview;
     const [svg, setSvg] = useState('');
     const [isPending, setIsPending] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -150,48 +200,65 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo
         return scaleMatch ? parseFloat(scaleMatch[1]) : 1;
     }, [code]);
 
-    const [width, setWidth] = useState(initialWidth);
-    const [height, setHeight] = useState('auto');
-    const [scale, setScale] = useState(initialScale);
+    const storageKey = useMemo(() => `chart-size-mermaid:${hashString(code)}`, [code]);
+    const { width, height, scale, updateWidth, updateHeight, updateScale, reset } = usePersistentCanvasSettings(
+        storageKey, 
+        initialWidth, 
+        initialScale
+    );
+
+    // 套用通用的 Debounce (300ms)
+    const debouncedCode = useDebounce(code, 300);
 
     useEffect(() => {
+        if (!debouncedCode) {
+            setSvg('');
+            return;
+        }
+
         isMounted.current = true;
         setIsPending(true);
         const timer = setTimeout(async () => {
             try {
-                // 先進行語法檢查
-                await mermaid.parse(code);
+                // 恢復標準主題（避免 var() 語法錯誤），後續由 CSS 同步覆蓋
+                const isDark = isDarkMode && !isPrinting && !showPrintPreview;
+                mermaid.initialize({ 
+                    theme: isDark ? 'dark' : 'neutral',
+                    fontFamily: 'Inter, system-ui, sans-serif'
+                });
 
-                const id = `mermaid-${hashString(code)}`;
-                const { svg: renderedSvg } = await mermaid.render(id, code);
+                const id = `mermaid-${hashString(debouncedCode)}`;
+                const { svg: renderedSvg } = await mermaid.render(id, debouncedCode);
 
                 if (isMounted.current) {
-                    setSvg(renderedSvg);
+                    // 對 SVG 進行處理，確保其能自適應 ResizableWrapper 的寬度
+                    setSvg(cleanMermaidSvg(renderedSvg));
                     setError(null);
+                    // 通知佈局已就緒（用於列印同步）
+                    window.dispatchEvent(new CustomEvent('content-layout-ready'));
                 }
             } catch (err: any) {
                 console.error('Mermaid render error:', err);
                 if (isMounted.current) {
                     setError(err.message || 'Syntax Error');
-                    // 如果渲染失敗，不更新 svg，保留上一個版本（或保持空白）
+                    // 即使出錯也通知，避免列印瑣死
+                    window.dispatchEvent(new CustomEvent('content-layout-ready'));
                 }
             } finally {
                 if (isMounted.current) {
                     setIsPending(false);
                 }
             }
-        }, 200);
-
+        }, 50); // 內部的渲染延時縮短，主要由外部 useDebounce 控制
+    
         return () => {
             isMounted.current = false;
             clearTimeout(timer);
         };
-    }, [code, isDarkMode]);
+    }, [debouncedCode, isDark]);
 
     const handleReset = () => {
-        setWidth(initialWidth);
-        setHeight('auto');
-        setScale(initialScale);
+        reset();
     };
 
     if (!svg && error) {
@@ -208,15 +275,15 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo
             width={width}
             height={height}
             scale={scale}
-            onWidthChange={setWidth}
-            onHeightChange={setHeight}
-            onScaleChange={setScale}
+            onWidthChange={updateWidth}
+            onHeightChange={updateHeight}
+            onScaleChange={updateScale}
             onReset={handleReset}
             isDarkMode={isDarkMode}
         >
             <div
-                className={`flex justify-center bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200/50 dark:border-slate-700/50 overflow-auto transition-opacity duration-300 ${isPending ? 'opacity-50' : 'opacity-100'}`}
-                style={{ width: '100%', height: 'auto' }}
+                className={`diagram-block-container flex justify-center p-6 rounded-2xl shadow-sm border overflow-auto transition-opacity duration-300 ${isDark ? 'border-slate-700/50' : 'border-slate-200/50'} ${isPending ? 'opacity-50' : 'opacity-100'}`}
+                style={{ width: '100%', height: 'auto', backgroundColor: 'var(--code-bg)' }}
                 dangerouslySetInnerHTML={{ __html: svg }}
             />
             {isPending && !error && (
@@ -236,50 +303,49 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo
     );
 });
 
-const VegaBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(({ code, isDarkMode }) => {
+const VegaBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: boolean; showPrintPreview?: boolean }> = React.memo(({ code, isDarkMode, isPrinting, showPrintPreview }) => {
+    const isDark = isDarkMode && !isPrinting && !showPrintPreview;
     const ref = useRef<HTMLDivElement>(null);
     const [isPending, setIsPending] = useState(false);
-    const [width, setWidth] = useState('100%');
-    const [height, setHeight] = useState('auto');
-    const [scale, setScale] = useState(1);
+    const storageKey = useMemo(() => `chart-size-vega:${hashString(code)}`, [code]);
+    const { width, height, scale, updateWidth, updateHeight, updateScale, reset } = usePersistentCanvasSettings(storageKey);
+
+    const debouncedCode = useDebounce(code, 400);
 
     useEffect(() => {
+        if (!debouncedCode) return;
         setIsPending(true);
         const timer = setTimeout(async () => {
             if (!ref.current) return;
             try {
-                const spec = JSON.parse(code);
-                await embed(ref.current, spec, { actions: false, theme: isDarkMode ? 'dark' : 'vox' });
+                const spec = JSON.parse(debouncedCode);
+                await embed(ref.current, spec, { actions: false, theme: isDark ? 'dark' : 'vox' });
             } catch (err) {
                 console.error('Vega render error:', err);
             } finally {
                 setIsPending(false);
+                // 通知佈局已就緒
+                window.dispatchEvent(new CustomEvent('content-layout-ready'));
             }
-        }, 250);
+        }, 50);
         return () => clearTimeout(timer);
-    }, [code, isDarkMode]);
-
-    const handleReset = () => {
-        setWidth('100%');
-        setHeight('auto');
-        setScale(1);
-    };
+    }, [debouncedCode, isDark]);
 
     return (
         <ResizableWrapper
             width={width}
             height={height}
             scale={scale}
-            onWidthChange={setWidth}
-            onHeightChange={setHeight}
-            onScaleChange={setScale}
-            onReset={handleReset}
+            onWidthChange={updateWidth}
+            onHeightChange={updateHeight}
+            onScaleChange={updateScale}
+            onReset={reset}
             isDarkMode={isDarkMode}
         >
             <div
                 ref={ref}
-                className={`overflow-auto bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200/50 dark:border-slate-700/50 transition-opacity duration-300 ${isPending ? 'opacity-50' : 'opacity-100'}`}
-                style={{ width: '100%', height: 'auto' }}
+                className={`diagram-block-container overflow-auto p-6 rounded-2xl shadow-sm border transition-opacity duration-300 ${isDark ? 'border-slate-700/50' : 'border-slate-200/50'} ${isPending ? 'opacity-50' : 'opacity-100'}`}
+                style={{ width: '100%', height: 'auto', backgroundColor: 'var(--code-bg)' }}
             />
             {isPending && (
                 <div className="absolute top-2 right-2">
@@ -290,15 +356,18 @@ const VegaBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(({
     );
 });
 
-const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(({ code, isDarkMode }) => {
+const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: boolean; showPrintPreview?: boolean }> = React.memo(({ code, isDarkMode, isPrinting, showPrintPreview }) => {
+    const isDark = isDarkMode && !isPrinting && !showPrintPreview;
     const svgRef = useRef<HTMLDivElement>(null);
     const [error, setError] = useState<string | null>(null);
     const [isPending, setIsPending] = useState(false);
-    const [width, setWidth] = useState('100%');
-    const [height, setHeight] = useState('auto');
-    const [scale, setScale] = useState(1);
+    const storageKey = useMemo(() => `chart-size-smiles:${hashString(code)}`, [code]);
+    const { width, height, scale, updateWidth, updateHeight, updateScale, reset } = usePersistentCanvasSettings(storageKey);
+
+    const debouncedCode = useDebounce(code, 500);
 
     useEffect(() => {
+        if (!debouncedCode) return;
         setIsPending(true);
         setError(null);
         const timer = setTimeout(() => {
@@ -319,7 +388,7 @@ const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(
                 });
 
                 SmilesDrawer.parse(
-                    code.trim(),
+                    debouncedCode.trim(),
                     (tree: any) => {
                         if (!svgRef.current) return;
                         // 僅在準備好繪製時才清除舊內容，減少閃爍
@@ -330,7 +399,7 @@ const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(
                         svgEl.setAttribute('viewBox', '0 0 200 100');
                         svgEl.style.maxHeight = '100%';
                         svgRef.current.appendChild(svgEl);
-                        drawer.draw(tree, svgEl, isDarkMode ? 'dark' : 'light');
+                        drawer.draw(tree, svgEl, isDark ? 'dark' : 'light');
                         setError(null);
                     },
                     (err: any) => {
@@ -343,16 +412,12 @@ const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(
                 setError(err?.message || '渲染失敗');
             } finally {
                 setIsPending(false);
+                // 通知佈局已就緒
+                window.dispatchEvent(new CustomEvent('content-layout-ready'));
             }
-        }, 600);
+        }, 50);
         return () => clearTimeout(timer);
-    }, [code, isDarkMode]);
-
-    const handleReset = () => {
-        setWidth('100%');
-        setHeight('auto');
-        setScale(1);
-    };
+    }, [debouncedCode, isDark]);
 
     if (error) {
         return (
@@ -368,16 +433,16 @@ const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(
             width={width}
             height={height}
             scale={scale}
-            onWidthChange={setWidth}
-            onHeightChange={setHeight}
-            onScaleChange={setScale}
-            onReset={handleReset}
+            onWidthChange={updateWidth}
+            onHeightChange={updateHeight}
+            onScaleChange={updateScale}
+            onReset={reset}
             isDarkMode={isDarkMode}
         >
             <div
                 ref={svgRef}
-                className={`flex justify-center items-center min-h-[200px] bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200/50 dark:border-slate-700/50 overflow-auto transition-opacity duration-300 ${isPending ? 'opacity-50' : 'opacity-100'}`}
-                style={{ width: '100%', height: 'auto' }}
+                className={`diagram-block-container flex justify-center items-center min-h-[200px] p-4 rounded-2xl shadow-sm border overflow-auto transition-opacity duration-300 ${isDark ? 'border-slate-700/50' : 'border-slate-200/50'} ${isPending ? 'opacity-50' : 'opacity-100'}`}
+                style={{ width: '100%', height: 'auto', backgroundColor: 'var(--code-bg)' }}
             />
             <div className="absolute bottom-2 right-3 text-[10px] text-slate-400 dark:text-slate-600 font-mono select-none">
                 SMILES
@@ -391,6 +456,8 @@ const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean }> = React.memo(
     );
 });
 
+const AbcBlock = React.lazy(() => import('./AbcBlock'));
+
 // ─── 本地圖片元件：非同步從 IndexedDB 讀取 Data URL 並顯示 (按需載入) ──────────────────────
 interface LocalImageProps {
     id: string;
@@ -398,33 +465,50 @@ interface LocalImageProps {
     className?: string;
 }
 
+// 建立一個輕量的記憶體快取，避免每次 markdown re-render 時都產生非同步讀取的落差(bounce)
+const memoryImageCache = new Map<string, string>();
+
 const LocalImage: React.FC<LocalImageProps & { getImage: (id: string) => Promise<string | null> }> = React.memo(({ id, alt, className, getImage }) => {
-    const [src, setSrc] = useState<string | null>(null);
-    const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
+    const cached = memoryImageCache.get(id);
+    const [src, setSrc] = useState<string | null>(cached || null);
+    const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>(cached ? 'loaded' : 'loading');
 
     useEffect(() => {
+        if (cached) {
+            window.dispatchEvent(new CustomEvent('content-layout-ready'));
+            return;
+        }
+
         let cancelled = false;
         setStatus('loading');
         getImage(id).then(dataUrl => {
             if (cancelled) return;
             if (dataUrl) {
+                memoryImageCache.set(id, dataUrl);
                 setSrc(dataUrl);
                 setStatus('loaded');
             } else {
                 setStatus('error');
             }
+            // 通知佈局已就緒
+            window.dispatchEvent(new CustomEvent('content-layout-ready'));
         }).catch(() => {
-            if (!cancelled) setStatus('error');
+            if (!cancelled) {
+                setStatus('error');
+                window.dispatchEvent(new CustomEvent('content-layout-ready'));
+            }
         });
         return () => { cancelled = true; };
     }, [id, getImage]);
 
     if (status === 'loading') {
         return (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 text-xs animate-pulse">
-                <span className="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-600 animate-pulse inline-block" />
-                載入圖片中…
-            </span>
+            <div className={`flex flex-col items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800/50 animate-pulse w-full min-h-[150px] ${className || ''}`}>
+                <span className="flex items-center gap-2 text-slate-400 dark:text-slate-500 text-xs">
+                    <span className="w-3 h-3 rounded-full border-2 border-slate-400 border-t-transparent animate-spin inline-block" />
+                    載入圖片中…
+                </span>
+            </div>
         );
     }
 
@@ -450,48 +534,21 @@ interface ResizableImageProps {
 
 const ResizableImage: React.FC<ResizableImageProps> = ({ src, alt, getImage, isDarkMode }) => {
     // ─── 狀態持久化：從 LocalStorage 讀取初始設定 ───────────────────────────────────────
-    const storageKey = useMemo(() => `mlp-img-size:${src}`, [src]);
-    const [initialSettings] = useState(() => {
-        try {
-            const saved = localStorage.getItem(storageKey);
-            return saved ? JSON.parse(saved) : null;
-        } catch (err) {
-            console.warn('[ResizableImage] 無法從 LocalStorage 讀取設定:', err);
-            return null;
-        }
-    });
-
-    const [width, setWidth] = useState(initialSettings?.width ?? '100%');
-    const [height, setHeight] = useState(initialSettings?.height ?? 'auto');
-    const [scale, setScale] = useState(initialSettings?.scale ?? 1);
-
-    // 當設定變動時，同步回 LocalStorage
-    useEffect(() => {
-        try {
-            localStorage.setItem(storageKey, JSON.stringify({ width, height, scale }));
-        } catch (err) {
-            console.warn('[ResizableImage] 無法寫入 LocalStorage:', err);
-        }
-    }, [width, height, scale, storageKey]);
+    const storageKey = useMemo(() => `chart-size-img:${src}`, [src]);
+    const { width, height, scale, updateWidth, updateHeight, updateScale, reset } = usePersistentCanvasSettings(storageKey);
 
     const isLocal = src?.startsWith('img-local://');
     const imgId = isLocal ? src.replace('img-local://', '') : '';
-
-    const handleReset = () => {
-        setWidth('100%');
-        setHeight('auto');
-        setScale(1);
-    };
 
     return (
         <ResizableWrapper
             width={width}
             height={height}
             scale={scale}
-            onWidthChange={setWidth}
-            onHeightChange={setHeight}
-            onScaleChange={setScale}
-            onReset={handleReset}
+            onWidthChange={updateWidth}
+            onHeightChange={updateHeight}
+            onScaleChange={updateScale}
+            onReset={reset}
             isDarkMode={isDarkMode}
         >
             {isLocal ? (
@@ -558,19 +615,35 @@ interface MemoizedMathJaxProps {
 }
 
 const MemoizedMathJax: React.FC<MemoizedMathJaxProps> = React.memo(({ content, inline, isDarkMode }) => {
+    // 為數學公式加入內部 Debounce，避免公式隨著打字不斷抖動
+    const debouncedContent = useDebounce(content, 300);
+    const [isPending, setIsPending] = useState(false);
+
+    useEffect(() => {
+        if (content !== debouncedContent) {
+            setIsPending(true);
+        } else {
+            setIsPending(false);
+        }
+    }, [content, debouncedContent]);
+
     return (
-        <MathJax
-            renderMode="pre"
-            inline={inline}
-            dynamic={true}
-            text={content}
-            typesettingOptions={{ fn: 'tex2chtml' }}
-        />
+        <div className={`transition-opacity duration-300 ${isPending ? 'opacity-40' : 'opacity-100'}`}>
+            <MathJax
+                renderMode="pre"
+                inline={inline}
+                dynamic={true}
+                text={debouncedContent}
+                typesettingOptions={{ fn: 'tex2chtml' }}
+            />
+        </div>
     );
 });
 
-const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDarkMode, documents = [], onSelectDocument, onCreateMissing, currentDocId }) => {
-    const isDark = isDarkMode;
+const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDarkMode, documents = [], onSelectDocument, onCreateMissing, currentDocId, isPrinting, showPrintPreview }) => {
+    // 關鍵修正：判斷當前是否處於「需要白色底」的狀態
+    const isActuallyPrinting = isPrinting || !!document.querySelector('.show-print-preview');
+    const shouldShowDark = isDarkMode && !isActuallyPrinting;
     const [debouncedContent, setDebouncedContent] = useState(content);
     // 在 MarkdownPreview 頂層呼叫一次，避免每個 LocalImage 獨立開啟 DB 連線
     const { getImage } = useImageStorage();
@@ -579,7 +652,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
         const timer = setTimeout(() => {
             const processed = content.replace(/\[\[(.*?)\]\]/g, '[$1](#wikilink-$1)');
             setDebouncedContent(processed);
-        }, 600);
+        }, 200); // 縮短頂層延時至 200ms 以提供即時反饋
         return () => clearTimeout(timer);
     }, [content]);
 
@@ -619,6 +692,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
     }), []);
 
     const components = useMemo(() => ({
+        pre: ({ children }: any) => <>{children}</>, // 移除外層 pre，消除雙層容器基礎
         code({ node, inline, className, children, ...props }: any) {
             const match = /language-(\w+)/.exec(className || '');
             const language = match ? match[1] : '';
@@ -626,18 +700,32 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
             const stableKey = hashString(codeString);
             const line = node?.position?.start?.line;
 
+            // 核心修正：明確定義列印時要使用的樣式物件
+            // 只要正在列印或開啟列印預覽，無視深色模式，強制使用淺色主題 (vs)
+            const syntaxStyle = isActuallyPrinting ? vs : (shouldShowDark ? vscDarkPlus : vs);
+
             if (!inline) {
-                if (language === 'mermaid') return <div data-line={line}><MermaidBlock key={stableKey} code={codeString} isDarkMode={isDark} /></div>;
-                if (language === 'vega' || language === 'vega-lite') return <div data-line={line}><VegaBlock key={stableKey} code={codeString} isDarkMode={isDark} /></div>;
-                if (language === 'smiles') return <div data-line={line}><SmilesBlock key={stableKey} code={codeString} isDarkMode={isDark} /></div>;
+                if (language === 'mermaid') return <div data-line={line}><MermaidBlock key={stableKey} code={codeString} isDarkMode={isDarkMode} isPrinting={isPrinting} showPrintPreview={showPrintPreview} /></div>;
+                if (language === 'vega' || language === 'vega-lite') return <div data-line={line}><VegaBlock key={stableKey} code={codeString} isDarkMode={isDarkMode} isPrinting={isPrinting} showPrintPreview={showPrintPreview} /></div>;
+                if (language === 'smiles') return <div data-line={line}><SmilesBlock key={stableKey} code={codeString} isDarkMode={isDarkMode} isPrinting={isPrinting} showPrintPreview={showPrintPreview} /></div>;
+                if (language === 'abc') return <React.Suspense fallback={<div className="p-4 flex justify-center items-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs">樂譜加載中...</div>}><div data-line={line}><AbcBlock key={stableKey} code={codeString} isDarkMode={isDarkMode} isPrinting={isPrinting} showPrintPreview={showPrintPreview} /></div></React.Suspense>;
 
                 return (
-                    <div data-line={line}>
+                    <div data-line={line} className="code-block-wrapper">
                         <SyntaxHighlighter
                             key={stableKey}
                             language={language || 'text'}
-                            style={isDark ? vscDarkPlus : vs}
-                            customStyle={{ borderRadius: '0.75rem', padding: '1rem', marginTop: '1.5rem', marginBottom: '1.5rem', fontSize: '0.875rem', lineHeight: '1.5' }}
+                            style={syntaxStyle}
+                            customStyle={{ 
+                                margin: '1.5rem 0',   // 在內層補償外層 pre 消失後的間距
+                                padding: '1rem',      // 統一由這裡控制內邊距
+                                fontSize: '0.875rem', 
+                                lineHeight: '1.5',
+                                backgroundColor: 'var(--code-bg)',
+                                borderRadius: '0.5rem',
+                                border: '1px solid var(--code-border)',
+                                filter: 'invert(0)', // 強制不反轉
+                            }}
                             showLineNumbers={true}
                             wrapLines={true}
                         >
@@ -668,7 +756,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
                 const stableKey = hashString(mathContent);
                 return (
                     <div key={stableKey} className="my-4 overflow-x-auto" style={{ whiteSpace: 'nowrap' }} data-line={node?.position?.start?.line}>
-                        <MemoizedMathJax content={mathContent} isDarkMode={isDark} />
+                        <MemoizedMathJax content={mathContent} isDarkMode={shouldShowDark} />
                     </div>
                 );
             }
@@ -680,7 +768,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
                 const stableKey = hashString(mathContent);
                 return (
                     <span key={stableKey} className="math-inline" style={{ whiteSpace: 'nowrap' }} data-line={node?.position?.start?.line}>
-                        <MemoizedMathJax content={mathContent} inline isDarkMode={isDark} />
+                        <MemoizedMathJax content={mathContent} inline isDarkMode={shouldShowDark} />
                     </span>
                 );
             }
@@ -712,11 +800,11 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
                     src={src}
                     alt={alt}
                     getImage={getImage}
-                    isDarkMode={isDark}
+                    isDarkMode={shouldShowDark}
                 />
             );
         },
-    }), [isDark, documents, onSelectDocument, onCreateMissing, currentDocId, getImage]);
+    }), [shouldShowDark, isActuallyPrinting, documents, onSelectDocument, onCreateMissing, currentDocId, getImage]);
 
     // 監聽圖片載入完成，若有必要可觸發同步刷新
     useEffect(() => {
@@ -734,7 +822,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
     }, [debouncedContent]);
 
     return (
-        <div className={`prose max-w-none p-8 select-text ${isDark ? 'prose-invert' : 'prose-slate'} prose-headings:font-bold prose-a:text-brand-primary prose-img:rounded-xl prose-table:border-collapse prose-th:border prose-th:border-slate-300 dark:prose-th:border-slate-700 prose-th:p-2 prose-td:border prose-td:border-slate-300 dark:prose-td:border-slate-700 prose-td:p-2 print:p-0 print:max-w-none`}>
+        <div className={`prose max-w-none p-8 select-text ${shouldShowDark ? 'prose-invert' : 'prose-slate'} prose-headings:font-bold prose-a:text-brand-primary prose-img:rounded-xl prose-table:border-collapse prose-th:border prose-th:border-slate-300 dark:prose-th:border-slate-700 prose-th:p-2 prose-td:border prose-td:border-slate-300 dark:prose-td:border-slate-700 prose-td:p-2 print:p-0 print:max-w-none print:bg-white`}>
             <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkMath]}
                 rehypePlugins={[rehypeRaw]}

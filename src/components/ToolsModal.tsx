@@ -38,7 +38,7 @@ function renderToolPanel(
         case 'pdf-merge': return <PdfMergeTool />;
         case 'table-gen': return <TableGeneratorTool currentDocMode={currentDocMode} onInsertIntoDoc={onInsertIntoDoc} />;
         case 'word-count': return <WordCountTool currentDocContent={currentDocContent} />;
-        case 'image-upload': return <ImageUploaderTool onInsertIntoDoc={onInsertIntoDoc} />;
+        case 'image-upload': return <ImageUploaderTool currentDocContent={currentDocContent} onInsertIntoDoc={onInsertIntoDoc} />;
         default: return null;
     }
 }

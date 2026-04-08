@@ -11,7 +11,7 @@ import { ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import CreateDocModal from './src/components/CreateDocModal';
 import SettingsModal from './src/components/SettingsModal';
 import SEOContent from './src/components/SEOContent';
-import Footer from './src/components/Footer';
+
 import { usePanZoom } from './src/hooks/usePanZoom';
 import { useDocumentStorage } from './src/hooks/useDocumentStorage';
 import { useAppSettings } from './src/hooks/useAppSettings';
@@ -767,7 +767,7 @@ const App: React.FC = () => {
     style.textContent = `
       @media print {
         @page { size: ${paperSize} ${orientation}; margin: ${marginMap[margin] ?? '1.5cm'}; }
-        header, footer, aside, .tab-bar, section:not(.preview-panel), .status-bar, .floating-controls { display: none !important; }
+        header,  aside, .tab-bar, section:not(.preview-panel), .status-bar, .floating-controls { display: none !important; }
         .preview-panel { 
           overflow: visible !important; 
           width: 100% !important; 
@@ -1256,9 +1256,6 @@ const App: React.FC = () => {
             />
           </div>
         </main>
-
-        {/* 可見的頁腳 - 增加 AdSense 文字密度與連結 */}
-        <Footer />
 
         {/* SEO Content - Hidden from visual display but visible to search engines */}
         <SEOContent />

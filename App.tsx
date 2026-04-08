@@ -54,7 +54,7 @@ const App: React.FC = () => {
           { id: 'math', path: 'defaults/markdown-math.md' },
           { id: 'charts', path: 'defaults/markdown-charts.md' },
           { id: 'mermaid', path: 'defaults/markdown-mermaid.md' },
-          { id: 'abc', path: 'defaults/markdown-abc.md' },
+          { id: 'markdown-abc', path: 'defaults/markdown-abc.md' },
         ];
 
         const mermaidTemplates = [

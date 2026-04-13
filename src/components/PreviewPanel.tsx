@@ -1,5 +1,5 @@
 import React, { forwardRef, useState, useEffect, useRef, useMemo } from 'react';
-import { AlertCircle, Trash2, RefreshCw, Sparkles, ZoomIn, ZoomOut, Maximize, Hand } from 'lucide-react';
+import { AlertCircle, Trash2, RefreshCw, Sparkles, ZoomIn, ZoomOut, Maximize, Hand, ChevronLeft, ChevronRight, Activity } from 'lucide-react';
 import MarkdownPreview from './MarkdownPreview';
 
 /** ── PageBreaksOverlay ──────────────────────────────────────────────────
@@ -374,6 +374,27 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
     printSettings,
     isPrinting,
 }, ref) => {
+    const [isHUDExpanded, setIsHUDExpanded] = useState(false);
+    const hudRef = useRef<HTMLDivElement>(null);
+
+    // 處理點擊外部收合
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (hudRef.current && !hudRef.current.contains(event.target as Node)) {
+                setIsHUDExpanded(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // 語法錯誤時自動展開 (如果尚未展開)
+    useEffect(() => {
+        if (error && !isHUDExpanded && mode === 'mermaid') {
+            setIsHUDExpanded(true);
+        }
+    }, [error, mode]);
+
 
     // DIFFERENT LAYOUT STRATEGY BASED ON MODE
     if (mode === 'markdown') {
@@ -405,7 +426,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
 
     return (
         <section
-            className="flex-1 flex flex-col bg-slate-100 dark:bg-slate-950 relative overflow-hidden group/preview transition-colors duration-200 preview-panel"
+            className={`flex-1 flex flex-col ${isDarkMode ? 'bg-black' : 'bg-white'} relative overflow-hidden group/preview transition-colors duration-500 preview-panel`}
             onWheel={onWheel}
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
@@ -427,18 +448,90 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
                 </div>
             )}
 
-            {/* Floating Controls */}
-            <div className="absolute bottom-16 right-8 z-30 flex flex-col gap-3 opacity-0 group-hover/preview:opacity-100 transition-all duration-500 translate-y-4 group-hover/preview:translate-y-0">
-                <button onClick={() => onZoom(25)}
-                    aria-label="放大預覽"
-                    className="p-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl text-slate-800 dark:text-slate-50 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-brand-accent transition-all active:scale-90 ring-1 ring-black/5" title="放大"><ZoomIn size={22} /></button>
-                <button onClick={() => onZoom(-25)}
-                    aria-label="縮小預覽"
-                    className="p-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl text-slate-800 dark:text-slate-50 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-brand-accent transition-all active:scale-90 ring-1 ring-black/5" title="缩小"><ZoomOut size={22} /></button>
-                <button onClick={onResetNav}
-                    aria-label="重置預覽位置與縮放"
-                    className="p-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl text-slate-800 dark:text-slate-50 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-brand-primary transition-all active:scale-90 ring-1 ring-black/5" title="居中"><Maximize size={22} /></button>
+            {/* Smart HUD Control Hub (精緻優化版 - 固定高度與品牌化深色模式) */}
+            <div
+                ref={hudRef}
+                className={`
+                    absolute bottom-10 right-8 z-50 flex items-center h-12 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]
+                    ${isHUDExpanded
+                        ? 'bg-white/95 dark:bg-slate-900/95 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.7),0_0_30px_rgba(14,165,233,0.1)] px-3 rounded-full border border-slate-300 dark:border-white/20'
+                        : 'bg-white/60 dark:bg-slate-950/40 shadow-xl p-1.5 rounded-full border border-white/30 dark:border-white/10'
+                    }
+                    backdrop-blur-3xl group/hud-container
+                `}
+            >
+                {/* 1. 呼吸燈 (觸發源) */}
+                <button
+                    onClick={() => setIsHUDExpanded(!isHUDExpanded)}
+                    className={`
+                        relative flex items-center justify-center w-9 h-9 rounded-full transition-all duration-300
+                        ${isHUDExpanded ? 'bg-slate-100/80 dark:bg-slate-800/80' : 'hover:bg-white/80 dark:hover:bg-slate-700/50'}
+                    `}
+                    title={isHUDExpanded ? "收合資訊" : "顯示詳情"}
+                >
+                    <div className={`
+                        w-2.5 h-2.5 rounded-full transition-all duration-500
+                        ${error
+                            ? 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.7)] animate-pulse'
+                            : 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.7)] animate-pulse'
+                        }
+                    `} />
+                    {!isHUDExpanded && error && (
+                        <span className="absolute -top-1.5 -right-1.5 flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                        </span>
+                    )}
+                </button>
+
+                {/* 按鈕組 (放大/縮小/重置) - 始終顯示，排列穩定 */}
+                <div className={`flex items-center gap-0.5 ${isHUDExpanded ? 'ml-1 pr-3 border-r border-slate-200 dark:border-white/10' : 'ml-0.5'}`}>
+                    <button onClick={() => onZoom(25)}
+                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full text-slate-700 dark:text-slate-100 hover:text-brand-primary dark:hover:text-brand-primary transition-all active:scale-90"
+                        title="放大"><ZoomIn size={18} /></button>
+                    <button onClick={() => onZoom(-25)}
+                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full text-slate-700 dark:text-slate-100 hover:text-brand-primary dark:hover:text-brand-primary transition-all active:scale-90"
+                        title="縮小"><ZoomOut size={18} /></button>
+                    <button onClick={onResetNav}
+                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full text-slate-700 dark:text-slate-100 hover:text-brand-primary dark:hover:text-brand-primary transition-all active:scale-90"
+                        title="跳轉至中心"><Maximize size={18} /></button>
+                </div>
+
+                {/* 2. 展開區域 (純水平展開，維持高度穩定) */}
+                <div className={`
+                    flex items-center gap-5 overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]
+                    ${isHUDExpanded ? 'max-w-md opacity-100 ml-4 mr-2' : 'max-w-0 opacity-0'}
+                `}>
+                    {/* Zoom Input */}
+                    <div className="flex items-center gap-3">
+                        <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest whitespace-nowrap">Zoom</span>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                value={`${Math.round(zoom)}%`}
+                                onChange={(e) => {
+                                    const val = e.target.value.replace(/[^0-9]/g, '');
+                                    if (val) onSetZoom(Math.min(Math.max(parseInt(val), 5), 1000));
+                                }}
+                                className="w-16 bg-slate-100 dark:bg-white/10 text-brand-primary font-bold text-[11px] px-2 py-1.5 rounded-lg border-none focus:ring-1 focus:ring-brand-primary/30 text-center transition-all tabular-nums placeholder:opacity-30"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Position Display */}
+                    <div className="flex items-center gap-3">
+                        <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest whitespace-nowrap">Cursor</span>
+                        <div className="flex items-center gap-2 font-mono text-[11px] text-slate-700 dark:text-slate-50 tabular-nums bg-slate-100 dark:bg-white/10 px-2.5 py-1.5 rounded-lg">
+                            <span className="opacity-30">X</span>
+                            <span className="min-w-[2.2rem] text-right font-bold">{Math.round(position.x)}</span>
+                            <span className="w-px h-2 bg-slate-400 dark:bg-white/20 mx-1"></span>
+                            <span className="opacity-30">Y</span>
+                            <span className="min-w-[2.2rem] text-right font-bold">{Math.round(position.y)}</span>
+                        </div>
+                    </div>
+                </div>
             </div>
+
 
             {/* Main Viewport */}
             <div
@@ -448,7 +541,11 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
                 onMouseUp={onMouseUp}
                 onMouseLeave={onMouseUp}
                 style={{
-                    backgroundImage: isDarkMode ? 'radial-gradient(circle, #475569 1.5px, transparent 1.5px)' : 'radial-gradient(circle, #cbd5e1 1.5px, transparent 1.5px)',
+                    backgroundImage: isDarkMode
+                        ? `linear-gradient(rgba(56, 189, 248, 0.15) 1px, transparent 1px), 
+                           linear-gradient(90deg, rgba(56, 189, 248, 0.15) 1px, transparent 1px)`
+                        : `linear-gradient(rgba(0, 0, 0, 0.07) 1px, transparent 1px), 
+                           linear-gradient(90deg, rgba(0, 0, 0, 0.07) 1px, transparent 1px)`,
                     backgroundSize: '32px 32px'
                 }}
             >
@@ -463,7 +560,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
                     {/* Mermaid Preview */}
                     {svgContent ? (
                         <div
-                            className="bg-white dark:bg-slate-800 p-16 rounded-[2.5rem] shadow-2xl border border-slate-200/50 dark:border-slate-700/50 transition-all duration-300 ease-out pointer-events-auto"
+                            className="bg-white dark:bg-slate-900/95 p-16 rounded-[2.5rem] shadow-2xl dark:shadow-[0_0_100px_rgba(56, 189, 248, 0.15),0_0_1px_rgba(56, 189, 248, 0.2)] border border-slate-200/50 dark:border-white/5 transition-all duration-300 ease-out pointer-events-auto"
                             style={{ transform: `scale(${zoom / 100})` }}
                             dangerouslySetInnerHTML={{ __html: svgContent }}
                         />
@@ -487,41 +584,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
                 </div>
             </div>
 
-            {/* Status Bar */}
-            <div className="h-10 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between px-6 text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-[0.2em] shrink-0 z-30 transition-colors duration-200">
-                <div className="flex items-center gap-3">
-                    <div className={`
-                        w-2 h-2 rounded-full transition-all
-                        ${error
-                            ? 'bg-red-600 ring-2 ring-red-200 dark:ring-red-900/50'
-                            : 'bg-emerald-500 ring-2 ring-emerald-200 dark:ring-emerald-900/50 animate-pulse'
-                        }
-                    `} />
-                    <span className={error ? 'text-red-700 dark:text-red-400' : 'text-slate-800 dark:text-slate-200'}>{error ? '批判的語法' : '引擎準備'}</span>
-                </div>
-                <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2">
-                        <label htmlFor="preview-zoom-input" className="text-[10px] text-slate-500 dark:text-slate-400 cursor-pointer">縮放</label>
-                        <div className="relative group/zoom">
-                            <input
-                                id="preview-zoom-input"
-                                type="text"
-                                value={`${Math.round(zoom)}%`}
-                                onChange={(e) => {
-                                    const val = e.target.value.replace(/[^0-9]/g, '');
-                                    if (val) onSetZoom(Math.min(Math.max(parseInt(val), 5), 1000));
-                                }}
-                                className="w-14 text-brand-primary bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md tabular-nums border-none outline-none focus:ring-1 focus:ring-brand-primary/30 text-center transition-all"
-                            />
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400">位置</span>
-                        <span className="text-slate-900 dark:text-slate-50 tabular-nums">{Math.round(position.x)}, {Math.round(position.y)}</span>
-                    </div>
 
-                </div>
-            </div>
         </section>
     );
 });

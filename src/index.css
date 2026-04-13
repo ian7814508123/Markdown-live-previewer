@@ -569,7 +569,7 @@ pre[style] {
 /* 4. 確保邊界調整出的空間也是白色的 */
 body,
 .app-container,
-.preview-panel {
+.show-print-preview.preview-panel {
     background-color: white !important;
 }
 
@@ -768,4 +768,4 @@ body,
     fill: #000 !important;
     stroke: #000 !important;
   }
-}
+}

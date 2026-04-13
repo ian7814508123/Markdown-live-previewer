@@ -388,14 +388,6 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // 語法錯誤時自動展開 (如果尚未展開)
-    useEffect(() => {
-        if (error && !isHUDExpanded && mode === 'mermaid') {
-            setIsHUDExpanded(true);
-        }
-    }, [error, mode]);
-
-
     // DIFFERENT LAYOUT STRATEGY BASED ON MODE
     if (mode === 'markdown') {
         const markdownDocIds = (openDocIds ?? [currentDocId].filter(Boolean) as string[])
@@ -476,12 +468,6 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
                             : 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.7)] animate-pulse'
                         }
                     `} />
-                    {!isHUDExpanded && error && (
-                        <span className="absolute -top-1.5 -right-1.5 flex h-3 w-3">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                        </span>
-                    )}
                 </button>
 
                 {/* 按鈕組 (放大/縮小/重置) - 始終顯示，排列穩定 */}
@@ -541,6 +527,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
                 onMouseUp={onMouseUp}
                 onMouseLeave={onMouseUp}
                 style={{
+                    backgroundColor: isDarkMode ? 'var(--brand-surface)' : '#ffffff',
                     backgroundImage: isDarkMode
                         ? `linear-gradient(rgba(56, 189, 248, 0.15) 1px, transparent 1px), 
                            linear-gradient(90deg, rgba(56, 189, 248, 0.15) 1px, transparent 1px)`

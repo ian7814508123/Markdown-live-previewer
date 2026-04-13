@@ -26,4 +26,4 @@ User-agent: MJ12bot
 Crawl-delay: 5
 
 # Sitemap locations
-Sitemap: https://markdown-live-previewer.onrender.com/sitemap.xml
+Sitemap: https://markdown-live-previewer-a6dx.onrender.com/sitemap.xml

@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import abcjs from 'abcjs';
-import { usePersistentCanvasSettings, ResizableWrapper, hashString, useDebounce } from './MarkdownPreview';
+import { usePersistentCanvasSettings } from '../hooks/usePersistentCanvasSettings';
+import { ResizableWrapper } from './MarkdownPreview';
+import { useDebounce } from '../hooks/useDebounce';
+import { hashString } from '../utils';
 
 interface AbcBlockProps {
     code: string;
@@ -12,7 +15,7 @@ interface AbcBlockProps {
 const AbcBlock: React.FC<AbcBlockProps> = React.memo(({ code, isDarkMode, isPrinting, showPrintPreview }) => {
     // 判斷是否為「實際深色模式」(若在列印或列印預覽狀態，則視為淺色)
     const isDark = isDarkMode && !isPrinting && !showPrintPreview;
-    
+
     const paperRef = useRef<HTMLDivElement>(null);
     const [isPending, setIsPending] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -56,7 +59,7 @@ const AbcBlock: React.FC<AbcBlockProps> = React.memo(({ code, isDarkMode, isPrin
                 window.dispatchEvent(new CustomEvent('content-layout-ready'));
             }
         }, 50); // 縮短內部延時
-        
+
         return () => clearTimeout(timer);
     }, [debouncedCode, isDark]);
 

@@ -627,16 +627,14 @@ const MemoizedMathJax: React.FC<MemoizedMathJaxProps> = React.memo(({ content, i
         }
     }, [content, debouncedContent]);
 
+    const Wrapper = inline ? 'span' : 'div';
+
     return (
-        <div className={`transition-opacity duration-300 ${isPending ? 'opacity-40' : 'opacity-100'}`}>
-            <MathJax
-                renderMode="pre"
-                inline={inline}
-                dynamic={true}
-                text={debouncedContent}
-                typesettingOptions={{ fn: 'tex2chtml' }}
-            />
-        </div>
+        <Wrapper className={`transition-opacity duration-300 ${isPending ? 'opacity-40' : 'opacity-100'}`}>
+            <MathJax inline={inline} dynamic hideUntilTypeset="every">
+                {inline ? `\\(${debouncedContent}\\)` : `\\[${debouncedContent}\\]`}
+            </MathJax>
+        </Wrapper>
     );
 });
 
@@ -644,17 +642,38 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
     // 關鍵修正：判斷當前是否處於「需要白色底」的狀態
     const isActuallyPrinting = isPrinting || !!document.querySelector('.show-print-preview');
     const shouldShowDark = isDarkMode && !isActuallyPrinting;
-    const [debouncedContent, setDebouncedContent] = useState(content);
+    const processedContent = useMemo(() => content.replace(/\[\[(.*?)\]\]/g, '[$1](#wikilink-$1)'), [content]);
+    const debouncedContent = useDebounce(processedContent, 200);
     // 在 MarkdownPreview 頂層呼叫一次，避免每個 LocalImage 獨立開啟 DB 連線
     const { getImage } = useImageStorage();
 
+    const renderContextRef = useRef({
+        documents,
+        currentDocId,
+        onSelectDocument,
+        onCreateMissing,
+        shouldShowDark,
+        isActuallyPrinting,
+        isDarkMode,
+        isPrinting,
+        showPrintPreview,
+        getImage
+    });
+
     useEffect(() => {
-        const timer = setTimeout(() => {
-            const processed = content.replace(/\[\[(.*?)\]\]/g, '[$1](#wikilink-$1)');
-            setDebouncedContent(processed);
-        }, 200); // 縮短頂層延時至 200ms 以提供即時反饋
-        return () => clearTimeout(timer);
-    }, [content]);
+        renderContextRef.current = {
+            documents,
+            currentDocId,
+            onSelectDocument,
+            onCreateMissing,
+            shouldShowDark,
+            isActuallyPrinting,
+            isDarkMode,
+            isPrinting,
+            showPrintPreview,
+            getImage
+        };
+    }, [documents, currentDocId, onSelectDocument, onCreateMissing, shouldShowDark, isActuallyPrinting, isDarkMode, isPrinting, showPrintPreview, getImage]);
 
     // ─── URI 轉換：允許自定義協定通過 react-markdown 的過濾 ───────────────────────────
     const urlTransform = useCallback((uri: string) => {
@@ -694,6 +713,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
     const components = useMemo(() => ({
         pre: ({ children }: any) => <>{children}</>, // 移除外層 pre，消除雙層容器基礎
         code({ node, inline, className, children, ...props }: any) {
+            const ctx = renderContextRef.current;
             const match = /language-(\w+)/.exec(className || '');
             const language = match ? match[1] : '';
             const codeString = String(children).replace(/\n$/, '');
@@ -702,13 +722,13 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
 
             // 核心修正：明確定義列印時要使用的樣式物件
             // 只要正在列印或開啟列印預覽，無視深色模式，強制使用淺色主題 (vs)
-            const syntaxStyle = isActuallyPrinting ? vs : (shouldShowDark ? vscDarkPlus : vs);
+            const syntaxStyle = ctx.isActuallyPrinting ? vs : (ctx.shouldShowDark ? vscDarkPlus : vs);
 
             if (!inline) {
-                if (language === 'mermaid') return <div data-line={line}><MermaidBlock key={stableKey} code={codeString} isDarkMode={isDarkMode} isPrinting={isPrinting} showPrintPreview={showPrintPreview} /></div>;
-                if (language === 'vega' || language === 'vega-lite') return <div data-line={line}><VegaBlock key={stableKey} code={codeString} isDarkMode={isDarkMode} isPrinting={isPrinting} showPrintPreview={showPrintPreview} /></div>;
-                if (language === 'smiles') return <div data-line={line}><SmilesBlock key={stableKey} code={codeString} isDarkMode={isDarkMode} isPrinting={isPrinting} showPrintPreview={showPrintPreview} /></div>;
-                if (language === 'abc') return <React.Suspense fallback={<div className="p-4 flex justify-center items-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs">樂譜加載中...</div>}><div data-line={line}><AbcBlock key={stableKey} code={codeString} isDarkMode={isDarkMode} isPrinting={isPrinting} showPrintPreview={showPrintPreview} /></div></React.Suspense>;
+                if (language === 'mermaid') return <div data-line={line}><MermaidBlock key={stableKey} code={codeString} isDarkMode={ctx.isDarkMode} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} /></div>;
+                if (language === 'vega' || language === 'vega-lite') return <div data-line={line}><VegaBlock key={stableKey} code={codeString} isDarkMode={ctx.isDarkMode} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} /></div>;
+                if (language === 'smiles') return <div data-line={line}><SmilesBlock key={stableKey} code={codeString} isDarkMode={ctx.isDarkMode} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} /></div>;
+                if (language === 'abc') return <React.Suspense fallback={<div className="p-4 flex justify-center items-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs">樂譜加載中...</div>}><div data-line={line}><AbcBlock key={stableKey} code={codeString} isDarkMode={ctx.isDarkMode} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} /></div></React.Suspense>;
 
                 return (
                     <div data-line={line} className="code-block-wrapper">
@@ -752,11 +772,12 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
         // ─────────────────────────────────────────────────────────────────────────
         div: ({ node, className, children, ...props }: any) => {
             if (className?.includes('math-display')) {
+                const ctx = renderContextRef.current;
                 const mathContent = String(children);
                 const stableKey = hashString(mathContent);
                 return (
                     <div key={stableKey} className="my-4 overflow-x-auto" style={{ whiteSpace: 'nowrap' }} data-line={node?.position?.start?.line}>
-                        <MemoizedMathJax content={mathContent} isDarkMode={shouldShowDark} />
+                        <MemoizedMathJax content={mathContent} isDarkMode={ctx.shouldShowDark} />
                     </div>
                 );
             }
@@ -764,11 +785,12 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
         },
         span: ({ node, className, children, ...props }: any) => {
             if (className?.includes('math-inline')) {
+                const ctx = renderContextRef.current;
                 const mathContent = String(children);
                 const stableKey = hashString(mathContent);
                 return (
                     <span key={stableKey} className="math-inline" style={{ whiteSpace: 'nowrap' }} data-line={node?.position?.start?.line}>
-                        <MemoizedMathJax content={mathContent} inline isDarkMode={shouldShowDark} />
+                        <MemoizedMathJax content={mathContent} inline isDarkMode={ctx.shouldShowDark} />
                     </span>
                 );
             }
@@ -776,14 +798,15 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
         },
         a: ({ node, href, children, ...props }: any) => {
             if (href?.startsWith('#wikilink-')) {
+                const ctx = renderContextRef.current;
                 const name = decodeURIComponent(href.replace('#wikilink-', ''));
                 return (
                     <WikiLink
                         name={name}
-                        documents={documents}
-                        currentDocId={currentDocId}
-                        onSelectDocument={onSelectDocument}
-                        onCreateMissing={onCreateMissing}
+                        documents={ctx.documents}
+                        currentDocId={ctx.currentDocId}
+                        onSelectDocument={ctx.onSelectDocument}
+                        onCreateMissing={ctx.onCreateMissing}
                     >
                         {children}
                     </WikiLink>
@@ -794,17 +817,18 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
         // ─── 圖片解析：支援本地與遠端，並提供縮放工具 ──────────────────────────────────────────
         img: ({ node, src, alt, ...props }: any) => {
             if (!src) return null;
+            const ctx = renderContextRef.current;
             return (
                 <ResizableImage
                     key={src}
                     src={src}
                     alt={alt}
-                    getImage={getImage}
-                    isDarkMode={shouldShowDark}
+                    getImage={ctx.getImage}
+                    isDarkMode={ctx.shouldShowDark}
                 />
             );
         },
-    }), [shouldShowDark, isActuallyPrinting, documents, onSelectDocument, onCreateMissing, currentDocId, getImage]);
+    }), []);
 
     // 監聽圖片載入完成，若有必要可觸發同步刷新
     useEffect(() => {

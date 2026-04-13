@@ -1034,7 +1034,7 @@ const App: React.FC = () => {
   };
 
   const mathJaxConfig = {
-    loader: { load: ["[tex]/ams", "[tex]/html", "[tex]/mhchem"] },
+    loader: { load: ["[tex]/ams", "[tex]/html", "[tex]/mhchem", "ui/menu"] },
     options: {
       enableVersionWarnings: false
     },

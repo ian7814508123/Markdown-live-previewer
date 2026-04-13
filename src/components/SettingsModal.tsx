@@ -273,7 +273,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     </RippleButton>
                                     <div>
                                         <h3 className="text-xl font-black text-slate-800 dark:text-slate-100">發行內容 (What's New)</h3>
-                                        <p className="text-[10px] font-bold text-brand-primary lowercase tracking-widest mt-0.5">Version 3.3.3</p>
+                                        <p className="text-[10px] font-bold text-brand-primary lowercase tracking-widest mt-0.5">Version 3.3.4</p>
                                     </div>
                                 </div>
                                 <div className="space-y-4">
@@ -301,7 +301,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                             <li>優化表格產生器,可直接從外部試算表複製表格並轉換成markdown語法。</li>
                                             <li>修正元件樣式。</li>
                                             <li>列印時可以支援內嵌圖表縮放設定了。</li>
-                                            <li>新增音樂樂譜範例。</li>
+                                            <li>修正圖表與方程式的跳動問題</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -325,7 +325,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     <div className="pt-0">
                                         <h3 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">Markdown Live Previewer</h3>
                                         <div className="flex items-center justify-center gap-2 mt-2">
-                                            <p className="text-1xl font-bold text-slate-600 dark:text-slate-300 lowercase tracking-widest">版本 3.3.3</p>
+                                            <p className="text-1xl font-bold text-slate-600 dark:text-slate-300 lowercase tracking-widest">版本 3.3.4</p>
                                             <button
                                                 onClick={() => setShowChangelog(true)}
                                                 className="flex items-center gap-1.5 px-2.5 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-500 dark:text-indigo-600 rounded-lg text-[10px] font-black hover:bg-indigo-200 dark:hover:bg-indigo-800/60 transition-colors"

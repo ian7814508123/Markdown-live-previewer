@@ -55,6 +55,48 @@ export default defineConfig(({ mode }) => {
             console.warn('[google-verify] VITE_GOOGLE_VERIFY_ID 未設置，跳過生成驗證檔');
           }
         }
+      },
+      // 動態生成 ads.txt（僅在根路徑部署時有效，GitHub Pages 子路徑不適用）
+      {
+        name: 'generate-ads-txt',
+
+        // ── Dev Server：以 middleware 代理 /ads.txt 請求 ──────────────────
+        configureServer(server) {
+          server.middlewares.use((req, res, next) => {
+            if (req.url !== '/ads.txt') return next();
+            // ca-pub-xxx → pub-xxx（ads.txt 規範不含 ca- 前綴）
+            const adsenseId = (env.VITE_GOOGLE_ADSENSE_ID || process.env.VITE_GOOGLE_ADSENSE_ID)?.replace(/^ca-/, '');
+            if (!adsenseId) {
+              res.writeHead(404);
+              res.end('ads.txt: VITE_GOOGLE_ADSENSE_ID not set');
+              return;
+            }
+            const content = `google.com, ${adsenseId}, DIRECT, f08c47fec0942fa0`;
+            res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+            res.end(content);
+          });
+        },
+
+        // ── Build：生成實體檔案到 dist/ 根目錄 ───────────────────────────
+        closeBundle() {
+          // GitHub Pages 子路徑部署（base 不是 '/'）不需要生成，Google 抓不到子路徑的 ads.txt
+          if (base !== '/') {
+            console.log('[ads-txt] 非根路徑部署，跳過 ads.txt 生成（GitHub Pages 子路徑不支援）');
+            return;
+          }
+          // ca-pub-xxx → pub-xxx（ads.txt 規範不含 ca- 前綴）
+          const adsenseId = (env.VITE_GOOGLE_ADSENSE_ID || process.env.VITE_GOOGLE_ADSENSE_ID)?.replace(/^ca-/, '');
+          if (!adsenseId) {
+            console.warn('[ads-txt] VITE_GOOGLE_ADSENSE_ID 未設置，跳過生成');
+            return;
+          }
+          const outDir = path.resolve(__dirname, 'dist');
+          if (fs.existsSync(outDir)) {
+            const content = `google.com, ${adsenseId}, DIRECT, f08c47fec0942fa0`;
+            fs.writeFileSync(path.resolve(outDir, 'ads.txt'), content);
+            console.log(`\nGenerated ads.txt for ${adsenseId}`);
+          }
+        }
       }
     ],
     define: {

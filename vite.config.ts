@@ -7,8 +7,11 @@ import { viteCommonjs } from '@originjs/vite-plugin-commonjs';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
+  // GitHub Pages 部署時，CI 會傳入 BASE_URL=/<repo-name>/
+  // 本地開發時未設置，預設使用 '/'
+  const base = process.env.BASE_URL ?? '/';
   return {
-    base: '/',
+    base,
     server: {
       port: 3000,
       host: "0.0.0.0"

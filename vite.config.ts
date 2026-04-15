@@ -6,7 +6,13 @@ import tailwindcss from '@tailwindcss/vite';
 import { viteCommonjs } from '@originjs/vite-plugin-commonjs';
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '');
+  // 本地開發：從專案根目錄的 .env 讀取
+  // Render Docker：Secret Files 掛載於 /etc/secrets，額外合併進來
+  const renderSecretsDir = '/etc/secrets';
+  const env = {
+    ...loadEnv(mode, process.cwd(), ''),
+    ...(fs.existsSync(renderSecretsDir) ? loadEnv(mode, renderSecretsDir, '') : {}),
+  };
   // GitHub Pages 部署時，CI 會傳入 BASE_URL=/<repo-name>/
   // 本地開發時未設置，預設使用 '/'
   const base = process.env.BASE_URL ?? '/';

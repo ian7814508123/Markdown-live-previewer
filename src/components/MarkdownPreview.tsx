@@ -21,6 +21,7 @@ interface MarkdownPreviewProps {
     currentDocId?: string | null;
     isPrinting?: boolean;
     showPrintPreview?: boolean;
+    printSessionId?: number;
 }
 
 // ─── 輔助函式：簡單的字串雜湊 ──────────────────────────────────────────────────
@@ -182,7 +183,7 @@ const cleanMermaidSvg = (svgHtml: string) => {
         .replace(/style="max-width:.*?"/i, 'style="max-width: 100%"');
 };
 
-const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: boolean; showPrintPreview?: boolean }> = React.memo(({ code, isDarkMode, isPrinting, showPrintPreview }) => {
+const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: boolean; showPrintPreview?: boolean; printSessionId?: number }> = React.memo(({ code, isDarkMode, isPrinting, showPrintPreview, printSessionId = 0 }) => {
     const isDark = isDarkMode && !isPrinting && !showPrintPreview;
     const [svg, setSvg] = useState('');
     const [isPending, setIsPending] = useState(false);
@@ -209,9 +210,17 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: b
 
     // 套用通用的 Debounce (300ms)
     const debouncedCode = useDebounce(code, 300);
+    const renderCode = isPrinting ? code : debouncedCode;
+
+    const notifyMermaidReady = useCallback(() => {
+        window.dispatchEvent(new CustomEvent('content-layout-ready'));
+        window.dispatchEvent(new CustomEvent('mermaid-render-complete', {
+            detail: { blockId: storageKey, printSessionId }
+        }));
+    }, [storageKey, printSessionId]);
 
     useEffect(() => {
-        if (!debouncedCode) {
+        if (!renderCode) {
             setSvg('');
             return;
         }
@@ -227,22 +236,22 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: b
                     fontFamily: 'Inter, system-ui, sans-serif'
                 });
 
-                const id = `mermaid-${hashString(debouncedCode)}`;
-                const { svg: renderedSvg } = await mermaid.render(id, debouncedCode);
+                const id = `mermaid-${hashString(renderCode)}`;
+                const { svg: renderedSvg } = await mermaid.render(id, renderCode);
 
                 if (isMounted.current) {
                     // 對 SVG 進行處理，確保其能自適應 ResizableWrapper 的寬度
                     setSvg(cleanMermaidSvg(renderedSvg));
                     setError(null);
                     // 通知佈局已就緒（用於列印同步）
-                    window.dispatchEvent(new CustomEvent('content-layout-ready'));
+                    notifyMermaidReady();
                 }
             } catch (err: any) {
                 console.error('Mermaid render error:', err);
                 if (isMounted.current) {
                     setError(err.message || 'Syntax Error');
                     // 即使出錯也通知，避免列印瑣死
-                    window.dispatchEvent(new CustomEvent('content-layout-ready'));
+                    notifyMermaidReady();
                 }
             } finally {
                 if (isMounted.current) {
@@ -255,7 +264,7 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: b
             isMounted.current = false;
             clearTimeout(timer);
         };
-    }, [debouncedCode, isDark]);
+    }, [renderCode, isDark, isDarkMode, isPrinting, showPrintPreview, notifyMermaidReady]);
 
     const handleReset = () => {
         reset();
@@ -270,6 +279,24 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: b
         );
     }
 
+    // 列印模式：扁平化，拿掉所有裝飾，讓 SVG 直接適應頁面寬度
+    if (isPrinting || showPrintPreview) {
+        return (
+            <div
+                data-mermaid-block="true"
+                data-mermaid-block-id={storageKey}
+                style={{
+                    width: '100%',
+                    margin: '1rem 0',
+                    display: 'flex',
+                    justifyContent: 'center',
+                }}
+                dangerouslySetInnerHTML={{ __html: svg }}
+            />
+        );
+    }
+
+    // 正常螢幕模式：保留完整互動畫布
     return (
         <ResizableWrapper
             width={width}
@@ -282,6 +309,8 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: b
             isDarkMode={isDarkMode}
         >
             <div
+                data-mermaid-block="true"
+                data-mermaid-block-id={storageKey}
                 className={`diagram-block-container flex justify-center p-6 rounded-2xl shadow-sm border overflow-auto transition-opacity duration-300 ${isDark ? 'border-slate-700/50' : 'border-slate-200/50'} ${isPending ? 'opacity-50' : 'opacity-100'}`}
                 style={{ width: '100%', height: 'auto', backgroundColor: 'var(--code-bg)' }}
                 dangerouslySetInnerHTML={{ __html: svg }}
@@ -331,6 +360,17 @@ const VegaBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: bool
         return () => clearTimeout(timer);
     }, [debouncedCode, isDark]);
 
+    // 列印模式：扁平化，讓 Vega 容器直接適應頁面寬度
+    if (isPrinting || showPrintPreview) {
+        return (
+            <div
+                ref={ref}
+                style={{ width: '100%', margin: '1rem 0', minHeight: '200px' }}
+            />
+        );
+    }
+
+    // 正常螢幕模式：保留完整互動畫布
     return (
         <ResizableWrapper
             width={width}
@@ -428,6 +468,23 @@ const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: bo
         );
     }
 
+    // 列印模式：扁平化，讓 SMILES SVG 直接適應頁面寬度
+    if (isPrinting || showPrintPreview) {
+        return (
+            <div
+                ref={svgRef}
+                style={{
+                    width: '100%',
+                    margin: '1rem 0',
+                    minHeight: '150px',
+                    display: 'flex',
+                    justifyContent: 'center',
+                }}
+            />
+        );
+    }
+
+    // 正常螢幕模式：保留完整互動畫布
     return (
         <ResizableWrapper
             width={width}
@@ -638,7 +695,7 @@ const MemoizedMathJax: React.FC<MemoizedMathJaxProps> = React.memo(({ content, i
     );
 });
 
-const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDarkMode, documents = [], onSelectDocument, onCreateMissing, currentDocId, isPrinting, showPrintPreview }) => {
+const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDarkMode, documents = [], onSelectDocument, onCreateMissing, currentDocId, isPrinting, showPrintPreview, printSessionId = 0 }) => {
     // 關鍵修正：判斷當前是否處於「需要白色底」的狀態
     const isActuallyPrinting = isPrinting || !!document.querySelector('.show-print-preview');
     const shouldShowDark = isDarkMode && !isActuallyPrinting;
@@ -657,6 +714,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
         isDarkMode,
         isPrinting,
         showPrintPreview,
+        printSessionId,
         getImage
     });
 
@@ -671,9 +729,10 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
             isDarkMode,
             isPrinting,
             showPrintPreview,
+            printSessionId,
             getImage
         };
-    }, [documents, currentDocId, onSelectDocument, onCreateMissing, shouldShowDark, isActuallyPrinting, isDarkMode, isPrinting, showPrintPreview, getImage]);
+    }, [documents, currentDocId, onSelectDocument, onCreateMissing, shouldShowDark, isActuallyPrinting, isDarkMode, isPrinting, showPrintPreview, printSessionId, getImage]);
 
     // ─── URI 轉換：允許自定義協定通過 react-markdown 的過濾 ───────────────────────────
     const urlTransform = useCallback((uri: string) => {
@@ -725,7 +784,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
             const syntaxStyle = ctx.isActuallyPrinting ? vs : (ctx.shouldShowDark ? vscDarkPlus : vs);
 
             if (!inline) {
-                if (language === 'mermaid') return <div data-line={line}><MermaidBlock key={stableKey} code={codeString} isDarkMode={ctx.isDarkMode} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} /></div>;
+                if (language === 'mermaid') return <div data-line={line}><MermaidBlock key={stableKey} code={codeString} isDarkMode={ctx.isDarkMode} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} printSessionId={ctx.printSessionId} /></div>;
                 if (language === 'vega' || language === 'vega-lite') return <div data-line={line}><VegaBlock key={stableKey} code={codeString} isDarkMode={ctx.isDarkMode} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} /></div>;
                 if (language === 'smiles') return <div data-line={line}><SmilesBlock key={stableKey} code={codeString} isDarkMode={ctx.isDarkMode} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} /></div>;
                 if (language === 'abc') return <React.Suspense fallback={<div className="p-4 flex justify-center items-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs">樂譜加載中...</div>}><div data-line={line}><AbcBlock key={stableKey} code={codeString} isDarkMode={ctx.isDarkMode} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} /></div></React.Suspense>;

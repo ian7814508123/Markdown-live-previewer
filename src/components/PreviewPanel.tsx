@@ -47,6 +47,7 @@ interface MarkdownPreviewSectionProps {
     scrollRef: React.Ref<HTMLDivElement>;
     printSettings: any;
     isPrinting?: boolean;
+    printSessionId?: number;
 }
 
 const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
@@ -64,6 +65,7 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
     scrollRef,
     printSettings,
     isPrinting = false,
+    printSessionId = 0,
 }) => {
     // 當前文件物件
     const currentDoc = documents?.find((d: any) => d.id === currentDocId);
@@ -292,6 +294,7 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
                                             currentDocId={docId}
                                             isPrinting={isPrinting}
                                             showPrintPreview={showPrintPreview}
+                                            printSessionId={printSessionId}
                                         />
                                         {/* 覆蓋層顯示分頁指示線 */}
                                         {showPrintPreview && (
@@ -343,6 +346,7 @@ interface PreviewPanelProps {
     openDocIds?: string[];
     printSettings: any;
     isPrinting?: boolean;
+    printSessionId?: number;
 }
 
 const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
@@ -373,6 +377,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
     openDocIds,
     printSettings,
     isPrinting,
+    printSessionId,
 }, ref) => {
     const [isHUDExpanded, setIsHUDExpanded] = useState(false);
     const hudRef = useRef<HTMLDivElement>(null);
@@ -412,6 +417,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
                 scrollRef={ref}
                 printSettings={printSettings}
                 isPrinting={isPrinting}
+                printSessionId={printSessionId}
             />
         );
     }
@@ -547,7 +553,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
                     {/* Mermaid Preview */}
                     {svgContent ? (
                         <div
-                            className="bg-white dark:bg-slate-900/95 p-16 rounded-[2.5rem] shadow-2xl dark:shadow-[0_0_100px_rgba(56, 189, 248, 0.15),0_0_1px_rgba(56, 189, 248, 0.2)] border border-slate-200/50 dark:border-white/5 transition-all duration-300 ease-out pointer-events-auto"
+                            className="bg-white dark:bg-slate-900/95 p-16 rounded-[2.5rem] shadow-2xl dark:shadow-[0_0_100px_rgba(56,189,248,0.15),0_0_1px_rgba(56,189,248,0.2)] border border-slate-200/50 dark:border-white/5 transition-all duration-300 ease-out pointer-events-auto print:p-0 print:rounded-none print:shadow-none print:border-none print:bg-transparent print:dark:bg-transparent"
                             style={{ transform: `scale(${zoom / 100})` }}
                             dangerouslySetInnerHTML={{ __html: svgContent }}
                         />

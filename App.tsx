@@ -134,6 +134,7 @@ const App: React.FC = () => {
   const [pendingFolderId, setPendingFolderId] = useState<string | null>(null);
   const [openDocIds, setOpenDocIds] = useState<string[]>([]);
   const [isPrinting, setIsPrinting] = useState(false);
+  const [printSessionId, setPrintSessionId] = useState(0);
 
   const { settings, updateMacros, updatePrintSettings, restoreDefaults } = useAppSettings();
 
@@ -235,6 +236,7 @@ const App: React.FC = () => {
   const scrollSource = useRef<'editor' | 'preview' | null>(null);
   const isHoveringEditor = useRef(false);
   const isHoveringPreview = useRef(false);
+  const printSessionRef = useRef(0);
   const rafId = useRef<number | null>(null);
 
   const syncLoop = useCallback(() => {
@@ -564,10 +566,33 @@ const App: React.FC = () => {
     // 縮放與佈局樣式
     let additionalCSS = '';
     if (printMode === 'mermaid') {
-      additionalCSS = scale === 'fit'
+      // 重置 transform scale（螢幕縮放），移除畫布裝飾，讓 SVG 直接以頁面寬度輸出
+      const svgWidthCSS = scale === 'fit'
         ? 'svg { max-width: 100% !important; width: 100% !important; height: auto !important; }'
         : scale === 'actual' ? ''
-          : `svg { zoom: ${scale}%; }`;
+          : `svg { max-width: 100% !important; width: ${scale}% !important; height: auto !important; }`;
+      additionalCSS = `
+        /* 重置螢幕縮放（zoom/transform），讓內容回到自然寬度 */
+        .preview-panel > div > div {
+          transform: none !important;
+          position: static !important;
+          display: flex !important;
+          justify-content: center !important;
+          align-items: flex-start !important;
+          padding: 2rem 0 !important;
+          background: transparent !important;
+        }
+        /* 移除畫布外框裝飾：圓角、陰影、padding、深色背景 */
+        .preview-panel > div > div > div {
+          transform: none !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+          border: none !important;
+          background: transparent !important;
+        }
+        ${svgWidthCSS}
+      `;
     } else {
       // Markdown 模式：當開啟列印預覽時，我們需要確保列印時捨棄所有 UI，只留紙張
       additionalCSS = `
@@ -721,10 +746,18 @@ const App: React.FC = () => {
 
         /* 針對 react-syntax-highlighter 產生的 div 容器進行修正 */
         .prose div[style*="background-color"] {
-        .card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; }
-        background-color: #f8f9fa !important;
-        border: 1px solid #ddd !important;
-        padding: 1em !important;
+          background-color: #f8f9fa !important;
+          border: 1px solid #ddd !important;
+          padding: 1em !important;
+        }
+
+        .diagram-block-container {
+          border-radius: 0 !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          border: none !important;
+          background: transparent !important;
         }
       `;
     }
@@ -755,25 +788,44 @@ const App: React.FC = () => {
     document.head.appendChild(style);
 
     // 1. 強制進入列印模式（這會觸發 MarkdownPreview 重新渲染為淺色）
+    const currentPrintSessionId = printSessionRef.current + 1;
+    printSessionRef.current = currentPrintSessionId;
+
     flushSync(() => {
+      setPrintSessionId(currentPrintSessionId);
       setIsPrinting(true);
     });
 
     // 2. 計算需要等待的目標數量 (Mermaid, Vega, Smiles, Images)
     const componentsToWait = document.querySelectorAll(
-      '.mermaid, .vega-embed, .smiles-drawer, img'
+      '.diagram-block-container, .vega-embed, .smiles-drawer, img'
     ).length;
+    const mermaidTargetIds = new Set(
+      Array.from(document.querySelectorAll<HTMLElement>('[data-mermaid-block="true"][data-mermaid-block-id]'))
+        .map((el) => el.dataset.mermaidBlockId)
+        .filter((id): id is string => Boolean(id))
+    );
 
     let readyCount = 0;
+    const mermaidReadyIds = new Set<string>();
 
     const finalizePrint = () => {
+      window.removeEventListener('mermaid-render-complete', onMermaidReady);
       window.print();
       setIsPrinting(false);
       document.getElementById('app-print-override')?.remove();
     };
 
+    const onMermaidReady = (event: Event) => {
+      const detail = (event as CustomEvent<{ blockId?: string; printSessionId?: number }>).detail;
+      if (!detail || detail.printSessionId !== currentPrintSessionId || !detail.blockId) {
+        return;
+      }
+      mermaidReadyIds.add(detail.blockId);
+    };
+
     // 如果畫面上沒有複雜圖表，直接列印
-    if (componentsToWait === 0) {
+    if (componentsToWait === 0 && mermaidTargetIds.size === 0) {
       setTimeout(finalizePrint, 100);
       return;
     }
@@ -781,19 +833,21 @@ const App: React.FC = () => {
     // 3. 定義處理函式
     const onReady = () => {
       readyCount++;
-      if (readyCount >= componentsToWait) {
+      if (readyCount >= componentsToWait && mermaidReadyIds.size >= mermaidTargetIds.size) {
         window.removeEventListener('content-layout-ready', onReady);
         // 給瀏覽器一點時間完成最後的 Paint
         setTimeout(finalizePrint, 500);
       }
     };
 
+    window.addEventListener('mermaid-render-complete', onMermaidReady);
     window.addEventListener('content-layout-ready', onReady);
 
     // 安全閥：避免因為某張圖片載入失敗導致永遠無法列印
     setTimeout(() => {
+      window.removeEventListener('mermaid-render-complete', onMermaidReady);
       window.removeEventListener('content-layout-ready', onReady);
-      if (readyCount < componentsToWait) {
+      if (readyCount < componentsToWait || mermaidReadyIds.size < mermaidTargetIds.size) {
         finalizePrint();
       }
     }, 5000);
@@ -1197,6 +1251,8 @@ const App: React.FC = () => {
               currentDocId={currentDocId}
               openDocIds={openDocIds}
               printSettings={settings.printSettings}
+              isPrinting={isPrinting}
+              printSessionId={printSessionId}
             />
           </div>
         </main>

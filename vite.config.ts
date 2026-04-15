@@ -1,10 +1,12 @@
 import path from 'path';
-import { defineConfig } from 'vite';
+import fs from 'fs';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { viteCommonjs } from '@originjs/vite-plugin-commonjs';
 
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
   return {
     base: '/',
     server: {
@@ -17,6 +19,21 @@ export default defineConfig(() => {
       viteCommonjs({
         include: ['mathjax-full']
       }),
+      // 動態生成 Google 驗證檔案
+      {
+        name: 'generate-google-verify',
+        closeBundle() {
+          const verifyId = env.VITE_GOOGLE_VERIFY_ID;
+          if (verifyId) {
+            const outDir = path.resolve(__dirname, 'dist');
+            const filePath = path.resolve(outDir, `${verifyId}.html`);
+            if (fs.existsSync(outDir)) {
+              fs.writeFileSync(filePath, `google-site-verification: ${verifyId}.html`);
+              console.log(`\nGenerated Google verification file: ${verifyId}.html`);
+            }
+          }
+        }
+      }
     ],
     define: {
       'global': 'window',

@@ -26,7 +26,9 @@ export default defineConfig(({ mode }) => {
       {
         name: 'generate-google-verify',
         closeBundle() {
-          const verifyId = env.VITE_GOOGLE_VERIFY_ID;
+          // loadEnv 讀取本地 .env 檔；process.env 對應 CI 注入的環境變數
+          // 兩者都支援，確保本地開發與 GitHub Actions 皆可正常生成驗證檔
+          const verifyId = env.VITE_GOOGLE_VERIFY_ID || process.env.VITE_GOOGLE_VERIFY_ID;
           if (verifyId) {
             const outDir = path.resolve(__dirname, 'dist');
             const filePath = path.resolve(outDir, `${verifyId}.html`);

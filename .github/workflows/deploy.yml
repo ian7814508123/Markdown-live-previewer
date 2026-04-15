@@ -35,7 +35,8 @@ jobs:
         env:
           # Automatically set the base path to /REPO_NAME/
           BASE_URL: /${{ github.event.repository.name }}/
-          VITE_GOOGLE_VERIFY_ID: ${{ secrets.VITE_GOOGLE_VERIFY_ID }} 
+          VITE_GOOGLE_VERIFY_ID: ${{ secrets.VITE_GOOGLE_VERIFY_ID }}
+          VITE_GOOGLE_ADSENSE_ID: ${{ secrets.VITE_GOOGLE_ADSENSE_ID }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

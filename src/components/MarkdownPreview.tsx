@@ -10,6 +10,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import SmilesDrawer from 'smiles-drawer';
 import { useImageStorage } from '../hooks/useImageStorage';
+import { WrapText } from 'lucide-react';
 
 interface MarkdownPreviewProps {
     content: string;
@@ -695,6 +696,81 @@ const MemoizedMathJax: React.FC<MemoizedMathJaxProps> = React.memo(({ content, i
     );
 });
 
+// ─── 增強型程式碼區塊 (智能斷行、懸掛縮排與列印控制) ────────────────────────────────────────────────
+interface EnhancedCodeBlockProps {
+    language: string;
+    codeString: string;
+    stableKey: string;
+    syntaxStyle: any;
+    isActuallyPrinting: boolean;
+    shouldShowDark: boolean;
+}
+
+const EnhancedCodeBlock: React.FC<EnhancedCodeBlockProps> = ({
+    language,
+    codeString,
+    stableKey,
+    syntaxStyle,
+    isActuallyPrinting,
+    shouldShowDark
+}) => {
+    // 預設需要換行的語言
+    const defaultWrapLanguages = ['text', 'log', 'json', 'bash', 'sh', 'yaml', 'plaintext', 'markdown'];
+    const [isWrapped, setIsWrapped] = useState(defaultWrapLanguages.includes(language));
+
+    // 列印模式為了防截斷，強制換行
+    const effectiveWrapped = isActuallyPrinting || isWrapped;
+
+    return (
+        <div className="relative group/codeblock w-full">
+            {/* 切換換行的按鈕 (不給列印時顯示) */}
+            {!isActuallyPrinting && (
+                <button
+                    className={`absolute top-2 right-2 p-1.5 rounded-md transition-all duration-200 z-10 opacity-0 group-hover/codeblock:opacity-100 
+                        ${isWrapped 
+                            ? 'bg-brand-primary/10 text-brand-primary dark:bg-brand-primary/30 dark:text-brand-primary font-semibold' 
+                            : 'bg-slate-100 text-slate-400 hover:text-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}
+                    onClick={() => setIsWrapped(!isWrapped)}
+                    title={isWrapped ? "禁用自動換行" : "啟用自動換行"}
+                    aria-label="Toggle Word Wrap"
+                >
+                    <WrapText size={16} />
+                </button>
+            )}
+            
+            <div 
+                className={`enhanced-codeblock ${effectiveWrapped ? 'code-block-wrap' : 'code-block-scroll'}`}
+                data-theme-style={(isActuallyPrinting || !shouldShowDark) ? 'light' : 'dark'}
+            >
+                <SyntaxHighlighter
+                    key={stableKey}
+                    language={language || 'text'}
+                    style={syntaxStyle}
+                    customStyle={{ 
+                        margin: '1.5rem 0',
+                        padding: '1rem',
+                        fontSize: '0.875rem', 
+                        lineHeight: '1.5',
+                        backgroundColor: 'var(--code-bg)',
+                        borderRadius: '0.5rem',
+                        border: '1px solid var(--code-border)',
+                        overflowX: effectiveWrapped ? 'hidden' : 'auto',
+                        tabSize: '2',
+                        filter: 'invert(0)',
+                    }}
+                    showLineNumbers={false} /* 關閉原生的缺陷行號 */
+                    wrapLines={true} /* 強制每一行編織成 span，作為 css counter 基準 */
+                    lineProps={{
+                        className: 'code-line'
+                    }}
+                >
+                    {codeString}
+                </SyntaxHighlighter>
+            </div>
+        </div>
+    );
+};
+
 const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDarkMode, documents = [], onSelectDocument, onCreateMissing, currentDocId, isPrinting, showPrintPreview, printSessionId = 0 }) => {
     // 關鍵修正：判斷當前是否處於「需要白色底」的狀態
     const isActuallyPrinting = isPrinting || !!document.querySelector('.show-print-preview');
@@ -791,25 +867,14 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
 
                 return (
                     <div data-line={line} className="code-block-wrapper">
-                        <SyntaxHighlighter
-                            key={stableKey}
-                            language={language || 'text'}
-                            style={syntaxStyle}
-                            customStyle={{ 
-                                margin: '1.5rem 0',   // 在內層補償外層 pre 消失後的間距
-                                padding: '1rem',      // 統一由這裡控制內邊距
-                                fontSize: '0.875rem', 
-                                lineHeight: '1.5',
-                                backgroundColor: 'var(--code-bg)',
-                                borderRadius: '0.5rem',
-                                border: '1px solid var(--code-border)',
-                                filter: 'invert(0)', // 強制不反轉
-                            }}
-                            showLineNumbers={true}
-                            wrapLines={true}
-                        >
-                            {codeString}
-                        </SyntaxHighlighter>
+                         <EnhancedCodeBlock 
+                             language={language}
+                             codeString={codeString}
+                             stableKey={stableKey}
+                             syntaxStyle={syntaxStyle}
+                             isActuallyPrinting={ctx.isActuallyPrinting}
+                             shouldShowDark={ctx.shouldShowDark}
+                         />
                     </div>
                 );
             }

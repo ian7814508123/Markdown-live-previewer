@@ -445,7 +445,6 @@ mjx-container:not([display="true"]) {
 
     /* 全部區塊標籤強制回歸白底 (Formal) */
     .prose .diagram-block-container,
-    .prose div[style*="background-color"],
     .prose .code-block-wrapper pre {
         background-color: var(--code-bg) !important;
         border: 1px solid var(--code-border) !important;
@@ -473,7 +472,6 @@ mjx-container:not([display="true"]) {
 
 /* 內層高亮容器與圖表容器：統一套用變數系統 */
 .prose .diagram-block-container,
-.prose div[style*="background-color"],
 .prose .code-block-wrapper pre {
     border-radius: 0.5rem !important;
     border: 1px solid var(--code-border) !important;
@@ -486,51 +484,71 @@ mjx-container:not([display="true"]) {
     width: 100% !important;
 }
 
+.prose .code-block-wrapper {
+    max-width: 100% !important;
+    overflow: hidden !important;
+}
+
 /* 針對圖表容器特定的間距優化 (ResizableWrapper 已給間距) */
-.prose .diagram-block-container,
-.prose div[style*="background-color"] {
+.prose .diagram-block-container {
     margin: 0 !important;
 }
 
 /* 針對 react-syntax-highlighter 產生的 pre 標籤 (優化) */
 pre[style] {
     background-color: var(--code-bg) !important;
-    color: inherit !important;
+    white-space: pre-wrap !important;
+    overflow-wrap: break-word !important;
+    word-break: normal !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+    max-width: 100% !important;
     transition: background-color 0.2s ease;
 }
 
 .show-print-preview pre[style] {
     background-color: var(--code-bg) !important;
-    color: #333 !important;
+    white-space: pre-wrap !important;
+    overflow-wrap: break-word !important;
+    word-break: normal !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+    max-width: 100% !important;
 }
 
 @media print {
+    .prose .code-block-wrapper {
+        overflow: visible !important;
+    }
+
     pre[style] {
         background-color: var(--code-bg) !important;
-        color: #333 !important;
+        white-space: pre-wrap !important;
+        overflow-wrap: break-word !important;
+        word-break: normal !important;
+    }
+
+    .prose pre[style] code,
+    .prose .code-block-wrapper code,
+    .prose .code-block-wrapper span {
+        white-space: pre-wrap !important;
+        overflow-wrap: break-word !important;
+        word-break: normal !important;
+    }
+
+    .prose .code-block-wrapper,
+    .prose .code-block-wrapper *,
+    .prose pre[style],
+    .prose pre[style] * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
     }
 }
 
 /* 針對 SyntaxHighlighter 產生的行號 */
 .react-syntax-highlighter-line-number {
     color: #999 !important;
-}
-
-/* 列印與模擬預覽時強力強制鎖定為白底*/
-.show-print-preview,
-.show-print-preview * {
-    --code-bg: #f8f9fa !important;
-    --code-border: #ddd !important;
-}
-
-@media print {
-
-    *,
-    ::before,
-    ::after {
-        --code-bg: #f8f9fa !important;
-        --code-border: #ddd !important;
-    }
 }
 
 /* 3. 確保圖表（Mermaid/Vega/ABC）背景也是白的 */
@@ -618,10 +636,7 @@ body,
     display: none !important;
 }
 
-/* 隱藏預覽專用的指標 */
-.page-break-indicator {
-    display: none !important;
-}
+/* 隱藏預覽專用的指標 (Removed for fix) */
 
 
 
@@ -648,28 +663,31 @@ body,
     /* 確保內容不會溢出紙張邊界 */
 }
 
-/* 分頁指示線 */
+/* 分頁指示線 (Print Preview Simulation) */
 .page-break-indicator {
     height: 1px;
-    border-top: 1.5px dashed var(--color-brand-primary);
-    /* 品牌靛青色虛線 */
-    z-index: 10;
+    border-top: 2px dashed var(--color-brand-primary);
+    z-index: 50;
     pointer-events: none;
-    opacity: 0.5;
+    opacity: 0.6;
+    position: absolute;
+    left: 0;
+    right: 0;
 }
 
 .page-break-indicator::after {
     content: "PAGE BREAK";
     position: absolute;
-    right: 0;
-    top: -10px;
-    font-size: 9px;
-    font-weight: 800;
+    right: 1.5rem;
+    top: -11px;
+    font-size: 10px;
+    font-weight: 900;
     background: var(--color-brand-primary);
     color: white;
-    padding: 1px 6px;
-    border-radius: 4px;
+    padding: 2px 8px;
+    border-radius: 6px;
     letter-spacing: 0.05em;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 @media print {
@@ -707,27 +725,7 @@ body,
     width: 279.4mm;
 }
 
-/* 分頁線預覽 (僅在瀏覽器預覽時顯示) */
-.page-break-indicator {
-    height: 1px;
-    border-top: 2px dashed #e2e8f0;
-    margin: 2rem -3rem;
-    position: relative;
-    z-index: 10;
-}
-
-.page-break-indicator::after {
-    content: 'PAGE BREAK';
-    position: absolute;
-    right: 0;
-    top: -8px;
-    background: #f8fafc;
-    color: #94a3b8;
-    font-size: 8px;
-    padding: 0 8px;
-    font-weight: 800;
-    letter-spacing: 0.1em;
-}
+/* 註：原本 L729 的重複定義已統合至上方 */
 
 /* 模擬頁面邊距 */
 .margin-normal .prose-container {

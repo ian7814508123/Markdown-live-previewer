@@ -28,7 +28,113 @@ const PageBreaksOverlay: React.FC<{
     );
 };
 
-// ── MarkdownPreviewSection ──────────────────────────────────────────────────
+// ── PrintPaper ──────────────────────────────────────────────────────────────
+// 封裝每份紙張的渲染邏輯與獨立的高度監測
+// 確保在「合併列印」模式下，每份文件都能計算出正確的分頁參考線
+interface PrintPaperProps {
+    docId: string;
+    doc: any;
+    showPrintPreview: boolean;
+    paperPx: { w: number, h: number };
+    paperSize: string;
+    orientation: string;
+    margin: string;
+    isActive: boolean;
+    isVisibleOnScreen: boolean;
+    isVisibleInPrint: boolean;
+    isPrinting: boolean;
+    printSessionId: number;
+    theme: any;
+    isDarkMode: boolean;
+    documents: any[];
+    onSelectDocument?: (docId: string) => void;
+    onCreateMissing?: (name: string) => void;
+    onScroll?: (e: React.UIEvent<HTMLDivElement>) => void;
+    scrollRef?: React.Ref<HTMLDivElement>;
+}
+
+const PrintPaper: React.FC<PrintPaperProps> = ({
+    docId,
+    doc,
+    showPrintPreview,
+    paperPx,
+    paperSize,
+    orientation,
+    margin,
+    isActive,
+    isVisibleOnScreen,
+    isVisibleInPrint,
+    isPrinting,
+    printSessionId,
+    theme,
+    isDarkMode,
+    documents,
+    onSelectDocument,
+    onCreateMissing,
+    onScroll,
+    scrollRef
+}) => {
+    const [contentHeight, setContentHeight] = useState(0);
+    const paperRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!showPrintPreview) return;
+
+        const observer = new ResizeObserver((entries) => {
+            for (let entry of entries) {
+                // 獲取 prose-container 的內容高度
+                setContentHeight(entry.contentRect.height);
+            }
+        });
+
+        const proseContainer = paperRef.current?.querySelector('.prose-container');
+        if (proseContainer) {
+            observer.observe(proseContainer);
+        }
+
+        return () => observer.disconnect();
+    }, [showPrintPreview, doc?.content]);
+
+    return (
+        <div
+            id={`wikilink-${encodeURIComponent(doc?.name || '')}`}
+            data-doc-id={docId}
+            ref={node => {
+                (paperRef as any).current = node;
+                // 在非預覽模式下，將 scrollRef 綁定到當前活動文件的容器
+                if (!showPrintPreview && isActive) {
+                    if (typeof scrollRef === 'function') scrollRef(node);
+                    else if (scrollRef) (scrollRef as any).current = node;
+                }
+            }}
+            onScroll={!showPrintPreview && isActive ? onScroll : undefined}
+            className={`${showPrintPreview ? 'print-paper bg-white shadow-2xl mx-auto paper-' + paperSize.toLowerCase() + ' paper-' + orientation + ' margin-' + margin : 'print:print-paper print:paper-' + paperSize.toLowerCase() + ' print:paper-' + orientation + ' print:margin-' + margin + ' absolute inset-0 overflow-auto custom-scrollbar p-8 bg-white dark:bg-slate-900 shadow-inner'} transition-all duration-300 print:max-w-none print:w-full print:shadow-none print:bg-white print:p-0 print:border-none print:rounded-none print:static print:inset-auto print:h-auto print:overflow-visible ${isVisibleOnScreen ? 'block' : 'hidden'} ${!isVisibleOnScreen && isVisibleInPrint ? 'print:block' : ''} ${!isActive && (!showPrintPreview && !isVisibleInPrint) ? 'tab-inactive' : ''} ${isActive && showPrintPreview ? 'ring-4 ring-brand-primary/50' : ''}`}
+        >
+            <div className={showPrintPreview ? 'prose-container relative' : 'print:prose-container max-w-[850px] mx-auto min-h-full bg-white dark:bg-slate-900 p-12 shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-none dark:border dark:border-slate-800 rounded-sm print:shadow-none print:border-none print:p-0 print:bg-white'}>
+                <MarkdownPreview
+                    content={doc?.content ?? ''}
+                    theme={theme}
+                    isDarkMode={isDarkMode}
+                    documents={documents}
+                    onSelectDocument={onSelectDocument}
+                    onCreateMissing={onCreateMissing}
+                    currentDocId={docId}
+                    isPrinting={isPrinting}
+                    showPrintPreview={showPrintPreview}
+                    printSessionId={printSessionId}
+                />
+                {/* 覆蓋層顯示分頁指示線 */}
+                {showPrintPreview && (
+                    <PageBreaksOverlay
+                        contentHeight={contentHeight}
+                        pageHeightPx={paperPx.h}
+                        isVisible={showPrintPreview}
+                    />
+                )}
+            </div>
+        </div>
+    );
+};
 // 導入独立元件避免在 forwardRef 內部的條件分支中呼叫 hooks（違反 Rules of Hooks）
 // activatedDocIds 追蹤「已被用戶訪問過的 tab」，尚未訪問的 tab 不會在背景被渲染
 // 這就消除了 MathJax 在 display:none 容器中渲染時發生的 null DOM 錯誤
@@ -74,9 +180,6 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
     // 動態縮放邏輯 (用於 Fit 模式)
     const containerRef = useRef<HTMLDivElement>(null);
     const [fitScale, setFitScale] = useState(1);
-
-    // 內容高度監測 (用於分頁線)
-    const [contentHeight, setContentHeight] = useState(0);
 
     useEffect(() => {
         if (!showPrintPreview || scale !== 'fit') return;
@@ -126,23 +229,6 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
         return { w: w * 3.7795, h: h * 3.7795 };
     };
     const paperPx = getPaperSizePx();
-
-    // 監控內容高度 (包裹在單個分頁佈局中的情況下)
-    useEffect(() => {
-        if (!showPrintPreview) return;
-
-        const observer = new ResizeObserver((entries) => {
-            for (let entry of entries) {
-                setContentHeight(entry.contentRect.height);
-            }
-        });
-
-        // 監控 prose-container 的高度
-        const elements = document.querySelectorAll('.prose-container');
-        elements.forEach(el => observer.observe(el));
-
-        return () => observer.disconnect();
-    }, [showPrintPreview, documents, code]); // 依賴項包含內容異動
 
     // 「已啟動 docId」：記錄曾被訪問過的 tab，只為它們渲染 MarkdownPreview
     const [activatedDocIds, setActivatedDocIds] = useState<Set<string>>(() => {
@@ -263,7 +349,6 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
                     >
                         {docsToRenderIds.map(docId => {
                             const doc = documents?.find((d: any) => d.id === docId);
-                            const docContent = doc?.content ?? '';
                             const isActive = docId === currentDocId;
 
                             // 邏輯優化：區分「螢幕顯示」與「列印顯示」
@@ -275,38 +360,28 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
                             const isVisibleInPrint = isMergedMode || isActive;
 
                             return (
-                                <div
+                                <PrintPaper
                                     key={docId}
-                                    id={`wikilink-${encodeURIComponent(doc?.name || '')}`}
-                                    data-doc-id={docId}
-                                    ref={!showPrintPreview && isActive ? (scrollRef as React.Ref<HTMLDivElement>) : undefined}
-                                    onScroll={!showPrintPreview && isActive ? onScroll : undefined}
-                                    className={`${showPrintPreview ? 'print-paper bg-white shadow-2xl mx-auto paper-' + paperSize.toLowerCase() + ' paper-' + orientation + ' margin-' + margin : 'print:print-paper print:paper-' + paperSize.toLowerCase() + ' print:paper-' + orientation + ' print:margin-' + margin + ' absolute inset-0 overflow-auto custom-scrollbar p-8 bg-white dark:bg-slate-900 shadow-inner'} transition-all duration-300 print:max-w-none print:w-full print:shadow-none print:bg-white print:p-0 print:border-none print:rounded-none print:static print:inset-auto print:h-auto print:overflow-visible ${isVisibleOnScreen ? 'block' : 'hidden'} ${!isVisibleOnScreen && isVisibleInPrint ? 'print:block' : ''} ${!isActive && (!showPrintPreview && !isVisibleInPrint) ? 'tab-inactive' : ''} ${isActive && showPrintPreview ? 'ring-4 ring-brand-primary/50' : ''}`}
-                                >
-                                    <div className={showPrintPreview ? 'prose-container relative' : 'print:prose-container max-w-[850px] mx-auto min-h-full bg-white dark:bg-slate-900 p-12 shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-none dark:border dark:border-slate-800 rounded-sm print:shadow-none print:border-none print:p-0 print:bg-white'}>
-                                        <MarkdownPreview
-                                            content={docContent}
-                                            theme={theme}
-                                            isDarkMode={isDarkMode}
-                                            documents={documents}
-                                            onSelectDocument={onSelectDocument}
-                                            onCreateMissing={onCreateMissing}
-                                            currentDocId={docId}
-                                            isPrinting={isPrinting}
-                                            showPrintPreview={showPrintPreview}
-                                            printSessionId={printSessionId}
-                                        />
-                                        {/* 覆蓋層顯示分頁指示線 */}
-                                        {showPrintPreview && (
-                                            <PageBreaksOverlay
-                                                contentHeight={contentHeight}
-                                                pageHeightPx={paperPx.h}
-                                                isVisible={showPrintPreview}
-                                            />
-                                        )}
-                                    </div>
-                                    {showPrintPreview && <div className="page-break-indicator fixed-bottom-0 opacity-0 pointer-events-none" />}
-                                </div>
+                                    docId={docId}
+                                    doc={doc}
+                                    showPrintPreview={showPrintPreview}
+                                    paperPx={paperPx}
+                                    paperSize={paperSize}
+                                    orientation={orientation}
+                                    margin={margin}
+                                    isActive={isActive}
+                                    isVisibleOnScreen={isVisibleOnScreen}
+                                    isVisibleInPrint={isVisibleInPrint}
+                                    isPrinting={isPrinting}
+                                    printSessionId={printSessionId}
+                                    theme={theme}
+                                    isDarkMode={isDarkMode}
+                                    documents={documents}
+                                    onSelectDocument={onSelectDocument}
+                                    onCreateMissing={onCreateMissing}
+                                    onScroll={onScroll}
+                                    scrollRef={scrollRef}
+                                />
                             );
                         })}
                     </div>

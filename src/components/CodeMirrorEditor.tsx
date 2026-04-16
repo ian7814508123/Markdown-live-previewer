@@ -6,6 +6,7 @@ import { languages } from '@codemirror/language-data';
 import { mermaid } from 'codemirror-lang-mermaid';
 import { vscodeDark, vscodeLight } from '@uiw/codemirror-theme-vscode';
 import { EditorView } from '@codemirror/view';
+import { EditorState } from '@codemirror/state';
 
 interface CodeMirrorEditorProps {
     mode: 'mermaid' | 'markdown';
@@ -22,6 +23,15 @@ const CodeMirrorEditor = React.forwardRef<ReactCodeMirrorRef, CodeMirrorEditorPr
     const extensions = useMemo(() => {
         const exts = [
             EditorView.lineWrapping,
+            EditorState.tabSize.of(2),
+            EditorView.theme({
+                '.cm-content, .cm-gutter': {
+                    lineHeight: '1.5',
+                },
+                '.cm-gutterElement': {
+                    fontStyle: 'italic',
+                },
+            }),
             mode === 'mermaid' ? mermaid() : markdown({ base: markdownLanguage, codeLanguages: languages }),
             // 透過 domEventHandlers 確保監聽到 scroller 的捲動事件
             EditorView.domEventHandlers({

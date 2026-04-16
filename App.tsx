@@ -597,7 +597,7 @@ const App: React.FC = () => {
       // Markdown 模式：當開啟列印預覽時，我們需要確保列印時捨棄所有 UI，只留紙張
       additionalCSS = `
         /* 強制所有背景為白色，文字為黑色 */
-        html, body, .preview-panel, .print-paper, .prose {
+        html, body, .preview-panel, .print-paper {
             background-color: white !important;
             color: black !important;
             color-scheme: light !important;
@@ -653,27 +653,36 @@ const App: React.FC = () => {
             overflow: visible !important;
             display: block !important;
             background-color: white !important;
-            color: black !important;
         }
 
         /* 修正程式碼區塊：強制淺色底色，無視深色模式設定 */
-        .prose pre, .prose code {
+        .prose pre {
             background-color: #f8f9fa !important;
-            color: #333 !important;
             border: 1px solid #ddd !important;
             white-space: pre-wrap !important;
-            word-break: break-all !important;
-            overflow: visible !important;
+            overflow-wrap: break-word !important;
+            word-break: normal !important;
+            overflow-x: hidden !important;
+            overflow-y: visible !important;
             max-width: 100% !important;
             display: block !important;
             filter: invert(0) !important;
             text-shadow: none !important;
         }
 
+        .prose :not(pre) > code {
+            background-color: #f1f5f9 !important;
+            color: #333 !important;
+            border: 1px solid #cbd5e1 !important;
+        }
+
         /* 語法高亮插件內部的 pre 可能有自己的樣式 */
         .prose pre {
-            overflow: visible !important;
+            overflow-x: hidden !important;
+            overflow-y: visible !important;
             white-space: pre-wrap !important;
+            overflow-wrap: break-word !important;
+            word-break: normal !important;
             filter: invert(0) !important;
         }
 
@@ -740,17 +749,7 @@ const App: React.FC = () => {
         * { scrollbar-width: none !important; }
         ::-webkit-scrollbar { display: none !important; }
 
-        pre, code {
-        background: transparent !important; border: none !important;
-        }
-
         /* 針對 react-syntax-highlighter 產生的 div 容器進行修正 */
-        .prose div[style*="background-color"] {
-          background-color: #f8f9fa !important;
-          border: 1px solid #ddd !important;
-          padding: 1em !important;
-        }
-
         .diagram-block-container {
           border-radius: 0 !important;
           box-shadow: none !important;

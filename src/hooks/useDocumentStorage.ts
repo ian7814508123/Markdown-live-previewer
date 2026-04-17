@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { DocumentRecord, AppState, FolderRecord } from '../types';
+import pkg from '../../package.json';
 
 const STORAGE_KEY = 'mermaid-lens-documents';
 /**
@@ -7,7 +8,7 @@ const STORAGE_KEY = 'mermaid-lens-documents';
  * 請遞增此版本號，讓既有使用者的快取預設文件自動刷新。
  * 使用者自訂的文件不受影響。
  */
-const DEFAULT_VERSION = '2';
+const DEFAULT_VERSION = pkg.version;
 const VERSION_KEY = 'mermaid-lens-default-version';
 const MAX_DOCUMENTS = 50; // 防止儲存過多文檔
 

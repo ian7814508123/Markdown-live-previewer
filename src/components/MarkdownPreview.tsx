@@ -721,6 +721,11 @@ const EnhancedCodeBlock: React.FC<EnhancedCodeBlockProps> = ({
     // 列印模式為了防截斷，強制換行
     const effectiveWrapped = isActuallyPrinting || isWrapped;
 
+    // 當斷行狀態改變或初次渲染時，通知預覽器重新計算佈局高度（列印同步用）
+    useEffect(() => {
+        window.dispatchEvent(new CustomEvent('content-layout-ready'));
+    }, [effectiveWrapped]);
+
     return (
         <div className="relative group/codeblock w-full">
             {/* 切換換行的按鈕 (不給列印時顯示) */}

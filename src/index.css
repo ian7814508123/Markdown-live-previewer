@@ -497,10 +497,6 @@ mjx-container:not([display="true"]) {
 /* 針對 react-syntax-highlighter 產生的 pre 標籤 (優化) */
 pre[style] {
     background-color: var(--code-bg) !important;
-    white-space: pre-wrap !important;
-    overflow-wrap: break-word !important;
-    word-break: normal !important;
-    overflow-x: hidden !important;
     overflow-y: visible !important;
     max-width: 100% !important;
     transition: background-color 0.2s ease;
@@ -508,32 +504,93 @@ pre[style] {
 
 .show-print-preview pre[style] {
     background-color: var(--code-bg) !important;
-    white-space: pre-wrap !important;
-    overflow-wrap: break-word !important;
-    word-break: normal !important;
-    overflow-x: hidden !important;
     overflow-y: visible !important;
     max-width: 100% !important;
 }
 
+/* =========================================================
+ *  🌟 智能行號與斷行控制 (CSS Counters & Hanging Indent)
+ * ========================================================= */
+
+.enhanced-codeblock code {
+    counter-reset: code-line;
+    display: block;
+}
+
+.enhanced-codeblock .code-line {
+    counter-increment: code-line;
+    display: block !important;
+    padding-left: 0 !important;
+    text-indent: 0 !important;
+}
+
+/* 核心：利用 ::before 充當每一行的專屬行號 */
+.enhanced-codeblock .code-line::before {
+    content: counter(code-line);
+    display: inline-block;
+    position: sticky; /* 當父層發生向右捲動時，將行號吸附於左側邊界 */
+    left: 0;
+    z-index: 10;
+    min-width: 3.5em; /* 為了防止大於 99 的行數擠壓，採用寬裕的寬度 */
+    text-align: right;
+    padding-right: 0.75em;
+    margin-right: 1.25em; /* 行號與程式碼之間的距離 */
+    border-right: 1px solid var(--code-border);
+    font-style: italic;
+    user-select: none;
+    background-color: var(--code-bg); /* 吸附時遮蓋下方卷動的程式碼 */
+    /* 增加設計感：捲動時呈現的層次陰影 */
+    box-shadow: 2px 0 4px -2px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.2s ease;
+}
+
+/* 列印時移除陰影與 sticky，保持純淨性 */
 @media print {
-    .prose .code-block-wrapper {
+    .enhanced-codeblock .code-line::before {
+        position: static;
+        box-shadow: none;
+        background-color: transparent;
+        border-right: 1px solid #e2e8f0;
+    }
+}
+
+/* 判斷色彩: dark 模式 */
+.enhanced-codeblock[data-theme-style="dark"] .code-line::before {
+    color: #64748b;
+}
+
+/* 判斷色彩: light/print 模式 */
+.enhanced-codeblock[data-theme-style="light"] .code-line::before {
+    color: #94a3b8;
+}
+
+/* ====================================
+ *  自動換行模式 (Wrap + Hanging Indent)
+ * ==================================== */
+/* 
+   Line Number Block Width ≈ 3.5(w) + 0.75(p) + 1.25(m) = 5.5em
+   Hanging Indent Push = 2em, Total Negative Indent = 7.5em 
+*/
+.enhanced-codeblock.code-block-wrap .code-line {
+    white-space: pre-wrap !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-all !important;
+    padding-left: 7.5em !important; 
+    text-indent: -7.5em !important;
+}
+
+/* ====================================
+ *  捲動模式 (Scroll)
+ * ==================================== */
+.enhanced-codeblock.code-block-scroll .code-line {
+    white-space: pre !important; 
+    /* 不需額外縮排，靠 ::before 自然撐開空間 */
+}
+
+@media print {
+    .prose .code-block-wrapper,
+    .enhanced-codeblock {
         overflow: visible !important;
-    }
-
-    pre[style] {
-        background-color: var(--code-bg) !important;
-        white-space: pre-wrap !important;
-        overflow-wrap: break-word !important;
-        word-break: normal !important;
-    }
-
-    .prose pre[style] code,
-    .prose .code-block-wrapper code,
-    .prose .code-block-wrapper span {
-        white-space: pre-wrap !important;
-        overflow-wrap: break-word !important;
-        word-break: normal !important;
     }
 
     .prose .code-block-wrapper,

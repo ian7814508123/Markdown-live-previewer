@@ -334,57 +334,169 @@
     }
 
 
-    /* ── 列表樣式與其他 ── */
-    .prose ol {
-        list-style-type: upper-roman;
-        /* Level 1: I, II, III */
-    }
+}
 
-    .prose ol ol {
-        list-style-type: lower-roman;
-        /* Level 2: i, ii, iii */
-    }
+/* ── Markdown 內容樣式增強 (放置於 @layer base 之外以確保優先權) ── */
 
-    .prose ol ol ol {
-        list-style-type: upper-alpha;
-        /* Level 3: A, B, C */
-    }
+/* 1. 標題階層強化 (解決 H5/H6 相同問題) */
+.prose h1 {
+    font-size: 2.25rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+}
 
-    .prose ol ol ol ol {
-        list-style-type: lower-alpha;
-        /* Level 4: a, b, c */
-    }
+.prose h2 {
+    font-size: 1.875rem;
+    margin-top: 1.75rem;
+    margin-bottom: 0.75rem;
+}
 
-    .prose ol ol ol ol ol {
-        list-style-type: decimal;
-        /* Level 5: 1, 2, 3 */
-    }
+.prose h3 {
+    font-size: 1.5rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+}
 
-    /* Multi-level Unordered List Styling */
-    .prose ul {
-        list-style-type: disc;
-        /* Level 1 */
-    }
+.prose h4 {
+    font-size: 1.25rem;
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+}
 
-    .prose ul ul {
-        list-style-type: circle;
-        /* Level 2 */
-    }
+.prose h5 {
+    font-size: 1.1rem;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
 
-    .prose ul ul ul {
-        list-style-type: square;
-        /* Level 3 */
-    }
+.prose h6 {
+    font-size: 1rem;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+    opacity: 0.8;
+}
 
-    .prose ul ul ul ul {
-        list-style-type: disc;
-        /* Level 4 */
-    }
+/* 2. 列表樣式與階層修復 (Ordered & Unordered Lists) */
+.prose ol,
+.prose ul {
+    padding-left: 1.5rem !important;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
 
-    .prose ul ul ul ul ul {
-        list-style-type: circle;
-        /* Level 5 */
-    }
+.prose li {
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+/* 有序列階層 (Ordered List Levels) */
+.prose ol {
+    list-style-type: decimal !important;
+    /* Level 1: 1, 2, 3 */
+    padding-left: 1.5rem !important;
+}
+
+.prose ol ol {
+    list-style-type: upper-alpha !important;
+    /* Level 2: A, B, C */
+}
+
+.prose ol ol ol {
+    list-style-type: lower-alpha !important;
+    /* Level 3: a, b, c */
+    padding-left: 1.5rem !important;
+}
+
+.prose ol ol ol ol {
+    list-style-type: upper-roman !important;
+    /* Level 4: I, II, III */
+    padding-left: 1.5rem !important;
+}
+
+.prose ol ol ol ol ol {
+    list-style-type: lower-roman !important;
+    /* Level 5: i, ii, iii */
+    padding-left: 1.5rem !important;
+}
+
+.prose ol ol ol ol ol ol {
+    list-style-type: lower-greek !important;
+    /* Level 6: α, β, γ */
+    padding-left: 1.5rem !important;
+}
+
+/* 無序列階層 (Unordered List Levels) */
+.prose ul {
+    list-style-type: disc !important;
+    /* Level 1: 實心圓 */
+}
+
+.prose ul ul {
+    list-style-type: circle !important;
+    /* Level 2: 空心圓 */
+    padding-left: 1.5rem !important;
+}
+
+.prose ul ul ul {
+    list-style-type: square !important;
+    /* Level 3: 方塊 */
+    padding-left: 1.5rem !important;
+}
+
+.prose ul ul ul ul {
+    list-style-type: '\25A1\00a0\00a0' !important;
+    /* Level 4: 空心方塊 */
+    padding-left: 1.5rem !important;
+}
+
+.prose ul ul ul ul ul {
+    list-style-type: disclosure-closed !important;
+    /* Level 5: 實心三角 */
+    padding-left: 1.5rem !important;
+}
+
+.prose ul ul ul ul ul ul {
+    list-style-type: '▷ ' !important;
+    /* Level 6: 空心三角 */
+    padding-left: 1.5rem !important;
+}
+
+/* 3. 行內程式碼樣式 (Inline Code) */
+.prose .inline-code {
+    background-color: #f1f5f9;
+    color: var(--brand-primary);
+    padding: 0.2rem 0.4rem;
+    border-radius: 6px;
+    font-size: 0.9em;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    border: 1px solid #e2e8f0;
+    word-break: break-word;
+    display: inline; /* 確保它是行內元素 */
+}
+
+.dark .prose .inline-code {
+    background-color: #1e293b; /* slate-800 */
+    color: var(--brand-primary);
+    border-color: #334155;
+}
+
+/* 4. 移除 Tailwind Typography 預設幫 code 加上 的反引號 (backticks) */
+.prose code::before,
+.prose code::after {
+    content: "" !important;
+}
+
+/* 防止在特定的不需 prose 樣式的地方受影響 */
+.not-prose .inline-code {
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+@layer base {
 
     /* MathJax Override for Production Build */
     mjx-container[display="true"] {
@@ -909,5 +1021,113 @@
             fill: #000 !important;
             stroke: #000 !important;
         }
+    }
+
+    /* ── CodeMirror 搜尋面板美化 (Search & Replace Panel) ────────────────── */
+    .cm-search {
+        background-color: white !important;
+        border: 1px solid var(--brand-secondary) !important;
+        border-radius: 12px !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+        padding: 12px 16px !important;
+        margin: 8px !important;
+        font-family: inherit !important;
+        animation: m3-slide-up 300ms var(--m3-easing-standard) both;
+        z-index: 100 !important;
+        color: #1e293b !important;
+    }
+
+    .dark .cm-search {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2) !important;
+        color: #f1f5f9 !important;
+    }
+
+    .cm-search label {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        margin-bottom: 6px !important;
+    }
+
+    .cm-search-field {
+        background-color: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 6px !important;
+        padding: 4px 8px !important;
+        margin-right: 8px !important;
+        outline: none !important;
+        transition: all 0.2s !important;
+        font-size: 13px !important;
+    }
+
+    .dark .cm-search-field {
+        background-color: #0f172a !important;
+        border-color: #334155 !important;
+        color: white !important;
+    }
+
+    .cm-search-field:focus {
+        border-color: var(--brand-primary) !important;
+        box-shadow: 0 0 0 2px rgba(0, 91, 148, 0.1) !important;
+    }
+
+    .cm-search .cm-button {
+        background: #f1f5f9 !important;
+        background-image: none !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 6px !important;
+        padding: 4px 12px !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        color: #475569 !important;
+        cursor: pointer !important;
+        transition: all 0.2s !important;
+        text-transform: none !important;
+    }
+
+    .dark .cm-search .cm-button {
+        background: #334155 !important;
+        border-color: #475569 !important;
+        color: #e2e8f0 !important;
+    }
+
+    .cm-search .cm-button:hover {
+        background: #e2e8f0 !important;
+        color: #1e293b !important;
+    }
+
+    .dark .cm-search .cm-button:hover {
+        background: #475569 !important;
+        color: white !important;
+    }
+
+    .cm-search [name="close"] {
+        position: absolute !important;
+        top: 8px !important;
+        right: 8px !important;
+        padding: 4px !important;
+        border-radius: 50% !important;
+        cursor: pointer !important;
+        color: #94a3b8 !important;
+        background: transparent !important;
+        border: none !important;
+    }
+
+    .cm-search [name="close"]:hover {
+        background: #f1f5f9 !important;
+        color: #ef4444 !important;
+    }
+
+    .dark .cm-search [name="close"]:hover {
+        background: #334155 !important;
+    }
+
+    /* 隱藏預設的陽春 CSS 表單行為，改用更現代的方式 */
+    .cm-search input[type="checkbox"] {
+        accent-color: var(--brand-primary) !important;
     }
 }

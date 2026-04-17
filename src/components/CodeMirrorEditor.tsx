@@ -5,8 +5,9 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
 import { mermaid } from 'codemirror-lang-mermaid';
 import { vscodeDark, vscodeLight } from '@uiw/codemirror-theme-vscode';
-import { EditorView } from '@codemirror/view';
+import { EditorView, keymap } from '@codemirror/view';
 import { EditorState } from '@codemirror/state';
+import { searchKeymap, openSearchPanel, search } from '@codemirror/search';
 
 interface CodeMirrorEditorProps {
     mode: 'mermaid' | 'markdown';
@@ -33,6 +34,9 @@ const CodeMirrorEditor = React.forwardRef<ReactCodeMirrorRef, CodeMirrorEditorPr
                 },
             }),
             mode === 'mermaid' ? mermaid() : markdown({ base: markdownLanguage, codeLanguages: languages }),
+            // 搜尋擴充與快速鍵
+            search({ top: true }),
+            keymap.of(searchKeymap),
             // 透過 domEventHandlers 確保監聽到 scroller 的捲動事件
             EditorView.domEventHandlers({
                 scroll: (event, view) => {

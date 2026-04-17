@@ -46,6 +46,14 @@ const Editor = forwardRef<ReactCodeMirrorRef, EditorProps>(({
     onCloseTab,
 }, ref) => {
 
+    const handleSearch = () => {
+        if (ref && 'current' in ref && ref.current?.view) {
+            import('@codemirror/search').then(({ openSearchPanel }) => {
+                openSearchPanel(ref.current!.view!);
+            });
+        }
+    };
+
     return (
         <section
             className="w-[400px] lg:w-[480px] flex flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 z-20 shadow-xl transition-colors duration-200 print:hidden"
@@ -122,6 +130,11 @@ const Editor = forwardRef<ReactCodeMirrorRef, EditorProps>(({
 
                 {/* 右側操作按鈕 */}
                 <div className="flex items-center gap-1 px-2 mb-1">
+                    <RippleButton variant="icon" onClick={handleSearch}
+                        aria-label="搜尋與取代 (Ctrl+F)"
+                        title="搜尋 (Ctrl+F)" className="w-8 h-8 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800">
+                        <FileSearch size={14} />
+                    </RippleButton>
                     <RippleButton variant="icon" onClick={onCopy} 
                         aria-label="複製內容"
                         title="複製" className="w-8 h-8 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800">

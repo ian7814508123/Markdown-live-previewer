@@ -1,7 +1,8 @@
 ---
 title: Mermaid 語法與樣式全攻略 (Cheat Sheet)
 ---
-%% width: 80%
+%% width: 100%
+%% 👆 Tip: 使用 %% width: 80% 或 %% scale: 0.9 來調整圖表大小 (支援 PDF 匯出)
 graph TD
     %% ==========================================
     %% 1. 基礎節點語法 (Node Syntax)
@@ -83,3 +84,57 @@ graph TD
     
     %% 連線樣式 (linkStyle)
     linkStyle 0 stroke:#ff9800,stroke-width:4px;
+  
+    %% ====================================
+    %% 其他圖表類型範例（取消註解即可使用）
+    %% ====================================
+    
+    %% 序列圖 (Sequence Diagram)
+    %% sequenceDiagram
+    %%     participant 用戶
+    %%     participant 系統
+    %%     participant 資料庫
+    %%     用戶->>系統: 發送請求
+    %%     系統->>資料庫: 查詢資料
+    %%     資料庫-->>系統: 返回結果
+    %%     系統-->>用戶: 顯示結果
+    
+    %% 類別圖 (Class Diagram)
+    %% classDiagram
+    %%     class Animal {
+    %%         +String name
+    %%         +int age
+    %%         +makeSound()
+    %%     }
+    %%     class Dog {
+    %%         +String breed
+    %%         +bark()
+    %%     }
+    %%     Animal <|-- Dog
+    
+    %% 狀態圖 (State Diagram)
+    %% stateDiagram-v2
+    %%     [*] --> 待處理
+    %%     待處理 --> 處理中: 開始處理
+    %%     處理中 --> 已完成: 處理成功
+    %%     處理中 --> 失敗: 處理失敗
+    %%     失敗 --> 待處理: 重試
+    %%     已完成 --> [*]
+    
+    %% 甘特圖 (Gantt Chart)
+    %% gantt
+    %%     title 專案時程表
+    %%     dateFormat YYYY-MM-DD
+    %%     section 設計階段
+    %%     需求分析: 2024-01-01, 7d
+    %%     UI設計: 2024-01-08, 5d
+    %%     section 開發階段
+    %%     前端開發: 2024-01-13, 10d
+    %%     後端開發: 2024-01-13, 10d
+    
+    %% 圓餅圖 (Pie Chart)
+    %% pie title 專案時間分配
+    %%     "設計" : 30
+    %%     "開發" : 45
+    %%     "測試" : 15
+    %%     "部署" : 10

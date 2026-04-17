@@ -408,6 +408,9 @@ const EnhancedCodeBlock: React.FC<EnhancedCodeBlockProps> = ({
     );
 };
 
+// ─── 區塊判斷上下文：用於解決 react-markdown v10 移除 inline prop 後的辨識問題 ───────
+const IsInPreContext = React.createContext(false);
+
 const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDarkMode, documents = [], onSelectDocument, onCreateMissing, currentDocId, isPrinting, showPrintPreview, printSessionId = 0 }) => {
     // 關鍵修正：判斷當前是否處於「需要白色底」或「列印中」的狀態
     // 優先使用 Props 以確保 React 渲染週期同步，避免 reliance on DOM queries
@@ -473,8 +476,9 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
     }), []);
 
     const components = useMemo(() => ({
-        pre: ({ children }: any) => <>{children}</>, // 移除外層 pre，消除雙層容器基礎
-        code({ node, inline, className, children, ...props }: any) {
+        pre: ({ children }: any) => <IsInPreContext.Provider value={true}>{children}</IsInPreContext.Provider>, 
+        code({ node, className, children, ...props }: any) {
+            const isBlock = React.useContext(IsInPreContext);
             const ctx = renderContextRef.current;
             const match = /language-(\w+)/.exec(className || '');
             const language = match ? match[1] : '';
@@ -482,7 +486,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
             const stableKey = hashString(codeString);
             const line = node?.position?.start?.line;
 
-            if (!inline) {
+            if (isBlock) {
                 if (language === 'mermaid') return <div data-line={line} className="not-prose"><MermaidBlock key={stableKey} code={codeString} isDarkMode={ctx.isDarkMode} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} printSessionId={ctx.printSessionId} /></div>;
                 if (language === 'vega' || language === 'vega-lite') return <div data-line={line} className="not-prose"><VegaBlock key={stableKey} code={codeString} isDarkMode={ctx.isDarkMode} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} printSessionId={ctx.printSessionId} /></div>;
                 if (language === 'smiles') return <div data-line={line} className="not-prose"><SmilesBlock key={stableKey} code={codeString} isDarkMode={ctx.isDarkMode} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} printSessionId={ctx.printSessionId} /></div>;
@@ -500,7 +504,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
                     </div>
                 );
             }
-            return <code className={className} {...props} data-line={line}>{children}</code>;
+            return <code className={`${className || ''} inline-code`} {...props} data-line={line}>{children}</code>;
         },
         // ─── 注入 Line Number 以實現精準同步捲動 ───────────────────────────────────
         p: ({ node, ...props }: any) => <div className="mb-4 last:mb-0" data-line={node?.position?.start?.line} {...props} />,

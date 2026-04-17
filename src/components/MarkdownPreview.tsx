@@ -7,10 +7,14 @@ import rehypeRaw from 'rehype-raw';
 import mermaid from 'mermaid';
 import embed from 'vega-embed';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import SmilesDrawer from 'smiles-drawer';
 import { useImageStorage } from '../hooks/useImageStorage';
 import { WrapText } from 'lucide-react';
+import DiagramBlock from './DiagramBlock';
+import { ResizableWrapper } from './ResizableWrapper';
+import { hashString } from '../utils';
+import { useDebounce } from '../hooks/useDebounce';
+import { usePersistentCanvasSettings } from '../hooks/usePersistentCanvasSettings';
 
 interface MarkdownPreviewProps {
     content: string;
@@ -25,153 +29,9 @@ interface MarkdownPreviewProps {
     printSessionId?: number;
 }
 
-// ─── 輔助函式：簡單的字串雜湊 ──────────────────────────────────────────────────
-// 用於生成基於內容的穩定 Key，防止 React 在內容未變時重新掛載組件
-export const hashString = (str: string) => {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        const char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32bit integer
-    }
-    return Math.abs(hash).toString(36);
-};
+// 原有的輔助 Hook 與組件已抽離至 DiagramBlock.tsx 與 ResizableWrapper.tsx 處理
 
-// ─── 持久化 Hook：用於記憶圖表縮放、寬度與高度 ──────────────────────────────────────
-export function usePersistentCanvasSettings(storageKey: string, initialWidth: string = '100%', initialScale: number = 1) {
-    const [settings, setSettings] = useState(() => {
-        try {
-            const saved = localStorage.getItem(storageKey);
-            return saved ? JSON.parse(saved) : { width: initialWidth, height: 'auto', scale: initialScale };
-        } catch {
-            return { width: initialWidth, height: 'auto', scale: initialScale };
-        }
-    });
-
-    useEffect(() => {
-        localStorage.setItem(storageKey, JSON.stringify(settings));
-    }, [settings, storageKey]);
-
-    const updateWidth = useCallback((w: string) => setSettings((s: any) => ({ ...s, width: w })), []);
-    const updateHeight = useCallback((h: string) => setSettings((s: any) => ({ ...s, height: h })), []);
-    const updateScale = useCallback((sc: number) => setSettings((s: any) => ({ ...s, scale: sc })), []);
-    const reset = useCallback(() => setSettings({ width: initialWidth, height: 'auto', scale: initialScale }), [initialWidth, initialScale]);
-
-    return { ...settings, updateWidth, updateHeight, updateScale, reset };
-}
-
-// ─── 通用防抖 Hook：用於延遲重型渲染 ──────────────────────────────────────────────
-export function useDebounce<T>(value: T, delay: number): T {
-    const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
-    useEffect(() => {
-        const handler = setTimeout(() => {
-            setDebouncedValue(value);
-        }, delay);
-        return () => clearTimeout(handler);
-    }, [value, delay]);
-
-    return debouncedValue;
-}
-
-// ─── 輔助組件：可調整寬度與高度的容器 ────────────────────────────────────────────────
-export const ResizableWrapper: React.FC<{
-    children: React.ReactNode;
-    width: string;
-    height: string;
-    scale: number;
-    onWidthChange: (width: string) => void;
-    onHeightChange: (height: string) => void;
-    onScaleChange: (scale: number) => void;
-    onReset: () => void;
-    isDarkMode: boolean;
-}> = ({ children, width, height, scale, onWidthChange, onHeightChange, onScaleChange, onReset, isDarkMode }) => {
-    return (
-        <div className="relative group/resizable my-8 print:my-4 print:p-0">
-            <div
-                className="mx-auto transition-all duration-300 ease-in-out relative flex justify-center"
-                style={{
-                    width,
-                    maxHeight: height === 'auto' ? 'none' : height,
-                    overflow: height === 'auto' ? 'visible' : 'hidden'
-                }}
-            >
-                <div
-                    className="print:![transform:none] print:![zoom:var(--print-scale)] w-full"
-                    style={{
-                        transform: `scale(${scale})`,
-                        transformOrigin: 'top center',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        '--print-scale': scale
-                    } as any}
-                >
-                    {children}
-                </div>
-            </div>
-
-            {/* 調整大小的 UI 面板 - 懸浮於上方 (列印時隱藏) */}
-            <div className={`absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover/resizable:opacity-100 transition-all duration-300 z-30 pointer-events-none group-hover/resizable:translate-y-0 translate-y-2 print:hidden`}>
-                <div className={`pointer-events-auto flex items-center gap-2.5 px-3.5 py-1.5 rounded-full border shadow-2xl backdrop-blur-xl ${isDarkMode
-                    ? 'bg-slate-800/95 border-slate-700 text-slate-200'
-                    : 'bg-white/95 border-slate-200 text-slate-600'
-                    }`}>
-                    {/* Width Control */}
-                    <div className="flex items-center gap-1.5 border-r border-slate-200/20 pr-2.5">
-                        <span className="text-[10px] font-bold uppercase tracking-wider select-none opacity-50">W</span>
-                        <input
-                            type="range" min="30" max="100" step="5"
-                            value={parseInt(width)}
-                            onChange={(e) => onWidthChange(`${e.target.value}%`)}
-                            className={`w-16 h-1 rounded-lg appearance-none cursor-pointer accent-brand-primary bg-slate-200 dark:bg-slate-700`}
-                        />
-                        <span className="text-[10px] font-mono min-w-[2.2rem] opacity-70">{width}</span>
-                    </div>
-
-                    {/* Height Control */}
-                    <div className="flex items-center gap-1.5 border-r border-slate-200/20 pr-2.5">
-                        <span className="text-[10px] font-bold uppercase tracking-wider select-none opacity-50">H</span>
-                        <input
-                            type="range" min="150" max="800" step="10"
-                            value={height === 'auto' ? 800 : parseInt(height)}
-                            onChange={(e) => onHeightChange(`${e.target.value}px`)}
-                            className={`w-16 h-1 rounded-lg appearance-none cursor-pointer accent-teal-500 bg-slate-200 dark:bg-slate-700`}
-                        />
-                        <span className="text-[10px] font-mono min-w-[2.2rem] opacity-70">{height === 'auto' ? 'Auto' : height}</span>
-                    </div>
-
-                    {/* Scale Control */}
-                    <div className="flex items-center gap-1.5 border-r border-slate-200/20 pr-2.5">
-                        <span className="text-[10px] font-bold uppercase tracking-wider select-none opacity-50">S</span>
-                        <input
-                            type="range" min="0.5" max="2" step="0.1"
-                            value={scale}
-                            onChange={(e) => onScaleChange(parseFloat(e.target.value))}
-                            className={`w-16 h-1 rounded-lg appearance-none cursor-pointer accent-amber-500 bg-slate-200 dark:bg-slate-700`}
-                        />
-                        <span className="text-[10px] font-mono min-w-[2.2rem] opacity-70">{scale.toFixed(1)}x</span>
-                    </div>
-
-                    {/* Reset Button */}
-                    <button
-                        onClick={onReset}
-                        className={`text-[9px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-brand-primary hover:text-white transition-colors duration-200`}
-                    >
-                        RESET
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-// 初始化 Mermaid 配置，防止其在語法出錯時顯示預設的錯誤 UI
-mermaid.initialize({
-    startOnLoad: false,
-    theme: 'default',
-    // @ts-ignore - 部分版本類型定義可能未包含此屬性
-    suppressError: true, // 關鍵：抑制預設錯誤提示
-});
+// 原有的輔助 Hook 與組件已抽離至 DiagramBlock.tsx 處理
 
 /** 
  * 淨化 Mermaid 生成的 SVG 字串
@@ -185,334 +45,109 @@ const cleanMermaidSvg = (svgHtml: string) => {
 };
 
 const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: boolean; showPrintPreview?: boolean; printSessionId?: number }> = React.memo(({ code, isDarkMode, isPrinting, showPrintPreview, printSessionId = 0 }) => {
-    const isDark = isDarkMode && !isPrinting && !showPrintPreview;
-    const [svg, setSvg] = useState('');
-    const [isPending, setIsPending] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const isMounted = useRef(true);
+    const render = useCallback(async (container: HTMLDivElement, renderCode: string, isDark: boolean) => {
+        mermaid.initialize({
+            theme: isDark ? 'dark' : 'neutral',
+            fontFamily: 'Inter, system-ui, sans-serif',
+            securityLevel: 'loose'
+        });
 
-    // 從程式碼註解中讀取初始設定
-    const initialWidth = useMemo(() => {
-        const widthMatch = code.match(/%%\s*width:\s*(\d+)%/i);
-        return widthMatch ? `${widthMatch[1]}%` : '100%';
-    }, [code]);
+        const id = `mermaid-${hashString(renderCode + (isDark ? 'dark' : 'light'))}`;
+        const { svg: renderedSvg } = await mermaid.render(id, renderCode);
+        container.innerHTML = cleanMermaidSvg(renderedSvg);
+    }, []);
 
-    const initialScale = useMemo(() => {
-        const scaleMatch = code.match(/%%\s*scale:\s*([\d.]+)/i);
-        return scaleMatch ? parseFloat(scaleMatch[1]) : 1;
-    }, [code]);
-
-    const storageKey = useMemo(() => `chart-size-mermaid:${hashString(code)}`, [code]);
-    const { width, height, scale, updateWidth, updateHeight, updateScale, reset } = usePersistentCanvasSettings(
-        storageKey, 
-        initialWidth, 
-        initialScale
-    );
-
-    // 套用通用的 Debounce (300ms)
-    const debouncedCode = useDebounce(code, 300);
-    const renderCode = isPrinting ? code : debouncedCode;
-
-    const notifyMermaidReady = useCallback(() => {
-        window.dispatchEvent(new CustomEvent('content-layout-ready'));
-        window.dispatchEvent(new CustomEvent('mermaid-render-complete', {
-            detail: { blockId: storageKey, printSessionId }
-        }));
-    }, [storageKey, printSessionId]);
-
-    useEffect(() => {
-        if (!renderCode) {
-            setSvg('');
-            return;
-        }
-
-        isMounted.current = true;
-        setIsPending(true);
-        const timer = setTimeout(async () => {
-            try {
-                // 恢復標準主題（避免 var() 語法錯誤），後續由 CSS 同步覆蓋
-                const isDark = isDarkMode && !isPrinting && !showPrintPreview;
-                mermaid.initialize({ 
-                    theme: isDark ? 'dark' : 'neutral',
-                    fontFamily: 'Inter, system-ui, sans-serif'
-                });
-
-                const id = `mermaid-${hashString(renderCode)}`;
-                const { svg: renderedSvg } = await mermaid.render(id, renderCode);
-
-                if (isMounted.current) {
-                    // 對 SVG 進行處理，確保其能自適應 ResizableWrapper 的寬度
-                    setSvg(cleanMermaidSvg(renderedSvg));
-                    setError(null);
-                    // 通知佈局已就緒（用於列印同步）
-                    notifyMermaidReady();
-                }
-            } catch (err: any) {
-                console.error('Mermaid render error:', err);
-                if (isMounted.current) {
-                    setError(err.message || 'Syntax Error');
-                    // 即使出錯也通知，避免列印瑣死
-                    notifyMermaidReady();
-                }
-            } finally {
-                if (isMounted.current) {
-                    setIsPending(false);
-                }
-            }
-        }, 50); // 內部的渲染延時縮短，主要由外部 useDebounce 控制
-    
-        return () => {
-            isMounted.current = false;
-            clearTimeout(timer);
-        };
-    }, [renderCode, isDark, isDarkMode, isPrinting, showPrintPreview, notifyMermaidReady]);
-
-    const handleReset = () => {
-        reset();
-    };
-
-    if (!svg && error) {
-        return (
-            <div className="my-6 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-xs font-mono whitespace-pre-wrap">
-                <div className="font-bold mb-2">Mermaid Syntax Error</div>
-                {error}
-            </div>
-        );
-    }
-
-    // 列印模式：扁平化，拿掉所有裝飾，讓 SVG 直接適應頁面寬度
-    if (isPrinting || showPrintPreview) {
-        return (
-            <div
-                data-mermaid-block="true"
-                data-mermaid-block-id={storageKey}
-                style={{
-                    width: '100%',
-                    margin: '1rem 0',
-                    display: 'flex',
-                    justifyContent: 'center',
-                }}
-                dangerouslySetInnerHTML={{ __html: svg }}
-            />
-        );
-    }
-
-    // 正常螢幕模式：保留完整互動畫布
     return (
-        <ResizableWrapper
-            width={width}
-            height={height}
-            scale={scale}
-            onWidthChange={updateWidth}
-            onHeightChange={updateHeight}
-            onScaleChange={updateScale}
-            onReset={handleReset}
+        <DiagramBlock
+            type="mermaid"
+            code={code}
             isDarkMode={isDarkMode}
-        >
-            <div
-                data-mermaid-block="true"
-                data-mermaid-block-id={storageKey}
-                className={`diagram-block-container flex justify-center p-6 rounded-2xl shadow-sm border overflow-auto transition-opacity duration-300 ${isDark ? 'border-slate-700/50' : 'border-slate-200/50'} ${isPending ? 'opacity-50' : 'opacity-100'}`}
-                style={{ width: '100%', height: 'auto', backgroundColor: 'var(--code-bg)' }}
-                dangerouslySetInnerHTML={{ __html: svg }}
-            />
-            {isPending && !error && (
-                <div className="absolute top-2 right-2">
-                    <div className="w-4 h-4 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
-                </div>
-            )}
-            {error && (
-                <div className="absolute top-0 left-0 right-0 -mt-3 flex justify-center z-10 pointer-events-none">
-                    <div className="bg-red-100 dark:bg-red-900/80 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-200 text-[10px] font-bold px-3 py-1 rounded-full shadow-sm flex items-center gap-2 backdrop-blur-sm">
-                        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                        Syntax Error - Showing last valid version
-                    </div>
-                </div>
-            )}
-        </ResizableWrapper>
+            isPrinting={isPrinting}
+            showPrintPreview={showPrintPreview}
+            printSessionId={printSessionId}
+            render={render}
+            errorTitle="Mermaid Syntax Error"
+        />
     );
 });
 
-const VegaBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: boolean; showPrintPreview?: boolean }> = React.memo(({ code, isDarkMode, isPrinting, showPrintPreview }) => {
-    const isDark = isDarkMode && !isPrinting && !showPrintPreview;
-    const ref = useRef<HTMLDivElement>(null);
-    const [isPending, setIsPending] = useState(false);
-    const storageKey = useMemo(() => `chart-size-vega:${hashString(code)}`, [code]);
-    const { width, height, scale, updateWidth, updateHeight, updateScale, reset } = usePersistentCanvasSettings(storageKey);
+const VegaBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: boolean; showPrintPreview?: boolean; printSessionId?: number }> = React.memo(({ code, isDarkMode, isPrinting, showPrintPreview, printSessionId = 0 }) => {
+    const render = useCallback(async (container: HTMLDivElement, renderCode: string, isDark: boolean) => {
+        const spec = JSON.parse(renderCode);
+        container.innerHTML = '';
+        await embed(container, spec, {
+            actions: false,
+            theme: isDark ? 'dark' : 'vox',
+            renderer: 'svg'
+        });
+    }, []);
 
-    const debouncedCode = useDebounce(code, 400);
-
-    useEffect(() => {
-        if (!debouncedCode) return;
-        setIsPending(true);
-        const timer = setTimeout(async () => {
-            if (!ref.current) return;
-            try {
-                const spec = JSON.parse(debouncedCode);
-                await embed(ref.current, spec, { actions: false, theme: isDark ? 'dark' : 'vox' });
-            } catch (err) {
-                console.error('Vega render error:', err);
-            } finally {
-                setIsPending(false);
-                // 通知佈局已就緒
-                window.dispatchEvent(new CustomEvent('content-layout-ready'));
-            }
-        }, 50);
-        return () => clearTimeout(timer);
-    }, [debouncedCode, isDark]);
-
-    // 列印模式：扁平化，讓 Vega 容器直接適應頁面寬度
-    if (isPrinting || showPrintPreview) {
-        return (
-            <div
-                ref={ref}
-                style={{ width: '100%', margin: '1rem 0', minHeight: '200px' }}
-            />
-        );
-    }
-
-    // 正常螢幕模式：保留完整互動畫布
     return (
-        <ResizableWrapper
-            width={width}
-            height={height}
-            scale={scale}
-            onWidthChange={updateWidth}
-            onHeightChange={updateHeight}
-            onScaleChange={updateScale}
-            onReset={reset}
+        <DiagramBlock
+            type="vega"
+            code={code}
             isDarkMode={isDarkMode}
-        >
-            <div
-                ref={ref}
-                className={`diagram-block-container overflow-auto p-6 rounded-2xl shadow-sm border transition-opacity duration-300 ${isDark ? 'border-slate-700/50' : 'border-slate-200/50'} ${isPending ? 'opacity-50' : 'opacity-100'}`}
-                style={{ width: '100%', height: 'auto', backgroundColor: 'var(--code-bg)' }}
-            />
-            {isPending && (
-                <div className="absolute top-2 right-2">
-                    <div className="w-4 h-4 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
-                </div>
-            )}
-        </ResizableWrapper>
+            isPrinting={isPrinting}
+            showPrintPreview={showPrintPreview}
+            printSessionId={printSessionId}
+            render={render}
+            errorTitle="Vega Render Error"
+        />
     );
 });
 
-const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: boolean; showPrintPreview?: boolean }> = React.memo(({ code, isDarkMode, isPrinting, showPrintPreview }) => {
-    const isDark = isDarkMode && !isPrinting && !showPrintPreview;
-    const svgRef = useRef<HTMLDivElement>(null);
-    const [error, setError] = useState<string | null>(null);
-    const [isPending, setIsPending] = useState(false);
-    const storageKey = useMemo(() => `chart-size-smiles:${hashString(code)}`, [code]);
-    const { width, height, scale, updateWidth, updateHeight, updateScale, reset } = usePersistentCanvasSettings(storageKey);
+const SmilesBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: boolean; showPrintPreview?: boolean; printSessionId?: number }> = React.memo(({ code, isDarkMode, isPrinting, showPrintPreview, printSessionId = 0 }) => {
+    const render = useCallback(async (container: HTMLDivElement, renderCode: string, isDark: boolean) => {
+        const drawer = new SmilesDrawer.SvgDrawer({
+            width: 200,
+            height: 100,
+            padding: 20,
+            bondThickness: 1.2,
+            bondLength: 15,
+            shortBondLength: 0.85,
+            bondSpacing: 4,
+            compactDrawing: true,
+            fontFamily: 'Inter, Arial, sans-serif',
+            terminalCarbons: false,
+            explicitHydrogens: false,
+        });
 
-    const debouncedCode = useDebounce(code, 500);
+        return new Promise<void>((resolve, reject) => {
+            SmilesDrawer.parse(
+                renderCode.trim(),
+                (tree: any) => {
+                    container.innerHTML = '';
+                    const svgEl = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    svgEl.setAttribute('width', '100%');
+                    svgEl.setAttribute('height', 'auto');
+                    svgEl.setAttribute('viewBox', '0 0 200 100');
+                    svgEl.style.maxHeight = '100%';
+                    container.appendChild(svgEl);
+                    drawer.draw(tree, svgEl, isDark ? 'dark' : 'light');
+                    resolve();
+                },
+                (err: any) => {
+                    reject(new Error(typeof err === 'string' ? err : (err?.message || 'SMILES 解析失敗')));
+                }
+            );
+        });
+    }, []);
 
-    useEffect(() => {
-        if (!debouncedCode) return;
-        setIsPending(true);
-        setError(null);
-        const timer = setTimeout(() => {
-            if (!svgRef.current) return;
-            try {
-                const drawer = new SmilesDrawer.SvgDrawer({
-                    width: 200,
-                    height: 100,
-                    padding: 20,
-                    bondThickness: 1.2,
-                    bondLength: 15,
-                    shortBondLength: 0.85,
-                    bondSpacing: 4,
-                    compactDrawing: true,
-                    fontFamily: 'Inter, Arial, sans-serif',
-                    terminalCarbons: false,
-                    explicitHydrogens: false,
-                });
-
-                SmilesDrawer.parse(
-                    debouncedCode.trim(),
-                    (tree: any) => {
-                        if (!svgRef.current) return;
-                        // 僅在準備好繪製時才清除舊內容，減少閃爍
-                        svgRef.current.innerHTML = '';
-                        const svgEl = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                        svgEl.setAttribute('width', '100%');
-                        svgEl.setAttribute('height', 'auto');
-                        svgEl.setAttribute('viewBox', '0 0 200 100');
-                        svgEl.style.maxHeight = '100%';
-                        svgRef.current.appendChild(svgEl);
-                        drawer.draw(tree, svgEl, isDark ? 'dark' : 'light');
-                        setError(null);
-                    },
-                    (err: any) => {
-                        console.error('SMILES parse error:', err);
-                        setError(typeof err === 'string' ? err : (err?.message || 'SMILES 解析失敗'));
-                    }
-                );
-            } catch (err: any) {
-                console.error('SMILES render error:', err);
-                setError(err?.message || '渲染失敗');
-            } finally {
-                setIsPending(false);
-                // 通知佈局已就緒
-                window.dispatchEvent(new CustomEvent('content-layout-ready'));
-            }
-        }, 50);
-        return () => clearTimeout(timer);
-    }, [debouncedCode, isDark]);
-
-    if (error) {
-        return (
-            <div className="my-6 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-xs font-mono whitespace-pre-wrap">
-                <div className="font-bold mb-2">⚗️ SMILES 語法錯誤</div>
-                {error}
-            </div>
-        );
-    }
-
-    // 列印模式：扁平化，讓 SMILES SVG 直接適應頁面寬度
-    if (isPrinting || showPrintPreview) {
-        return (
-            <div
-                ref={svgRef}
-                style={{
-                    width: '100%',
-                    margin: '1rem 0',
-                    minHeight: '150px',
-                    display: 'flex',
-                    justifyContent: 'center',
-                }}
-            />
-        );
-    }
-
-    // 正常螢幕模式：保留完整互動畫布
     return (
-        <ResizableWrapper
-            width={width}
-            height={height}
-            scale={scale}
-            onWidthChange={updateWidth}
-            onHeightChange={updateHeight}
-            onScaleChange={updateScale}
-            onReset={reset}
+        <DiagramBlock
+            type="smiles"
+            code={code}
             isDarkMode={isDarkMode}
-        >
-            <div
-                ref={svgRef}
-                className={`diagram-block-container flex justify-center items-center min-h-[200px] p-4 rounded-2xl shadow-sm border overflow-auto transition-opacity duration-300 ${isDark ? 'border-slate-700/50' : 'border-slate-200/50'} ${isPending ? 'opacity-50' : 'opacity-100'}`}
-                style={{ width: '100%', height: 'auto', backgroundColor: 'var(--code-bg)' }}
-            />
-            <div className="absolute bottom-2 right-3 text-[10px] text-slate-400 dark:text-slate-600 font-mono select-none">
-                SMILES
-            </div>
-            {isPending && (
-                <div className="absolute top-2 right-2">
-                    <div className="w-4 h-4 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
-                </div>
-            )}
-        </ResizableWrapper>
+            isPrinting={isPrinting}
+            showPrintPreview={showPrintPreview}
+            printSessionId={printSessionId}
+            render={render}
+            errorTitle="⚗️ SMILES 語法錯誤"
+            containerClassName="min-h-[200px]"
+        />
     );
 });
+
 
 const AbcBlock = React.lazy(() => import('./AbcBlock'));
 
@@ -701,7 +336,6 @@ interface EnhancedCodeBlockProps {
     language: string;
     codeString: string;
     stableKey: string;
-    syntaxStyle: any;
     isActuallyPrinting: boolean;
     shouldShowDark: boolean;
 }
@@ -710,7 +344,6 @@ const EnhancedCodeBlock: React.FC<EnhancedCodeBlockProps> = ({
     language,
     codeString,
     stableKey,
-    syntaxStyle,
     isActuallyPrinting,
     shouldShowDark
 }) => {
@@ -732,8 +365,8 @@ const EnhancedCodeBlock: React.FC<EnhancedCodeBlockProps> = ({
             {!isActuallyPrinting && (
                 <button
                     className={`absolute top-2 right-2 p-1.5 rounded-md transition-all duration-200 z-10 opacity-0 group-hover/codeblock:opacity-100 
-                        ${isWrapped 
-                            ? 'bg-brand-primary/10 text-brand-primary dark:bg-brand-primary/30 dark:text-brand-primary font-semibold' 
+                        ${isWrapped
+                            ? 'bg-brand-primary/10 text-brand-primary dark:bg-brand-primary/30 dark:text-brand-primary font-semibold'
                             : 'bg-slate-100 text-slate-400 hover:text-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}
                     onClick={() => setIsWrapped(!isWrapped)}
                     title={isWrapped ? "禁用自動換行" : "啟用自動換行"}
@@ -742,26 +375,25 @@ const EnhancedCodeBlock: React.FC<EnhancedCodeBlockProps> = ({
                     <WrapText size={16} />
                 </button>
             )}
-            
-            <div 
+
+            <div
                 className={`enhanced-codeblock ${effectiveWrapped ? 'code-block-wrap' : 'code-block-scroll'}`}
                 data-theme-style={(isActuallyPrinting || !shouldShowDark) ? 'light' : 'dark'}
             >
                 <SyntaxHighlighter
                     key={stableKey}
                     language={language || 'text'}
-                    style={syntaxStyle}
-                    customStyle={{ 
+                    useInlineStyles={false}
+                    customStyle={{
                         margin: '1.5rem 0',
                         padding: '1rem',
-                        fontSize: '0.875rem', 
+                        fontSize: '0.875rem',
                         lineHeight: '1.5',
-                        backgroundColor: 'var(--code-bg)',
+                        backgroundColor: 'transparent',
                         borderRadius: '0.5rem',
                         border: '1px solid var(--code-border)',
                         overflowX: effectiveWrapped ? 'hidden' : 'auto',
                         tabSize: '2',
-                        filter: 'invert(0)',
                     }}
                     showLineNumbers={false} /* 關閉原生的缺陷行號 */
                     wrapLines={true} /* 強制每一行編織成 span，作為 css counter 基準 */
@@ -777,15 +409,21 @@ const EnhancedCodeBlock: React.FC<EnhancedCodeBlockProps> = ({
 };
 
 const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDarkMode, documents = [], onSelectDocument, onCreateMissing, currentDocId, isPrinting, showPrintPreview, printSessionId = 0 }) => {
-    // 關鍵修正：判斷當前是否處於「需要白色底」的狀態
-    const isActuallyPrinting = isPrinting || !!document.querySelector('.show-print-preview');
+    // 關鍵修正：判斷當前是否處於「需要白色底」或「列印中」的狀態
+    // 優先使用 Props 以確保 React 渲染週期同步，避免 reliance on DOM queries
+    const isActuallyPrinting = !!isPrinting || !!showPrintPreview;
     const shouldShowDark = isDarkMode && !isActuallyPrinting;
     const processedContent = useMemo(() => content.replace(/\[\[(.*?)\]\]/g, '[$1](#wikilink-$1)'), [content]);
     const debouncedContent = useDebounce(processedContent, 200);
     // 在 MarkdownPreview 頂層呼叫一次，避免每個 LocalImage 獨立開啟 DB 連線
     const { getImage } = useImageStorage();
 
-    const renderContextRef = useRef({
+    const renderContextRef = useRef<any>(null);
+
+    // 🛠️ 同步更新渲染上下文 (Ref)，確保 ReactMarkdown 中的 Memoized 子組件能讀取到最新狀態，
+    // 同時避免因為 components 物件 identity 改變而觸發整個 Markdown 樹重掛。
+    // 解決列印後輔助工具「狀態回退延遲」的關鍵在於不等待 useEffect，而是直接在渲染階段階段同步最新值。
+    renderContextRef.current = {
         documents,
         currentDocId,
         onSelectDocument,
@@ -797,23 +435,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
         showPrintPreview,
         printSessionId,
         getImage
-    });
-
-    useEffect(() => {
-        renderContextRef.current = {
-            documents,
-            currentDocId,
-            onSelectDocument,
-            onCreateMissing,
-            shouldShowDark,
-            isActuallyPrinting,
-            isDarkMode,
-            isPrinting,
-            showPrintPreview,
-            printSessionId,
-            getImage
-        };
-    }, [documents, currentDocId, onSelectDocument, onCreateMissing, shouldShowDark, isActuallyPrinting, isDarkMode, isPrinting, showPrintPreview, printSessionId, getImage]);
+    };
 
     // ─── URI 轉換：允許自定義協定通過 react-markdown 的過濾 ───────────────────────────
     const urlTransform = useCallback((uri: string) => {
@@ -860,33 +482,28 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
             const stableKey = hashString(codeString);
             const line = node?.position?.start?.line;
 
-            // 核心修正：明確定義列印時要使用的樣式物件
-            // 只要正在列印或開啟列印預覽，無視深色模式，強制使用淺色主題 (vs)
-            const syntaxStyle = ctx.isActuallyPrinting ? vs : (ctx.shouldShowDark ? vscDarkPlus : vs);
-
             if (!inline) {
-                if (language === 'mermaid') return <div data-line={line}><MermaidBlock key={stableKey} code={codeString} isDarkMode={ctx.isDarkMode} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} printSessionId={ctx.printSessionId} /></div>;
-                if (language === 'vega' || language === 'vega-lite') return <div data-line={line}><VegaBlock key={stableKey} code={codeString} isDarkMode={ctx.isDarkMode} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} /></div>;
-                if (language === 'smiles') return <div data-line={line}><SmilesBlock key={stableKey} code={codeString} isDarkMode={ctx.isDarkMode} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} /></div>;
-                if (language === 'abc') return <React.Suspense fallback={<div className="p-4 flex justify-center items-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs">樂譜加載中...</div>}><div data-line={line}><AbcBlock key={stableKey} code={codeString} isDarkMode={ctx.isDarkMode} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} /></div></React.Suspense>;
+                if (language === 'mermaid') return <div data-line={line} className="not-prose"><MermaidBlock key={stableKey} code={codeString} isDarkMode={ctx.isDarkMode} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} printSessionId={ctx.printSessionId} /></div>;
+                if (language === 'vega' || language === 'vega-lite') return <div data-line={line} className="not-prose"><VegaBlock key={stableKey} code={codeString} isDarkMode={ctx.isDarkMode} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} printSessionId={ctx.printSessionId} /></div>;
+                if (language === 'smiles') return <div data-line={line} className="not-prose"><SmilesBlock key={stableKey} code={codeString} isDarkMode={ctx.isDarkMode} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} printSessionId={ctx.printSessionId} /></div>;
+                if (language === 'abc') return <React.Suspense fallback={<div className="p-4 flex justify-center items-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs">樂譜加載中...</div>}><div data-line={line} className="not-prose"><AbcBlock key={stableKey} code={codeString} isDarkMode={ctx.isDarkMode} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} printSessionId={ctx.printSessionId} /></div></React.Suspense>;
 
                 return (
-                    <div data-line={line} className="code-block-wrapper">
-                         <EnhancedCodeBlock 
-                             language={language}
-                             codeString={codeString}
-                             stableKey={stableKey}
-                             syntaxStyle={syntaxStyle}
-                             isActuallyPrinting={ctx.isActuallyPrinting}
-                             shouldShowDark={ctx.shouldShowDark}
-                         />
+                    <div data-line={line} className="code-block-wrapper not-prose">
+                        <EnhancedCodeBlock
+                            language={language}
+                            codeString={codeString}
+                            stableKey={stableKey}
+                            isActuallyPrinting={ctx.isActuallyPrinting}
+                            shouldShowDark={ctx.shouldShowDark}
+                        />
                     </div>
                 );
             }
             return <code className={className} {...props} data-line={line}>{children}</code>;
         },
         // ─── 注入 Line Number 以實現精準同步捲動 ───────────────────────────────────
-        p: ({ node, ...props }: any) => <p data-line={node?.position?.start?.line} {...props} />,
+        p: ({ node, ...props }: any) => <div className="mb-4 last:mb-0" data-line={node?.position?.start?.line} {...props} />,
         h1: ({ node, ...props }: any) => <h1 data-line={node?.position?.start?.line} {...props} />,
         h2: ({ node, ...props }: any) => <h2 data-line={node?.position?.start?.line} {...props} />,
         h3: ({ node, ...props }: any) => <h3 data-line={node?.position?.start?.line} {...props} />,

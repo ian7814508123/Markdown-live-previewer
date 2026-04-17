@@ -34,18 +34,39 @@
         --mermaid-node-border: #cbd5e1;
         --mermaid-line: #64748b;
         --mermaid-edge-bg: #ffffff;
+
+        /* VS Code Light 語法高亮變數 */
+        --code-token-comment: #008000;
+        --code-token-keyword: #0000FF;
+        --code-token-string: #A31515;
+        --code-token-number: #098658;
+        --code-token-function: #795E26;
+        --code-token-operator: #000000;
+        --code-token-variable: #001080;
+        --code-token-constant: #0000FF;
+        --code-token-builtin: #267F99;
+        --code-token-class: #267F99;
+        --code-token-attr-name: #E50000;
+        --code-token-tag: #800000;
+        --code-token-punctuation: #393A34;
+
+        /* MD3 動效與緩動變數 */
+        --m3-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+        --m3-easing-emphasized: cubic-bezier(0.3, 0, 0, 1);
+        --m3-easing-decelerate: cubic-bezier(0, 0, 0, 1);
+        --m3-easing-accelerate: cubic-bezier(0.3, 1, 1, 1);
     }
 
     .dark {
         color-scheme: dark;
         --brand-primary: #38BDF8;
-        /* 亮靛青：深色模式下的透亮主色 */
+        /* 亮靛青：主色 */
         --brand-secondary: #00416A;
-        /* 染料靛青：深色模式下的容器背景 */
+        /* 容器背景 */
         --brand-accent: #7DD3FC;
-        /* 極亮藍：深色模式互動 */
+        /* 互動 */
         --brand-surface: #0F172A;
-        /* 深藍黑：深色模式底色 */
+        /* 底色 */
 
         /* 程式碼與圖表變數 (深色預設) */
         --code-bg: #1e1e1e;
@@ -54,773 +75,839 @@
         /* Mermaid 專用變數 (深色預設) */
         --mermaid-node-bg: #1e293b;
         --mermaid-node-text: #f1f5f9;
-        --mermaid-node-border: #334155;
+        --mermaid-node-border: var(--code-border);
         --mermaid-line: #94a3b8;
-        --mermaid-edge-bg: #1e293b;
-    }
+        --mermaid-edge-bg: var(--mermaid-node-bg);
 
-    .show-print-preview,
-    .show-print-preview * {
-        --code-bg: #f8f9fa !important;
-        --code-border: #ddd !important;
-        
-        /* Mermaid 鎖定 */
-        --mermaid-node-bg: #f1f5f9 !important;
-        --mermaid-node-text: #1e293b !important;
-        --mermaid-node-border: #cbd5e1 !important;
-        --mermaid-line: #64748b !important;
-        --mermaid-edge-bg: #ffffff !important;
-    }
+        /* VS Code Dark+ 語法高亮變數 */
+        --code-token-comment: #6A9955;
+        --code-token-keyword: #569CD6;
+        --code-token-string: #CE9178;
+        --code-token-number: #B5CEA8;
+        --code-token-function: #DCDCAA;
+        --code-token-operator: #D4D4D4;
+        --code-token-variable: #9CDCFE;
+        --code-token-constant: #4FC1FF;
+        --code-token-builtin: #4EC9B0;
+        --code-token-class: #4EC9B0;
+        --code-token-attr-name: #9CDCFE;
+        --code-token-tag: #569CD6;
+        --code-token-punctuation: #D4D4D4;
 
-    @media print {
-        *,
-        ::before,
-        ::after {
-            --code-bg: #f8f9fa !important;
-            --code-border: #ddd !important;
+        /* 深色模式特定樣式 (集中管理) */
+        ::-webkit-scrollbar-thumb {
+            background: var(--brand-primary);
+        }
 
-            /* Mermaid 列印鎖定 */
-            --mermaid-node-bg: #f1f5f9 !important;
-            --mermaid-node-text: #1e293b !important;
-            --mermaid-node-border: #cbd5e1 !important;
-            --mermaid-line: #64748b !important;
-            --mermaid-edge-bg: #ffffff !important;
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+            /* slate-500 */
+        }
+
+        * {
+            scrollbar-color: #475569 transparent;
         }
     }
-}
 
-/* ── Material Design 3 動效與緩動變數 ─────────────────────────────────── */
-:root {
-    --m3-easing-standard: cubic-bezier(0.2, 0, 0, 1);
-    --m3-easing-emphasized: cubic-bezier(0.3, 0, 0, 1);
-    --m3-easing-decelerate: cubic-bezier(0, 0, 0, 1);
-    --m3-easing-accelerate: cubic-bezier(0.3, 0, 1, 1);
-}
 
-/* ── 全域基礎過渡（精簡版） ───────────────────────────────────────────── */
-html,
-body {
-    /* 僅針對最基礎的背景與文字色 */
-    transition: background-color 0.4s var(--m3-easing-standard),
-        color 0.4s var(--m3-easing-standard);
-}
-
-/* ── View Transitions API：圓形擴散主題切換 ────────────────────────────── */
-::view-transition-old(root),
-::view-transition-new(root) {
-    animation: none;
-    mix-blend-mode: normal;
-}
-
-/* 圓形擴散效果的動畫定義 */
-::view-transition-new(root) {
-    clip-path: circle(0% at var(--reveal-center-x, 50%) var(--reveal-center-y, 50%));
-    animation: reveal-circle 500ms var(--m3-easing-emphasized) forwards;
-}
-
-@keyframes reveal-circle {
-    to {
-        clip-path: circle(125% at var(--reveal-center-x, 50%) var(--reveal-center-y, 50%));
-    }
-}
-
-/* ── 文檔切換與通用淡入動畫 ─────────────────────────────────────────── */
-@keyframes m3-fade-in {
-    from {
-        opacity: 0;
+    /* ── 全域基礎過渡（精簡版） ───────────────────────────────────────────── */
+    html,
+    body {
+        /* 僅針對最基礎的背景與文字色 */
+        transition: background-color 0.4s var(--m3-easing-standard),
+            color 0.4s var(--m3-easing-standard);
     }
 
-    to {
-        opacity: 1;
-    }
-}
-
-.m3-fade-in {
-    animation: m3-fade-in 300ms var(--m3-easing-standard) both;
-}
-
-@keyframes doc-fade-in {
-    from {
-        opacity: 0;
-        transform: translateY(4px);
+    /* ── View Transitions API：圓形擴散主題切換 ────────────────────────────── */
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation: none;
+        mix-blend-mode: normal;
     }
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.doc-fade-in {
-    animation: doc-fade-in 180ms var(--m3-easing-standard) both;
-}
-
-/* ── 視窗與彈窗動效 (Slide-up & Scale) ───────────────────────────────── */
-@keyframes m3-slide-up {
-    from {
-        opacity: 0;
-        transform: translateY(30px) scale(0.95);
+    /* 圓形擴散效果的動畫定義 */
+    ::view-transition-new(root) {
+        clip-path: circle(0% at var(--reveal-center-x, 50%) var(--reveal-center-y, 50%));
+        animation: reveal-circle 500ms var(--m3-easing-emphasized) forwards;
     }
 
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
+    @keyframes reveal-circle {
+        to {
+            clip-path: circle(125% at var(--reveal-center-x, 50%) var(--reveal-center-y, 50%));
+        }
     }
-}
 
-.m3-slide-up {
-    animation: m3-slide-up 400ms var(--m3-easing-standard) both;
-}
+    /* ── 文檔切換與通用淡入動畫 ─────────────────────────────────────────── */
+    @keyframes m3-fade-in {
+        from {
+            opacity: 0;
+        }
 
-/* ── 工具面板切換：從中心往上下浮現 ──────────────────────────────────────
+        to {
+            opacity: 1;
+        }
+    }
+
+    .m3-fade-in {
+        animation: m3-fade-in 300ms var(--m3-easing-standard) both;
+    }
+
+    @keyframes doc-fade-in {
+        from {
+            opacity: 0;
+            transform: translateY(4px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .doc-fade-in {
+        animation: doc-fade-in 180ms var(--m3-easing-standard) both;
+    }
+
+    /* ── 視窗與彈窗動效 (Slide-up & Scale) ───────────────────────────────── */
+    @keyframes m3-slide-up {
+        from {
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .m3-slide-up {
+        animation: m3-slide-up 400ms var(--m3-easing-standard) both;
+    }
+
+    /* ── 工具面板切換：從中心往上下浮現 ──────────────────────────────────────
  * 設計原則：transform-origin: center 讓縮放從元素中央展開，
  * 配合 opacity 消除閃爍感，cubic-bezier(0.4,0,0.2,1) 達到先快後慢的物理感。
  * 適用場景：任何需要「上下撐開」或「左右撐開」的面板元素。
  * 左右展開：改用 scaleX(0.94)→scaleX(1) 即可，transform-origin 同樣為 center。
  * ─────────────────────────────────────────────────────────────────────── */
-@keyframes toolPanelIn {
-    from {
-        opacity: 0;
-        transform: scaleY(0.94);
-        transform-origin: center;
+    @keyframes toolPanelIn {
+        from {
+            opacity: 0;
+            transform: scaleY(0.94);
+            transform-origin: center;
+        }
+
+        to {
+            opacity: 1;
+            transform: scaleY(1);
+            transform-origin: center;
+        }
     }
 
-    to {
-        opacity: 1;
-        transform: scaleY(1);
-        transform-origin: center;
-    }
-}
+    /* ── 側邊欄與工具切換 (Slide-in) ─────────────────────────────────────── */
+    @keyframes slide-in-from-right {
+        from {
+            opacity: 0;
+            transform: translateX(12px);
+        }
 
-/* ── 側邊欄與工具切換 (Slide-in) ─────────────────────────────────────── */
-@keyframes slide-in-from-right {
-    from {
-        opacity: 0;
-        transform: translateX(12px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-@keyframes slide-in-from-left {
-    from {
-        opacity: 0;
-        transform: translateX(-20px);
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
     }
 
-    to {
-        opacity: 1;
-        transform: translateX(0);
+    @keyframes slide-in-from-left {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
     }
-}
 
-@keyframes fade-in {
-    from {
-        opacity: 0;
+    /* @keyframes fade-in 已移除：與 m3-fade-in 重複，且未被任何規則引用 */
+
+    .animate-in {
+        animation-fill-mode: both;
     }
 
-    to {
-        opacity: 1;
+    .slide-in-from-right-4 {
+        animation-name: slide-in-from-right;
     }
-}
 
-.animate-in {
-    animation-fill-mode: both;
-}
+    .fade-in {
+        animation-name: m3-fade-in;
+    }
 
-.slide-in-from-right-4 {
-    animation-name: slide-in-from-right;
-}
+    .duration-150 {
+        animation-duration: 150ms;
+    }
 
-.fade-in {
-    animation-name: m3-fade-in;
-}
+    .duration-200 {
+        animation-duration: 200ms;
+    }
 
-.duration-150 {
-    animation-duration: 150ms;
-}
+    .duration-300 {
+        animation-duration: 300ms;
+    }
 
-.duration-200 {
-    animation-duration: 200ms;
-}
+    .duration-400 {
+        animation-duration: 400ms;
+    }
 
-.duration-300 {
-    animation-duration: 300ms;
-}
+    /* ── MD3 Ripple Effect ─────────────────────────────────── */
 
-.duration-400 {
-    animation-duration: 400ms;
-}
+    @keyframes md-ripple {
+        from {
+            transform: scale(0);
+            opacity: 0.36;
+        }
 
-/* ── MD3 Ripple Effect ─────────────────────────────────── */
+        to {
+            transform: scale(2.5);
+            opacity: 0;
+        }
+    }
 
-@keyframes md-ripple {
-    from {
+    .md-ripple-root {
+        position: relative;
+        overflow: hidden;
+        /* 確保 ripple 不超出圓角邊界 */
+        isolation: isolate;
+    }
+
+    .md-ripple-wave {
+        position: absolute;
+        border-radius: 50%;
+        background: currentColor;
+        pointer-events: none;
         transform: scale(0);
-        opacity: 0.36;
+        animation: md-ripple 550ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
     }
 
-    to {
-        transform: scale(2.5);
-        opacity: 0;
+    /* ── MD3 按下回饋（fallback for non-ripple elements） ───── */
+    .md-press {
+        transition: transform 100ms cubic-bezier(0.4, 0, 0.2, 1),
+            box-shadow 100ms cubic-bezier(0.4, 0, 0.2, 1);
     }
-}
 
-.md-ripple-root {
-    position: relative;
-    overflow: hidden;
-    /* 確保 ripple 不超出圓角邊界 */
-    isolation: isolate;
-}
+    .md-press:active {
+        transform: scale(0.96);
+    }
 
-.md-ripple-wave {
-    position: absolute;
-    border-radius: 50%;
-    background: currentColor;
-    pointer-events: none;
-    transform: scale(0);
-    animation: md-ripple 550ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
+    /* ── 全域捲軸美化 (Scrollbar Styling) ────────────────────────────────── */
+    /* 針對 Webkit 瀏覽器 (Chrome, Edge, Safari) */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
 
-/* ── MD3 按下回饋（fallback for non-ripple elements） ───── */
-.md-press {
-    transition: transform 100ms cubic-bezier(0.4, 0, 0.2, 1),
-        box-shadow 100ms cubic-bezier(0.4, 0, 0.2, 1);
-}
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
 
-.md-press:active {
-    transform: scale(0.96);
-}
+    ::-webkit-scrollbar-thumb {
+        background: var(--color-brand-primary);
+        /* 淺色模式下的預設顏色 */
+        border-radius: 20px;
+        border: 2px solid transparent;
+        background-clip: content-box;
+        opacity: 0.8;
+    }
 
-/* ── 全域捲軸美化 (Scrollbar Styling) ────────────────────────────────── */
-/* 針對 Webkit 瀏覽器 (Chrome, Edge, Safari) */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--color-brand-accent);
+        background-clip: content-box;
+    }
 
-::-webkit-scrollbar-track {
-    background: transparent;
-}
+    /* 深色模式下的捲軸樣式 */
 
-::-webkit-scrollbar-thumb {
-    background: var(--color-brand-primary);
-    /* 淺色模式下的預設顏色 */
-    border-radius: 20px;
-    border: 2px solid transparent;
-    background-clip: content-box;
-    opacity: 0.8;
-}
+    /* 針對 Firefox */
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 transparent;
+    }
 
-::-webkit-scrollbar-thumb:hover {
-    background: var(--color-brand-accent);
-    background-clip: content-box;
-}
 
-/* 深色模式下的捲軸樣式 */
-.dark ::-webkit-scrollbar-thumb {
-    background: var(--color-brand-primary);
-    background-clip: content-box;
-}
+    /* ── 列表樣式與其他 ── */
+    .prose ol {
+        list-style-type: upper-roman;
+        /* Level 1: I, II, III */
+    }
 
-.dark ::-webkit-scrollbar-thumb:hover {
-    background: #64748b;
-    /* slate-500 */
-    background-clip: content-box;
-}
+    .prose ol ol {
+        list-style-type: lower-roman;
+        /* Level 2: i, ii, iii */
+    }
 
-/* 針對 Firefox */
-* {
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 transparent;
-}
+    .prose ol ol ol {
+        list-style-type: upper-alpha;
+        /* Level 3: A, B, C */
+    }
 
-.dark * {
-    scrollbar-color: #475569 transparent;
-}
+    .prose ol ol ol ol {
+        list-style-type: lower-alpha;
+        /* Level 4: a, b, c */
+    }
 
-/* ── 列表樣式與其他 ── */
-.prose ol {
-    list-style-type: upper-roman;
-    /* Level 1: I, II, III */
-}
+    .prose ol ol ol ol ol {
+        list-style-type: decimal;
+        /* Level 5: 1, 2, 3 */
+    }
 
-.prose ol ol {
-    list-style-type: lower-roman;
-    /* Level 2: i, ii, iii */
-}
+    /* Multi-level Unordered List Styling */
+    .prose ul {
+        list-style-type: disc;
+        /* Level 1 */
+    }
 
-.prose ol ol ol {
-    list-style-type: upper-alpha;
-    /* Level 3: A, B, C */
-}
+    .prose ul ul {
+        list-style-type: circle;
+        /* Level 2 */
+    }
 
-.prose ol ol ol ol {
-    list-style-type: lower-alpha;
-    /* Level 4: a, b, c */
-}
+    .prose ul ul ul {
+        list-style-type: square;
+        /* Level 3 */
+    }
 
-.prose ol ol ol ol ol {
-    list-style-type: decimal;
-    /* Level 5: 1, 2, 3 */
-}
+    .prose ul ul ul ul {
+        list-style-type: disc;
+        /* Level 4 */
+    }
 
-/* Multi-level Unordered List Styling */
-.prose ul {
-    list-style-type: disc;
-    /* Level 1 */
-}
+    .prose ul ul ul ul ul {
+        list-style-type: circle;
+        /* Level 5 */
+    }
 
-.prose ul ul {
-    list-style-type: circle;
-    /* Level 2 */
-}
+    /* MathJax Override for Production Build */
+    mjx-container[display="true"] {
+        display: block;
+        margin: 1em 0 !important;
+    }
 
-.prose ul ul ul {
-    list-style-type: square;
-    /* Level 3 */
-}
+    mjx-container:not([display="true"]) {
+        display: inline-block !important;
+        vertical-align: middle;
+    }
 
-.prose ul ul ul ul {
-    list-style-type: disc;
-    /* Level 4 */
-}
-
-.prose ul ul ul ul ul {
-    list-style-type: circle;
-    /* Level 5 */
-}
-
-/* MathJax Override for Production Build */
-mjx-container[display="true"] {
-    display: block;
-    margin: 1em 0 !important;
-}
-
-mjx-container:not([display="true"]) {
-    display: inline-block !important;
-    vertical-align: middle;
-}
-
-/* ── 列印 / PDF：只列印當前啟用的分頁 ────────────────────────────────────
+    /* ── 列印 / PDF：只列印當前啟用的分頁 ────────────────────────────────────
  * 配合 MarkdownPreviewSection 中為非當前 tab 添加的 .tab-inactive class
  * 確保多分頁情境下 window.print() 只輸出當前文件，而非所有開啟的分頁
  * ─────────────────────────────────────────────────────────────────────── */
-@media print {
+    @media print {
 
-    /* 1. 全域強制顏色與背景重置 */
-    :root,
-    .dark {
-        --brand-surface: #ffffff !important;
-        background-color: white !important;
-        color-scheme: light !important;
-        /* 強制回歸淺色配色方案 */
+        /* 1. 確保所有顏色能被忠實列印（最高優先） */
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+        }
+
+        /* 2. 全域強制顏色與背景重置 */
+        :root,
+        .dark {
+            --brand-surface: #ffffff !important;
+            background-color: white !important;
+            color-scheme: light !important;
+            /* 強制回歸淺色配色方案 */
+        }
+
+        /* 即使 html 標籤帶有 .dark，列印時也要強制回歸淺色 */
+        html.dark body {
+            background-color: white !important;
+            color: black;
+        }
+
+        /* 3. 在列印環境下重新宣告語法高亮變數（不依賴 .dark 類別）
+         *    使用 VS Code Light+ 風格，確保在白紙上的對比度與可讀性。 */
+        :root {
+            --code-bg: #f8f9fa !important;
+            --code-border: #e2e8f0 !important;
+            --code-token-comment: #008000 !important;
+            --code-token-keyword: #0000FF !important;
+            --code-token-string: #A31515 !important;
+            --code-token-number: #098658 !important;
+            --code-token-function: #795E26 !important;
+            --code-token-operator: #000000 !important;
+            --code-token-variable: #001080 !important;
+            --code-token-constant: #0000FF !important;
+            --code-token-builtin: #267F99 !important;
+            --code-token-class: #267F99 !important;
+            --code-token-attr-name: #E50000 !important;
+            --code-token-tag: #800000 !important;
+            --code-token-punctuation: #393A34 !important;
+        }
+
+        /* 4. 程式碼與圖表容器：不再需要與 prose 激烈爭奪，回歸標準定義 */
+        .diagram-block-container,
+        .code-block-wrapper pre,
+        pre[style] {
+            background-color: var(--code-bg) !important;
+            /* PDF 導出必須強制背景 */
+            border: 1px solid var(--code-border);
+            border-radius: 6px;
+            padding: 1rem 0;
+            margin: 1.5rem 0;
+            width: 100%;
+            overflow: visible;
+            white-space: pre-wrap;
+        }
+
+        .prose :not(pre)>code {
+            background-color: #f1f5f9 !important;
+            border: 1px solid #cbd5e1;
+            padding: 0.125rem 0.4rem;
+            border-radius: 4px;
+        }
     }
 
-    /* 即使 html 標籤帶有 .dark，列印時也要強制回歸淺色 */
-    html.dark body {
-        background-color: white !important;
+    /* ── 預覽模式：清除 .prose pre 外層容器的干擾樣式 ──
+     * .prose pre 只是外殼，背景完全交給內層 .code-block-wrapper pre
+     * 與 react-syntax-highlighter 產生的 pre[style] 統一控制，
+     * 避免「雙層背景」的視覺問題。
+     */
+    /* ── 程式碼區塊容器 (外框) ───────────────────────────────────────────── */
+    .diagram-block-container,
+    .code-block-wrapper pre,
+    pre[style] {
+        background-color: var(--code-bg);
+        border: 1px solid var(--code-border);
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        margin: 1.5rem 0;
+        padding: 1rem;
+        display: block;
+        width: 100%;
+        color: var(--code-token-punctuation);
     }
 
-    /* 2. 徹底消除程式碼區塊與圖表的冗餘邊框 */
-    .prose pre {
-        margin: 0 !important;
-        padding: 0 !important;
-        border: none !important;
-        background: none !important;
-        overflow: visible !important;
+    .code-block-wrapper {
+        max-width: 100%;
+        overflow: hidden;
     }
 
-    /* 處理正常的 code 標籤 (行內程式碼) */
-    .prose :not(pre)>code {
-        background-color: #f1f5f9 !important;
-        border: 1px solid #cbd5e1 !important;
-        padding: 0.125rem 0.4rem !important;
-        border-radius: 4px !important;
-        font-weight: 500 !important;
+    /* 針對圖表容器特定的間距優化 (ResizableWrapper 已給間距) */
+    .diagram-block-container {
+        margin: 0;
     }
 
-    /* 全部區塊標籤強制回歸白底 (Formal) */
-    .prose .diagram-block-container,
-    .prose .code-block-wrapper pre {
-        background-color: var(--code-bg) !important;
-        border: 1px solid var(--code-border) !important;
-        border-radius: 6px !important;
-        padding: 1rem !important;
-        margin: 1.5rem 0 !important;
-        width: 100% !important;
-        box-shadow: none !important;
-    }
-}
+    /* .show-print-preview pre[style] 已移除：與上方 pre[style] 規則完全重複（冗餘死碼） */
 
-/* 預覽模式優化 */
-.prose pre {
-    background: transparent !important;
-    border: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-/* 針對行內代碼的基礎美化 */
-.prose :not(pre)>code {
-    @apply rounded-md border border-slate-200 dark:border-slate-700;
-    @apply bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 font-medium;
-}
-
-/* 內層高亮容器與圖表容器：統一套用變數系統 */
-.prose .diagram-block-container,
-.prose .code-block-wrapper pre {
-    border-radius: 0.5rem !important;
-    border: 1px solid var(--code-border) !important;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
-    border-color: var(--code-border) !important;
-    background-color: var(--code-bg) !important;
-    margin: 1.5rem 0 !important;
-    padding: 1rem !important;
-    display: block !important;
-    width: 100% !important;
-}
-
-.prose .code-block-wrapper {
-    max-width: 100% !important;
-    overflow: hidden !important;
-}
-
-/* 針對圖表容器特定的間距優化 (ResizableWrapper 已給間距) */
-.prose .diagram-block-container {
-    margin: 0 !important;
-}
-
-/* 針對 react-syntax-highlighter 產生的 pre 標籤 (優化) */
-pre[style] {
-    background-color: var(--code-bg) !important;
-    overflow-y: visible !important;
-    max-width: 100% !important;
-    transition: background-color 0.2s ease;
-}
-
-.show-print-preview pre[style] {
-    background-color: var(--code-bg) !important;
-    overflow-y: visible !important;
-    max-width: 100% !important;
-}
-
-/* =========================================================
+    /* =========================================================
  *  🌟 智能行號與斷行控制 (CSS Counters & Hanging Indent)
  * ========================================================= */
 
-.enhanced-codeblock code {
-    counter-reset: code-line;
-    display: block;
-}
-
-.enhanced-codeblock .code-line {
-    counter-increment: code-line;
-    display: block !important;
-    padding-left: 0 !important;
-    text-indent: 0 !important;
-}
-
-/* 核心：利用 ::before 充當每一行的專屬行號 */
-.enhanced-codeblock .code-line::before {
-    content: counter(code-line);
-    display: inline-block;
-    position: sticky; /* 當父層發生向右捲動時，將行號吸附於左側邊界 */
-    left: 0;
-    z-index: 10;
-    min-width: 3.5em; /* 為了防止大於 99 的行數擠壓，採用寬裕的寬度 */
-    text-align: right;
-    padding-right: 0.75em;
-    margin-right: 1.25em; /* 行號與程式碼之間的距離 */
-    border-right: 1px solid var(--code-border);
-    font-style: italic;
-    user-select: none;
-    background-color: var(--code-bg); /* 吸附時遮蓋下方卷動的程式碼 */
-    /* 增加設計感：捲動時呈現的層次陰影 */
-    box-shadow: 2px 0 4px -2px rgba(0, 0, 0, 0.1);
-    transition: background-color 0.2s ease;
-}
-
-/* 列印時移除陰影與 sticky，保持純淨性 */
-@media print {
-    .enhanced-codeblock .code-line::before {
-        position: static;
-        box-shadow: none;
-        background-color: transparent;
-        border-right: 1px solid #e2e8f0;
+    .enhanced-codeblock code {
+        counter-reset: code-line;
+        display: block;
     }
-}
 
-/* 判斷色彩: dark 模式 */
-.enhanced-codeblock[data-theme-style="dark"] .code-line::before {
-    color: #64748b;
-}
+    .enhanced-codeblock .code-line {
+        counter-increment: code-line;
+        display: block;
+        padding-left: 0;
+        text-indent: 0;
+    }
 
-/* 判斷色彩: light/print 模式 */
-.enhanced-codeblock[data-theme-style="light"] .code-line::before {
-    color: #94a3b8;
-}
+    /* 核心：利用 ::before 充當每一行的專屬行號 */
+    .enhanced-codeblock .code-line::before {
+        content: counter(code-line);
+        display: inline-block;
+        position: sticky;
+        /* 當父層發生向右捲動時，將行號吸附於左側邊界 */
+        left: 0;
+        z-index: 10;
+        min-width: 2.5em;
+        /* 為了防止大於 99 的行數擠壓，採用寬裕的寬度 */
+        text-align: right;
+        padding-right: 0.75em;
+        margin-right: 1.25em;
+        /* 行號與程式碼之間的距離 */
+        border-right: 1px solid var(--code-border);
+        font-style: italic;
+        user-select: none;
+        /* 吸附時遮蓋下方卷動的程式碼 */
+    }
 
-/* ====================================
+    /* 列印時的行號 ::before 樣式已合併至下方 enhanced-codeblock 的 @media print 區塊 */
+
+    /* 判斷色彩: dark 模式 */
+    .enhanced-codeblock[data-theme-style="dark"] .code-line::before {
+        color: #64748b;
+    }
+
+    /* 判斷色彩: light/print 模式 */
+    .enhanced-codeblock[data-theme-style="light"] .code-line::before {
+        color: #94a3b8;
+    }
+
+    /* ====================================
  *  自動換行模式 (Wrap + Hanging Indent)
  * ==================================== */
-/* 
+    /* 
    Line Number Block Width ≈ 3.5(w) + 0.75(p) + 1.25(m) = 5.5em
    Hanging Indent Push = 2em, Total Negative Indent = 7.5em 
 */
-.enhanced-codeblock.code-block-wrap .code-line {
-    white-space: pre-wrap !important;
-    overflow-wrap: anywhere !important;
-    word-break: break-all !important;
-    padding-left: 7.5em !important; 
-    text-indent: -7.5em !important;
-}
+    .enhanced-codeblock.code-block-wrap .code-line {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        word-break: break-all;
+        padding-left: 7.5em;
+        text-indent: -7.5em;
+    }
 
-/* ====================================
+    /* ====================================
  *  捲動模式 (Scroll)
  * ==================================== */
-.enhanced-codeblock.code-block-scroll .code-line {
-    white-space: pre !important; 
-    /* 不需額外縮排，靠 ::before 自然撐開空間 */
-}
+    .enhanced-codeblock.code-block-scroll .code-line {
+        white-space: pre;
+        /* 不需額外縮排，靠 ::before 自然撐開空間 */
+    }
 
-@media print {
-    .prose .code-block-wrapper,
-    .enhanced-codeblock {
+    @media print {
+
+        /* 列印時程式碼區塊容器強制可見溢出（確保內容不被截斷） */
+        .prose .code-block-wrapper,
+        .enhanced-codeblock {
+            overflow: visible !important;
+        }
+
+        /* 列印時行號（::before）完整樣式：移除 sticky 定位、陰影，套用淺色主題
+         * （合併自原本分散的兩個 @media print 區塊，統一管理）  */
+        .enhanced-codeblock .code-line::before {
+            position: static;
+            /* 列印不需要 sticky 吸附 */
+            box-shadow: none;
+            /* 移除捲動層次陰影 */
+            background-color: var(--code-bg) !important;
+            /* 淺色背景（print :root 已覆寫為 #f8f9fa） */
+            border-right: 1px solid #e2e8f0;
+            /* 固定淺色分隔線 */
+            color: #94a3b8 !important;
+            /* 行號文字顏色 */
+        }
+    }
+
+    /* 核心修復：強制隱藏 SyntaxHighlighter 內部可能殘留的行號 span，
+     * 徹底解決與我們的 ::before 行號產生的「雙重影像」問題。 */
+    .react-syntax-highlighter-line-number {
+        display: none !important;
+    }
+
+    /* 解決深色模式下的重影問題 */
+    .dark .enhanced-codeblock pre,
+    .dark .enhanced-codeblock code {
+        color: var(--code-token-punctuation) !important;
+        /* 預設文字顏色 */
+        -webkit-font-smoothing: subpixel-antialiased;
+        /* 修正字體渲染 */
+        text-shadow: none !important;
+    }
+
+    /* 確保 Token 覆蓋掉預設顏色 */
+    .enhanced-codeblock .token {
+        position: relative;
+        z-index: 1;
+        /* 確保高亮層在最上方 */
+    }
+
+    /* =========================================================
+ *  🎨 語法高亮規則 (不再需要 !important，由 not-prose 確保純淨)
+ * ========================================================= */
+    .enhanced-codeblock .token.comment,
+    .enhanced-codeblock .token.prolog,
+    .enhanced-codeblock .token.doctype,
+    .enhanced-codeblock .token.cdata {
+        color: var(--code-token-comment) !important;
+    }
+
+    .enhanced-codeblock .token.punctuation {
+        color: var(--code-token-punctuation) !important;
+    }
+
+    .enhanced-codeblock .token.namespace {
+        opacity: .7 !important;
+    }
+
+    .enhanced-codeblock .token.property,
+    .enhanced-codeblock .token.tag,
+    .enhanced-codeblock .token.boolean,
+    .enhanced-codeblock .token.number,
+    .enhanced-codeblock .token.constant,
+    .enhanced-codeblock .token.symbol,
+    .enhanced-codeblock .token.deleted {
+        color: var(--code-token-number) !important;
+    }
+
+    .enhanced-codeblock .token.selector,
+    .enhanced-codeblock .token.attr-name,
+    .enhanced-codeblock .token.char,
+    .enhanced-codeblock .token.builtin,
+    .enhanced-codeblock .token.inserted,
+    .enhanced-codeblock .token.regex,
+    .enhanced-codeblock .token.important,
+    .enhanced-codeblock .token.variable {
+        color: var(--code-token-variable) !important;
+    }
+
+    .enhanced-codeblock .token.string {
+        color: var(--code-token-string) !important;
+    }
+
+    .enhanced-codeblock .token.operator,
+    .enhanced-codeblock .token.entity,
+    .enhanced-codeblock .token.url {
+        color: var(--code-token-operator) !important;
+    }
+
+    .enhanced-codeblock .token.atrule,
+    .enhanced-codeblock .token.attr-value,
+    .enhanced-codeblock .token.keyword {
+        color: var(--code-token-keyword) !important;
+    }
+
+    .enhanced-codeblock .token.function {
+        color: var(--code-token-function) !important;
+    }
+
+    .enhanced-codeblock .token.class-name {
+        color: var(--code-token-class) !important;
+    }
+
+    .enhanced-codeblock .token.important,
+    .enhanced-codeblock .token.bold {
+        font-weight: bold !important;
+    }
+
+    .enhanced-codeblock .token.italic {
+        font-style: italic !important;
+    }
+
+    .token.entity {
+        cursor: help;
+    }
+
+    /* 確保圖表（Mermaid/Vega/ABC）背景設為透明，讓深色/淺色頁面背景能正確透出 */
+    /* 注意：transparent 而非 white，在深色模式下白底會破壞視覺一致性 */
+    .mermaid svg,
+    .vega-embed canvas,
+    .smiles-drawer svg,
+    .abcjs-inner-container svg {
+        background-color: transparent !important;
+        filter: invert(0) !important;
+    }
+
+    /* 強制覆蓋 Mermaid SVG 內部的節點顏色 (與變數同步) */
+    .mermaid .node rect,
+    .mermaid .node circle,
+    .mermaid .node ellipse,
+    .mermaid .node polygon,
+    .mermaid .node path {
+        fill: var(--mermaid-node-bg) !important;
+        stroke: var(--mermaid-node-border) !important;
+    }
+
+    .mermaid .label text,
+    .mermaid .edgeLabel text {
+        fill: var(--mermaid-node-text) !important;
+    }
+
+    .mermaid .edgePath path {
+        stroke: var(--mermaid-line) !important;
+    }
+
+    .mermaid .marker {
+        fill: var(--mermaid-line) !important;
+        stroke: var(--mermaid-line) !important;
+    }
+
+    /* ── 列印預覽模擬（.show-print-preview class）專屬全域樣式 ── */
+
+    /* 僅讓「整個預覽面板」呈現白色背景，不影響 body/app-container 在一般瀏覽模式下的深色主題 */
+    .show-print-preview.preview-panel {
+        background-color: white !important;
+    }
+
+    /* JS 會在非當前分頁加上 .tab-inactive，確保多文件列印時只印當前分頁 */
+    .tab-inactive {
+        display: none !important;
+    }
+
+    /* 重置預覽模擬用的邊距與樣式 */
+    .prose-container {
+        padding: 0 !important;
+        margin: 0 !important;
         overflow: visible !important;
+        height: auto !important;
+        min-height: auto !important;
     }
 
-    .prose .code-block-wrapper,
-    .prose .code-block-wrapper *,
-    .prose pre[style],
-    .prose pre[style] * {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-        color-adjust: exact !important;
+    /* 強制每個文件在新的一頁開始 */
+    [id^="wikilink-"] {
+        page-break-before: always !important;
     }
-}
 
-/* 針對 SyntaxHighlighter 產生的行號 */
-.react-syntax-highlighter-line-number {
-    color: #999 !important;
-}
+    @media print {
 
-/* 3. 確保圖表（Mermaid/Vega/ABC）背景也是白的 */
-.mermaid svg,
-.vega-embed canvas,
-.smiles-drawer svg,
-.abcjs-inner-container svg {
-    background-color: transparent !important;
-    filter: invert(0) !important;
-}
+        /* 隱藏頁腳、分頁指示線等非列印元素 */
+        footer,
+        .page-break-indicator {
+            display: none !important;
+        }
 
-/* 強制覆蓋 Mermaid SVG 內部的節點顏色 (與變數同步) */
-.mermaid .node rect,
-.mermaid .node circle,
-.mermaid .node ellipse,
-.mermaid .node polygon,
-.mermaid .node path {
-    fill: var(--mermaid-node-bg) !important;
-    stroke: var(--mermaid-node-border) !important;
-}
+        /* 列印時隱藏捲軸，避免出現在 PDF 輸出中 */
+        * {
+            scrollbar-width: none !important;
+        }
 
-.mermaid .label text,
-.mermaid .edgeLabel text {
-    fill: var(--mermaid-node-text) !important;
-}
+        ::-webkit-scrollbar {
+            display: none !important;
+        }
+    }
 
-.mermaid .edgePath path {
-    stroke: var(--mermaid-line) !important;
-}
+    /* 隱藏預覽專用的指標 (Removed for fix) */
 
-.mermaid .marker {
-    fill: var(--mermaid-line) !important;
-    stroke: var(--mermaid-line) !important;
-}
 
-/* 4. 確保邊界調整出的空間也是白色的 */
-body,
-.app-container,
-.show-print-preview.preview-panel {
-    background-color: white !important;
-}
 
-.tab-inactive {
-    display: none !important;
-}
+    /* ── 列印預覽模式 (Print Preview Simulation) ────────────────────────────── */
 
-/* 重置預覽模擬用的邊距與樣式 */
-.prose-container {
-    padding: 0 !important;
-    margin: 0 !important;
-    overflow: visible !important;
-    height: auto !important;
-    min-height: auto !important;
-}
+    /* 模擬預覽模式下的強制修正 */
+    .show-print-preview .print-paper,
+    .show-print-preview .prose-container {
+        background-color: white !important;
+        color: black !important;
+    }
 
-.print-paper {
-    width: 100% !important;
-    min-height: auto !important;
-    box-shadow: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: visible !important;
-    display: block !important;
-    background-color: white !important;
-}
+    /* 模擬 A4 紙張的基礎樣式（預覽用，非 @media print 的實際列印樣式）
+     * 此為 .print-paper 的唯一宣告；原 L800-809 的重複定義已刪除。
+     * padding: 0 → 紙張容器本身無內距，由內層 .prose-container 的 margin 控制邊距 */
+    .print-paper {
+        background: white !important;
+        color: black !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+        /* 原 L800-809 中的唯一有效屬性，保留至此 */
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+        position: relative;
+        border: none !important;
+        min-height: 297mm;
+        /* A4 高度參考 */
+        overflow: hidden;
+        /* 確保內容不會溢出紙張邊界 */
+        display: block !important;
+    }
 
-/* 強制每個文件在新的一頁開始 */
-[id^="wikilink-"] {
-    page-break-before: always !important;
-}
-
-@media print {
-    /* 隱藏頁腳與不必要的頁面元素 */
-    footer,
+    /* 分頁指示線 (Print Preview Simulation) */
     .page-break-indicator {
-        display: none !important;
+        height: 1px;
+        border-top: 2px dashed var(--color-brand-primary);
+        z-index: 50;
+        pointer-events: none;
+        opacity: 0.6;
+        position: absolute;
+        left: 0;
+        right: 0;
     }
-}
 
-* {
-    scrollbar-width: none !important;
-}
-
-::-webkit-scrollbar {
-    display: none !important;
-}
-
-/* 隱藏預覽專用的指標 (Removed for fix) */
-
-
-
-/* ── 列印預覽模式 (Print Preview Simulation) ────────────────────────────── */
-
-/* 模擬預覽模式下的強制修正 */
-.show-print-preview .print-paper,
-.show-print-preview .prose-container {
-    background-color: white !important;
-    color: black !important;
-}
-
-/* 模擬 A4 紙張的基礎樣式 */
-.print-paper {
-    background: white !important;
-    color: black !important;
-    margin: 0 auto !important;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
-    position: relative;
-    border: none !important;
-    min-height: 297mm;
-    /* A4 高度參考 */
-    overflow: hidden;
-    /* 確保內容不會溢出紙張邊界 */
-}
-
-/* 分頁指示線 (Print Preview Simulation) */
-.page-break-indicator {
-    height: 1px;
-    border-top: 2px dashed var(--color-brand-primary);
-    z-index: 50;
-    pointer-events: none;
-    opacity: 0.6;
-    position: absolute;
-    left: 0;
-    right: 0;
-}
-
-.page-break-indicator::after {
-    content: "PAGE BREAK";
-    position: absolute;
-    right: 1.5rem;
-    top: -11px;
-    font-size: 10px;
-    font-weight: 900;
-    background: var(--color-brand-primary);
-    color: white;
-    padding: 2px 8px;
-    border-radius: 6px;
-    letter-spacing: 0.05em;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-@media print {
-    .page-break-indicator {
-        display: none !important;
+    .page-break-indicator::after {
+        content: "PAGE BREAK";
+        position: absolute;
+        right: 1.5rem;
+        top: -11px;
+        font-size: 10px;
+        font-weight: 900;
+        background: var(--color-brand-primary);
+        color: white;
+        padding: 2px 8px;
+        border-radius: 6px;
+        letter-spacing: 0.05em;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
-}
 
-/* 不同尺寸的容器寬度 */
-.paper-a4 {
-    width: 210mm;
-    min-height: 297mm;
-}
+    @media print {
+        .page-break-indicator {
+            display: none !important;
+        }
+    }
 
-.paper-a3 {
-    width: 297mm;
-    min-height: 420mm;
-}
+    /* 不同尺寸的容器寬度 */
+    .paper-a4 {
+        width: 210mm;
+        min-height: 297mm;
+    }
 
-.paper-letter {
-    width: 215.9mm;
-    min-height: 279.4mm;
-}
+    .paper-a3 {
+        width: 297mm;
+        min-height: 420mm;
+    }
 
-/* 橫向模式調換寬高 */
-.paper-landscape.paper-a4 {
-    width: 297mm;
-}
+    .paper-letter {
+        width: 215.9mm;
+        min-height: 279.4mm;
+    }
 
-.paper-landscape.paper-a3 {
-    width: 420mm;
-}
+    /* 橫向模式調換寬高 */
+    .paper-landscape.paper-a4 {
+        width: 297mm;
+    }
 
-.paper-landscape.paper-letter {
-    width: 279.4mm;
-}
+    .paper-landscape.paper-a3 {
+        width: 420mm;
+    }
 
-/* 註：原本 L729 的重複定義已統合至上方 */
+    .paper-landscape.paper-letter {
+        width: 279.4mm;
+    }
 
-/* 模擬頁面邊距 */
-.margin-normal .prose-container {
-    padding: 15mm !important;
-}
+    /* 註：原本 L729 的重複定義已統合至上方 */
 
-.margin-narrow .prose-container {
-    padding: 5mm !important;
-}
+    /* 模擬頁面邊距 */
+    .margin-normal .prose-container {
+        padding: 15mm !important;
+    }
 
-.margin-none .prose-container {
-    padding: 0 !important;
-}
+    .margin-narrow .prose-container {
+        padding: 5mm !important;
+    }
 
-.dark .print-paper {
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
-}
+    .margin-none .prose-container {
+        padding: 0 !important;
+    }
 
-/* 滾動容器優化 */
-.show-print-preview .preview-panel>div.flex-1 {
-    background-color: #f1f5f9;
-    /* 外層灰底，凸顯白紙 */
-}
+    .dark .print-paper {
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
+    }
 
-.dark .show-print-preview .preview-panel>div.flex-1 {
-    background-color: #0f172a;
-}
+    /* 滾動容器優化 */
+    .show-print-preview .preview-panel>div.flex-1 {
+        background-color: #f1f5f9;
+        /* 外層灰底，凸顯白紙 */
+    }
 
-/* ── 自訂 abcjs 深淺色/列印適應 ── */
-.dark .abcjs-inner-container svg path,
-.dark .abcjs-inner-container svg text {
-  fill: currentColor !important;
-  stroke: currentColor !important;
-}
-@media print {
-  .abcjs-inner-container svg path,
-  .abcjs-inner-container svg text {
-    fill: #000 !important;
-    stroke: #000 !important;
-  }
+    .dark .show-print-preview .preview-panel>div.flex-1 {
+        background-color: #0f172a;
+    }
+
+    /* ── 自訂 abcjs 深淺色/列印適應 ── */
+    .dark .abcjs-inner-container svg path,
+    .dark .abcjs-inner-container svg text {
+        fill: currentColor !important;
+        stroke: currentColor !important;
+    }
+
+    @media print {
+
+        .abcjs-inner-container svg path,
+        .abcjs-inner-container svg text {
+            fill: #000 !important;
+            stroke: #000 !important;
+        }
+    }
 }

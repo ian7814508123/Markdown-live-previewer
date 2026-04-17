@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Save, RotateCcw, AlertCircle, Check, FileText, Printer, Box, PackagePlus, ChevronLeft } from 'lucide-react';
 import RippleButton from './RippleButton';
 import { PrintSettings } from '../hooks/useAppSettings';
+import pkg from '../../package.json';
 
 interface SettingsModalProps {
     isOpen: boolean;
@@ -188,6 +189,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
     const [showChangelog, setShowChangelog] = useState(false);
+    const version = pkg.version;
 
     useEffect(() => {
         if (isOpen) {
@@ -273,7 +275,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     </RippleButton>
                                     <div>
                                         <h3 className="text-xl font-black text-slate-800 dark:text-slate-100">發行內容 (What's New)</h3>
-                                        <p className="text-[10px] font-bold text-brand-primary lowercase tracking-widest mt-0.5">Version 3.3.7</p>
+                                        <p className="text-[10px] font-bold text-brand-primary lowercase tracking-widest mt-0.5">Version {version}</p>
                                     </div>
                                 </div>
                                 <div className="space-y-4">
@@ -325,7 +327,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     <div className="pt-0">
                                         <h3 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">Markdown Live Previewer</h3>
                                         <div className="flex items-center justify-center gap-2 mt-2">
-                                            <p className="text-1xl font-bold text-slate-600 dark:text-slate-300 lowercase tracking-widest">版本 3.3.7</p>
+                                            <p className="text-1xl font-bold text-slate-600 dark:text-slate-300 capitalize tracking-widest">Version {version}</p>
                                             <button
                                                 onClick={() => setShowChangelog(true)}
                                                 className="flex items-center gap-1.5 px-2.5 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-500 dark:text-indigo-600 rounded-lg text-[10px] font-black hover:bg-indigo-200 dark:hover:bg-indigo-800/60 transition-colors"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { flushSync } from 'react-dom';
 import { MathJaxContext } from 'better-react-mathjax';
 import mermaid from 'mermaid';
@@ -14,6 +14,7 @@ import SEOContent from './src/components/SEOContent';
 import Footer from './src/components/Footer';
 import { usePanZoom } from './src/hooks/usePanZoom';
 import { useDocumentStorage } from './src/hooks/useDocumentStorage';
+import { hashString, debounce } from './src/utils';
 import { useAppSettings } from './src/hooks/useAppSettings';
 
 type Theme = 'default' | 'neutral' | 'dark' | 'forest';
@@ -238,6 +239,73 @@ const App: React.FC = () => {
   const isHoveringPreview = useRef(false);
   const printSessionRef = useRef(0);
   const rafId = useRef<number | null>(null);
+  const lineMap = useRef<Map<number, number>>(new Map());
+  const lastContentRef = useRef<string>("");
+
+  // ─── 核心：建立 Line-to-Pixel 映射表 ──────────────────────────────────────
+  const rebuildLineMap = useCallback(() => {
+    if (!previewRef.current || mode !== 'markdown') return;
+
+    // 取得預覽容器及其矩陣
+    const container = previewRef.current;
+
+    // 獲取目前啟動中的頁面容器
+    const activePapers = container.querySelectorAll(`.print-paper[data-doc-id="${currentDocId}"]`);
+    const searchContext = activePapers.length > 0 ? activePapers[0] : container;
+
+    const elements = searchContext.querySelectorAll('[data-line]');
+    const containerRect = container.getBoundingClientRect();
+    const scrollTop = container.scrollTop;
+
+    const newMap = new Map<number, number>();
+    elements.forEach((el) => {
+      const line = parseInt(el.getAttribute('data-line') || '0');
+      const rect = el.getBoundingClientRect();
+      const offset = rect.top - containerRect.top + scrollTop;
+      newMap.set(line, offset);
+    });
+
+    lineMap.current = newMap;
+    // console.log(`[ScrollSync] Map rebuilt: ${newMap.size} markers found`);
+  }, [mode, currentDocId]);
+
+  const debouncedRebuildMap = useMemo(() => debounce(rebuildLineMap, 200), [rebuildLineMap]);
+
+  // 監聽內容與佈局變化以重新校準
+  useEffect(() => {
+    const handleLayoutChange = () => {
+      debouncedRebuildMap();
+    };
+
+    // 使用 ResizeObserver 監聽預覽容器高度變化 (針對 MathJax 等異步渲染)
+    let resizeObserver: ResizeObserver | null = null;
+    if (previewRef.current) {
+      resizeObserver = new ResizeObserver(() => {
+        debouncedRebuildMap();
+      });
+      resizeObserver.observe(previewRef.current);
+    }
+
+    window.addEventListener('content-layout-ready', handleLayoutChange);
+    window.addEventListener('preview-content-height-change', handleLayoutChange);
+    window.addEventListener('resize', handleLayoutChange);
+
+    return () => {
+      if (resizeObserver) resizeObserver.disconnect();
+      window.removeEventListener('content-layout-ready', handleLayoutChange);
+      window.removeEventListener('preview-content-height-change', handleLayoutChange);
+      window.removeEventListener('resize', handleLayoutChange);
+    };
+  }, [rebuildLineMap]);
+
+  // 當內容大幅度改變或切換文本時重新校準
+  useEffect(() => {
+    if (code !== lastContentRef.current) {
+      lastContentRef.current = code;
+      setTimeout(rebuildLineMap, 500); // 等待 ReactMarkdown 渲染
+    }
+  }, [code, rebuildLineMap]);
+
 
   const syncLoop = useCallback(() => {
     if (!previewRef.current || !editorRef.current?.view) {
@@ -277,46 +345,53 @@ const App: React.FC = () => {
     const editorView = editorRef.current.view;
     const scrollDOM = editorView.scrollDOM;
 
-    // 取得當前編輯器頂部的行號
-    // CodeMirror 6: 使用 visualLineAtHeight 取得高度對應的行區塊
+    // 1. 取得編輯器當前高度對應的行區塊
     const lineBlock = editorView.lineBlockAtHeight(scrollDOM.scrollTop);
-    const lineNumber = editorView.state.doc.lineAt(lineBlock.from).number;
+    const line = editorView.state.doc.lineAt(lineBlock.from);
+    const lineNumber = line.number;
 
     if (previewRef.current) {
-      // 取得合併模式下所有可能的 [data-line] 元素 (包含其他文件的)
-      const elements = Array.from(previewRef.current.querySelectorAll('[data-line]'));
-      if (elements.length === 0) {
+      const map = lineMap.current;
+      const sortedLines = Array.from(map.keys()).sort((a, b) => a - b);
+
+      if (sortedLines.length === 0) {
         // 退回百分比模式
         const percentage = scrollDOM.scrollTop / (scrollDOM.scrollHeight - scrollDOM.clientHeight || 1);
         targetScrollTop.current = percentage * (previewRef.current.scrollHeight - previewRef.current.clientHeight);
       } else {
-        // 尋找最接近且小於或等於 lineNumber 的元素
-        // 優先在「當前活動文件」中尋找，確保精確度
-        const currentDocPapers = previewRef.current.querySelectorAll(`.print-paper[data-doc-id="${currentDocId}"] [data-line]`);
-        const searchElements = currentDocPapers.length > 0 ? Array.from(currentDocPapers) : elements;
-
-        let targetElement = null;
-        for (let i = searchElements.length - 1; i >= 0; i--) {
-          const el = searchElements[i];
-          const elLine = parseInt(el.getAttribute('data-line') || '0');
-          if (elLine <= lineNumber) {
-            targetElement = el as HTMLElement;
+        // 尋找包圍當前行號的兩個標記點
+        let l1 = -1, l2 = -1;
+        for (let i = 0; i < sortedLines.length; i++) {
+          if (sortedLines[i] <= lineNumber) {
+            l1 = sortedLines[i];
+          } else {
+            l2 = sortedLines[i];
             break;
           }
         }
 
-        if (targetElement) {
-          // 計算目標位置：元素的 offsetTop 減去預覽區容器的頂部位置
-          // 注意：offsetTop 是相對於最近的 offsetParent 的距離
-          // 在合併模式下，targetElement.offsetTop 可能相對於 .print-paper
-          // 因此需要疊加計算各層的 offsetTop 或是使用 getBoundingClientRect()
-          const containerRect = previewRef.current.getBoundingClientRect();
-          const targetRect = targetElement.getBoundingClientRect();
-          targetScrollTop.current = previewRef.current.scrollTop + (targetRect.top - containerRect.top);
+        if (l1 !== -1 && l2 !== -1) {
+          // 執行線性插值 (Linear Interpolation)
+          const p1 = map.get(l1)!;
+          const p2 = map.get(l2)!;
+
+          // 取得這兩行在編輯器中的 Y 座標
+          const h1 = editorView.lineBlockAt(editorView.state.doc.line(l1).from).top;
+          const h2 = editorView.lineBlockAt(editorView.state.doc.line(l2).from).top;
+
+          const ratio = (scrollDOM.scrollTop - h1) / (h2 - h1 || 1);
+          targetScrollTop.current = p1 + ratio * (p2 - p1);
+        } else if (l1 !== -1) {
+          // 只找到前面的標記點（接近末尾）
+          const p1 = map.get(l1)!;
+          // 額外加上與標記點的偏差
+          const h1 = editorView.lineBlockAt(editorView.state.doc.line(l1).from).top;
+          targetScrollTop.current = p1 + (scrollDOM.scrollTop - h1);
         } else {
-          // 如果找不到（在文件開頭），滾向該文件的紙張頂部
-          const paper = previewRef.current.querySelector(`.print-paper[data-doc-id="${currentDocId}"]`) as HTMLElement;
-          targetScrollTop.current = paper ? paper.offsetTop : 0;
+          // 在第一個標記點之前
+          const p2 = map.get(sortedLines[0])!;
+          const h2 = editorView.lineBlockAt(editorView.state.doc.line(sortedLines[0]).from).top;
+          targetScrollTop.current = Math.max(0, p2 - (h2 - scrollDOM.scrollTop));
         }
       }
 
@@ -338,61 +413,48 @@ const App: React.FC = () => {
 
     if (editorRef.current?.view) {
       const editorView = editorRef.current.view;
+      const map = lineMap.current;
+      const scrollTop = target.scrollTop;
 
-      // 在預覽區尋找目前在頂部的元素
-      const elements = Array.from(target.querySelectorAll('[data-line]'));
-      if (elements.length === 0) {
-        // 退回百分比模式
+      // 1. 尋找目前預覽區頂部包圍的映射點
+      const sortedLines = Array.from(map.keys()).sort((a, b) => a - b);
+      const offsets = sortedLines.map(line => ({ line, offset: map.get(line)! }));
+
+      if (offsets.length === 0) {
         const percentage = target.scrollTop / (target.scrollHeight - target.clientHeight || 1);
         targetScrollTop.current = percentage * (editorView.scrollDOM.scrollHeight - editorView.scrollDOM.clientHeight);
       } else {
-        // 尋找目前可見區塊中最上方的帶有 data-line 的元素
-        let topElement = null;
-        const containerRect = target.getBoundingClientRect();
-        const containerTop = containerRect.top;
-
-        for (const el of elements) {
-          const rect = el.getBoundingClientRect();
-          // 如果元素的頂部剛好在容器頂部附近（或稍微超出）
-          if (rect.top >= containerTop - 10 && rect.top <= containerTop + 100) {
-            topElement = el;
+        let l1 = -1, l2 = -1;
+        for (let i = 0; i < offsets.length; i++) {
+          if (offsets[i].offset <= scrollTop) {
+            l1 = offsets[i].line;
+          } else {
+            l2 = offsets[i].line;
             break;
           }
         }
 
-        // 自動切換文件 (跨文件同步滾動核心)
-        if (topElement) {
-          // 向上搜尋最近的 [data-doc-id] 容器
-          const paper = topElement.closest('.print-paper');
+        if (l1 !== -1) {
+          // 自動切換文件邏輯
+          const topElement = target.querySelector(`[data-line="${l1}"]`);
+          const paper = topElement?.closest('.print-paper');
           const newDocId = paper?.getAttribute('data-doc-id');
-
-          if (newDocId && newDocId !== currentDocId) {
-            // 防止循環觸發：標記為捲動導致的切換
-            // 確保 switchDocument 不會導致 previewPanel 重新跳轉導致死循環
-            handleDocumentSwitch(newDocId);
-          }
-
-          const lineNumber = parseInt(topElement.getAttribute('data-line') || '1');
-          try {
-            const line = editorView.state.doc.line(lineNumber);
-            // 取得該行在編輯器中的高度位置
-            targetScrollTop.current = editorView.lineBlockAt(line.from).top;
-          } catch (e) {
-            // 如果行號不存在（例如切換中的不一致狀態），退回百分比
-            const percentage = target.scrollTop / (target.scrollHeight - target.clientHeight || 1);
-            targetScrollTop.current = percentage * (editorView.scrollDOM.scrollHeight - editorView.scrollDOM.clientHeight);
-          }
-        } else {
-          // 如果沒找到（可能在銜接處），試圖讀取目前最顯眼的紙張
-          const visiblePaper = Array.from(target.querySelectorAll('.print-paper')).find(p => {
-            const rect = p.getBoundingClientRect();
-            return rect.top >= containerTop - 50 && rect.top <= containerTop + target.clientHeight / 2;
-          });
-          const newDocId = visiblePaper?.getAttribute('data-doc-id');
           if (newDocId && newDocId !== currentDocId) handleDocumentSwitch(newDocId);
 
-          const percentage = target.scrollTop / (target.scrollHeight - target.clientHeight || 1);
-          targetScrollTop.current = percentage * (editorView.scrollDOM.scrollHeight - editorView.scrollDOM.clientHeight);
+          if (l2 !== -1) {
+            // 插值計算編輯器位置
+            const p1 = map.get(l1)!;
+            const p2 = map.get(l2)!;
+            const h1 = editorView.lineBlockAt(editorView.state.doc.line(l1).from).top;
+            const h2 = editorView.lineBlockAt(editorView.state.doc.line(l2).from).top;
+
+            const ratio = (scrollTop - p1) / (p2 - p1 || 1);
+            targetScrollTop.current = h1 + ratio * (h2 - h1);
+          } else {
+            // 末尾部分
+            const h1 = editorView.lineBlockAt(editorView.state.doc.line(l1).from).top;
+            targetScrollTop.current = h1 + (scrollTop - map.get(l1)!);
+          }
         }
       }
 
@@ -795,62 +857,70 @@ const App: React.FC = () => {
       setIsPrinting(true);
     });
 
-    // 2. 計算需要等待的目標數量 (Mermaid, Vega, Smiles, Images)
-    const componentsToWait = document.querySelectorAll(
-      '.diagram-block-container, .vega-embed, .smiles-drawer, img'
-    ).length;
-    const mermaidTargetIds = new Set(
-      Array.from(document.querySelectorAll<HTMLElement>('[data-mermaid-block="true"][data-mermaid-block-id]'))
-        .map((el) => el.dataset.mermaidBlockId)
-        .filter((id): id is string => Boolean(id))
-    );
-
-    let readyCount = 0;
-    const mermaidReadyIds = new Set<string>();
+    // 2. 計算需要等待的目標數量 (圖表與圖片)
+    // 使用更精準的選擇器：所有具有 diagram-block-container 類別的容器
+    const diagramElements = document.querySelectorAll('.diagram-block-container');
+    const diagramsToWait = diagramElements.length;
+    const imagesToWait = document.querySelectorAll('.prose img').length;
+    
+    // 追蹤已完成的圖表 ID
+    const completedDiagrams = new Set<string>();
+    let completedImages = 0;
 
     const finalizePrint = () => {
-      window.removeEventListener('mermaid-render-complete', onMermaidReady);
+      window.removeEventListener('diagram-render-complete', onDiagramReady);
+      window.removeEventListener('content-layout-ready', onImageReady);
       window.print();
       setIsPrinting(false);
       document.getElementById('app-print-override')?.remove();
     };
 
-    const onMermaidReady = (event: Event) => {
+    const onDiagramReady = (event: Event) => {
       const detail = (event as CustomEvent<{ blockId?: string; printSessionId?: number }>).detail;
-      if (!detail || detail.printSessionId !== currentPrintSessionId || !detail.blockId) {
-        return;
-      }
-      mermaidReadyIds.add(detail.blockId);
+      if (!detail || detail.printSessionId !== currentPrintSessionId || !detail.blockId) return;
+      
+      completedDiagrams.add(detail.blockId);
+      checkAllReady();
     };
 
-    // 如果畫面上沒有複雜圖表，直接列印
-    if (componentsToWait === 0 && mermaidTargetIds.size === 0) {
-      setTimeout(finalizePrint, 100);
-      return;
-    }
+    const onImageReady = () => {
+      completedImages++;
+      checkAllReady();
+    };
 
-    // 3. 定義處理函式
-    const onReady = () => {
-      readyCount++;
-      if (readyCount >= componentsToWait && mermaidReadyIds.size >= mermaidTargetIds.size) {
-        window.removeEventListener('content-layout-ready', onReady);
-        // 給瀏覽器一點時間完成最後的 Paint
+    const checkAllReady = () => {
+      // 判斷是否所有圖表與圖片都已就緒
+      // 注意：content-layout-ready 也會由 CodeBlock 觸發，所以 completedImages 可能會大於 imagesToWait
+      // 這裡採用較保守的檢查方式
+      const allDiagramsReady = completedDiagrams.size >= diagramsToWait;
+      const allImagesReady = completedImages >= imagesToWait;
+
+      if (allDiagramsReady && allImagesReady) {
+        window.removeEventListener('diagram-render-complete', onDiagramReady);
+        window.removeEventListener('content-layout-ready', onImageReady);
+        // 給渲染引擎一點時間完成 Paint
         setTimeout(finalizePrint, 500);
       }
     };
 
-    window.addEventListener('mermaid-render-complete', onMermaidReady);
-    window.addEventListener('content-layout-ready', onReady);
+    // 如果沒有任何需要等待的內容，直接啟動列印
+    if (diagramsToWait === 0 && imagesToWait === 0) {
+      setTimeout(finalizePrint, 100);
+      return;
+    }
 
-    // 安全閥：避免因為某張圖片載入失敗導致永遠無法列印
+    // 3. 註冊監聽器
+    window.addEventListener('diagram-render-complete', onDiagramReady);
+    window.addEventListener('content-layout-ready', onImageReady);
+
+    // 安全閥：避免永遠卡住
     setTimeout(() => {
-      window.removeEventListener('mermaid-render-complete', onMermaidReady);
-      window.removeEventListener('content-layout-ready', onReady);
-      if (readyCount < componentsToWait || mermaidReadyIds.size < mermaidTargetIds.size) {
+      if (isPrinting) {
+        console.warn('Print timeout: forcing print despite incomplete renders.');
         finalizePrint();
       }
-    }, 5000);
-  }, [mode, settings.printSettings, isDarkMode]);
+    }, 6000);
+  }, [mode, settings.printSettings, isDarkMode, documents]);
 
   // 攔截 Ctrl + P (原生列印捷徑)
   useEffect(() => {

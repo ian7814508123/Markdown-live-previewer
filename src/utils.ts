@@ -9,3 +9,11 @@ export const hashString = (str: string) => {
     }
     return Math.abs(hash).toString(36);
 };
+// ─── 輔助函式：防抖 (Debounce) ──────────────────────────────────────────────────
+export function debounce<T extends (...args: any[]) => any>(fn: T, delay: number) {
+    let timeout: any;
+    return (...args: Parameters<T>) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn(...args), delay);
+    };
+}

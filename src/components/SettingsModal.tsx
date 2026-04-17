@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Save, RotateCcw, AlertCircle, Check, FileText, Printer, Box, PackagePlus, ChevronLeft } from 'lucide-react';
 import RippleButton from './RippleButton';
 import { PrintSettings } from '../hooks/useAppSettings';
@@ -220,10 +221,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
     if (!isOpen) return null;
 
-    return (
+    return createPortal(
         <>
-            <div className="fixed inset-0 bg-black/40 z-50 backdrop-blur-[2px]" onClick={onClose} />
-            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white dark:bg-slate-900 rounded-[2rem] shadow-[0_30px_90px_rgba(0,0,0,0.3)] border border-slate-200 dark:border-slate-800/80 z-50 flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 fade-in duration-300">
+            <div className="fixed inset-0 bg-black/40 z-[100] backdrop-blur-[2px]" onClick={onClose} />
+            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white dark:bg-slate-900 rounded-[2rem] shadow-[0_30px_90px_rgba(0,0,0,0.3)] border border-slate-200 dark:border-slate-800/80 z-[101] flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 fade-in duration-300">
 
                 {/* Header & Tabs */}
                 <div className="px-8 pt-8 pb-4 shrink-0">
@@ -456,7 +457,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     )}
                 </div>
             </div>
-        </>
+        </>,
+        document.body
     );
 };
 

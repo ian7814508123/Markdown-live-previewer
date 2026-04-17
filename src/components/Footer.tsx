@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
-import { ChevronUp, ChevronDown, ExternalLink } from 'lucide-react';
+import { ChevronUp, ChevronDown, ExternalLink, Sparkles } from 'lucide-react';
+import IntroModal from './IntroModal';
 
-const Footer: React.FC = () => {
+interface FooterProps {
+  showIntroTrigger?: boolean;
+}
+
+const Footer: React.FC<FooterProps> = ({ showIntroTrigger = true }) => {
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isIntroOpen, setIsIntroOpen] = useState(false);
 
   return (
     <footer className={`w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 transition-all duration-500 ease-in-out relative z-40 print:hidden ${isCollapsed ? 'py-2 px-6' : 'py-8 px-6'}`}>
 
-      {/* 展開/收合切換按鈕 - 放在右上角或中央 */}
+      {/* 展開/收合切換按鈕 */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
         className="absolute -top-3 right-8 p-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full shadow-sm text-slate-400 hover:text-brand-primary transition-all hover:scale-110 z-50"
@@ -68,7 +74,7 @@ const Footer: React.FC = () => {
           </div>
         )}
 
-        {/* 底部導覽條 (收合狀態下依然保持可見，確保 AdSense 爬蟲可讀取) */}
+        {/* 底部導覽條 */}
         <div className={`flex flex-col sm:flex-row justify-between items-center gap-3 ${!isCollapsed ? 'border-t border-slate-100 dark:border-slate-800/50 pt-6' : ''}`}>
           <div className="flex items-center gap-5">
             <p className="text-[10px] text-slate-600 dark:text-slate-300 font-medium">
@@ -83,7 +89,19 @@ const Footer: React.FC = () => {
             )}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setIsIntroOpen(true)}
+              className={`
+                flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all text-[10px] font-black uppercase tracking-widest group
+                ${showIntroTrigger
+                  ? 'opacity-100 bg-transparent border-slate-200 dark:border-slate-700 text-slate-500 hover:text-brand-primary hover:border-brand-primary/30 dark:text-slate-400 cursor-pointer'
+                  : 'opacity-0 pointer-events-none cursor-default'
+                }
+              `}
+            >
+              功能介紹
+            </button>
             <span className="hidden sm:inline-block w-1 h-1 bg-slate-300 dark:bg-slate-700 rounded-full"></span>
             <p className="text-[10px] text-slate-600 dark:text-slate-300 font-black uppercase tracking-tighter italic">
               Local-First • Privacy Focused • High Performance
@@ -91,6 +109,7 @@ const Footer: React.FC = () => {
           </div>
         </div>
       </div>
+      <IntroModal isOpen={isIntroOpen} onClose={() => setIsIntroOpen(false)} />
     </footer>
   );
 };

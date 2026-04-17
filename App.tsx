@@ -1327,7 +1327,7 @@ const App: React.FC = () => {
         </main>
 
         {/* 可見的頁腳 - 增加 AdSense 文字密度與連結 */}
-        <Footer />
+        <Footer showIntroTrigger={openDocIds.length > 0} />
 
         {/* SEO Content - Hidden from visual display but visible to search engines */}
         <SEOContent />

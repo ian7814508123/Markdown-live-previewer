@@ -1,9 +1,10 @@
 
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useState } from 'react';
 import { FileCode, Check, Copy, RefreshCw, Trash2, Menu, X, FileText, FileSearch } from 'lucide-react';
 import RippleButton from './RippleButton';
 import CodeMirrorEditor from './CodeMirrorEditor';
 import { ReactCodeMirrorRef } from '@uiw/react-codemirror';
+import IntroModal from './IntroModal';
 
 interface EditorProps {
     mode: 'mermaid' | 'markdown';
@@ -45,6 +46,8 @@ const Editor = forwardRef<ReactCodeMirrorRef, EditorProps>(({
     onSwitchTab,
     onCloseTab,
 }, ref) => {
+
+    const [isIntroOpen, setIsIntroOpen] = useState(false);
 
     const handleSearch = () => {
         if (ref && 'current' in ref && ref.current?.view) {
@@ -135,17 +138,17 @@ const Editor = forwardRef<ReactCodeMirrorRef, EditorProps>(({
                         title="搜尋 (Ctrl+F)" className="w-8 h-8 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800">
                         <FileSearch size={14} />
                     </RippleButton>
-                    <RippleButton variant="icon" onClick={onCopy} 
+                    <RippleButton variant="icon" onClick={onCopy}
                         aria-label="複製內容"
                         title="複製" className="w-8 h-8 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800">
                         {copied ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
                     </RippleButton>
-                    <RippleButton variant="icon" onClick={onReset} 
+                    <RippleButton variant="icon" onClick={onReset}
                         aria-label="還原初始內容"
                         title="重置" className="w-8 h-8 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800">
                         <RefreshCw size={14} />
                     </RippleButton>
-                    <RippleButton variant="icon" onClick={onClear} 
+                    <RippleButton variant="icon" onClick={onClear}
                         aria-label="清空編輯器"
                         title="清除" className="w-8 h-8 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
                         <Trash2 size={14} />
@@ -155,7 +158,8 @@ const Editor = forwardRef<ReactCodeMirrorRef, EditorProps>(({
 
             {/* 編輯區域 */}
             <div className="flex-1 flex flex-col overflow-hidden bg-white dark:bg-slate-900 transition-colors duration-200 relative">
-                {openDocIds.length > 0 ? (
+                {/* 核心編輯器 */}
+                {openDocIds.length > 0 && (
                     <CodeMirrorEditor
                         ref={ref}
                         mode={mode}
@@ -165,31 +169,54 @@ const Editor = forwardRef<ReactCodeMirrorRef, EditorProps>(({
                         onScroll={onScroll}
                         placeholder={mode === 'mermaid' ? "Enter Mermaid code..." : "Enter Markdown content..."}
                     />
-                ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 p-8 space-y-6">
-                        <div className="relative">
-                            <div className="absolute -inset-4 bg-brand-primary/10 dark:bg-brand-primary/5 rounded-full blur-2xl animate-pulse"></div>
-                            <div className="relative p-6 bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700">
-                                <FileSearch size={48} className="text-brand-primary" />
-                            </div>
+                )}
+
+                {/* 空狀態覆蓋層 (具備「吸入」Footer 的動畫效果) */}
+                <div className={`
+                    absolute inset-0 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 p-8 space-y-6 bg-white dark:bg-slate-900 z-20 transition-all duration-700 ease-in-out
+                    ${openDocIds.length > 0
+                        ? 'opacity-0 scale-[0.1] translate-x-[100%] translate-y-[100%] pointer-events-none blur-sm'
+                        : 'opacity-100 scale-100 translate-x-0 translate-y-0'
+                    }
+                `}>
+                    <div className="relative">
+                        <div className="absolute -inset-4 bg-brand-primary/10 dark:bg-brand-primary/5 rounded-full blur-2xl animate-pulse"></div>
+                        <div className="relative p-6 bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700">
+                            <FileSearch size={40} className="text-brand-primary" />
                         </div>
-                        <div className="text-center space-y-2 max-w-xs">
-                            <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">尚未開啟任何文件</h3>
-                            <p className="text-sm leading-relaxed">
-                                請在左側工具欄點選文件圖示，從「我的文檔」中選擇文件開始編輯。
-                            </p>
-                        </div>
+                    </div>
+                    <div className="text-center space-y-2 max-w-xs">
+                        <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">尚未開啟任何文件</h3>
+                        <p className="text-sm leading-relaxed">
+                            請在左側工具欄點選文件圖示，從「我的文檔」中選擇文件開始編輯。
+                        </p>
+                    </div>
+                    <button
+                        onClick={onToggleSidebar}
+                        className="flex items-center gap-2 px-6 py-2.5 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-xl font-bold text-sm shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/40 active:scale-95 transition-all"
+                    >
+                        <Menu size={15} />
+                        開啟側邊欄
+                    </button>
+                    <div className="flex flex-col items-center gap-2">
+                        <p className="text-sm leading-relaxed">
+                            不知道如何開始嗎?要不要看看
+                        </p>
                         <button
-                            onClick={onToggleSidebar}
-                            className="flex items-center gap-2 px-6 py-2.5 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-xl font-bold text-sm shadow-lg shadow-brand-primary/20 active:scale-95 transition-all"
+                            onClick={() => setIsIntroOpen(true)}
+                            className="flex items-center gap-2 px-6 py-2.5 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-xl font-bold text-sm shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/40 active:scale-95 transition-all"
                         >
-                            <Menu size={18} />
-                            開啟側邊欄
+                            功能介紹
                         </button>
                     </div>
-                )}
+                </div>
             </div>
+            <IntroModal
+                isOpen={isIntroOpen}
+                onClose={() => setIsIntroOpen(false)}
+            />
         </section>
+
     );
 });
 

@@ -1,7 +1,7 @@
 {
   "name": "markdown-live-previewer",
   "private": true,
-  "version": "3.3.10",
+  "version": "3.3.11",
   "type": "module",
   "engines": {
     "node": ">=22"

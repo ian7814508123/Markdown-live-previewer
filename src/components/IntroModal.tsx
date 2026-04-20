@@ -166,7 +166,7 @@ const IntroModal: React.FC<IntroModalProps> = ({ isOpen, onClose }) => {
                 icon={<Files size={16} />}
                 title="文檔管理與組織"
                 items={[
-                  { label: "儲存庫概念", detail: "點擊側邊欄的「資料夾」圖示建立儲存庫。您可以將相關文件放入其中，方便分類與批次處理。" },
+                  { label: "資料夾概念", detail: "點擊側邊欄的「資料夾」圖示建立資料夾。您可以將相關文件放入其中，方便分類與批次處理。" },
                   { label: "雙向連結", detail: "在內容中使用 [[檔名]] 即可快速連結到另一個文件。注意：連結功能目前僅限於同一資料夾內有效。" },
                   { label: "智慧歷史記錄", detail: "所有文檔皆儲存於瀏覽器本地 (IndexedDB)，即便重新整理頁面，您的創作也不會遺失。" }
                 ]}
@@ -195,7 +195,7 @@ const IntroModal: React.FC<IntroModalProps> = ({ isOpen, onClose }) => {
                 items={[
                   { label: "圖表尺寸控制", detail: "在 Mermaid 代碼塊的首行加入 %% width: 50% 可精確調整預覽與匯出時的顯示比例。" },
                   { label: "紙張模擬預覽", detail: "在 設定 > 列印與匯出 中開啟。編輯器旁會顯示虛擬 A4 紙張與分頁線，所見即所得。" },
-                  { label: "儲存庫批次匯出", detail: "當您在資料夾中工作時，下載選單可切換「合併下載」或「合併列印」，一次導出整個儲存庫內容。" }
+                  { label: "資料夾批次匯出", detail: "當您在資料夾中工作時，下載選單可切換「合併下載」或「合併列印」，一次導出整個資料夾內容。" }
                 ]}
               />
             </div>

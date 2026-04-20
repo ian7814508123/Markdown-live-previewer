@@ -18,7 +18,7 @@ interface HeaderProps {
     onOpenSettings: () => void;
     /** 統一列印 / PDF 呼叫 */
     onPrint: () => void;
-    /** 是否正處於資料夾中（儲存庫模式） */
+    /** 是否正處於資料夾中（資料夾模式） */
     isInFolder?: boolean;
     /** 列印與合併設定 */
     printSettings?: any;
@@ -272,12 +272,12 @@ const Header: React.FC<HeaderProps> = ({
                                 <div className="w-9 h-9 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-xl flex items-center justify-center"><Printer size={18} /></div>,
                                 '列印 / PDF', '套用 PDF 版面設定')}
 
-                            {/* 儲存庫合併快捷開關 */}
+                            {/* 資料夾合併快捷開關 */}
                             {isInFolder && onUpdatePrintSettings && printSettings && (
                                 <div className="mt-2 mx-1 p-4 bg-brand-secondary/40 dark:bg-brand-primary/10 rounded-2xl border border-brand-primary/10 dark:border-brand-primary/30 shadow-sm space-y-4 animate-in slide-in-from-top-2 duration-300">
                                     <div className="flex items-center gap-2 mb-1">
                                         <div className="p-1.5 bg-brand-primary/10 dark:bg-brand-primary/30 rounded-lg text-brand-primary"><Box size={15} /></div>
-                                        <p className="text-[12px] font-bold text-brand-primary uppercase tracking-widest">儲存庫合併選項</p>
+                                        <p className="text-[12px] font-bold text-brand-primary uppercase tracking-widest">資料夾合併選項</p>
                                     </div>
 
                                     <label className="flex items-center justify-between cursor-pointer group">
@@ -398,12 +398,12 @@ const Header: React.FC<HeaderProps> = ({
                                 <div className="w-9 h-9 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-xl flex items-center justify-center"><Printer size={18} /></div>,
                                 '列印 / PDF', '套用 PDF 版面設定')}
 
-                            {/* 儲存庫合併快捷開關 */}
+                            {/* 資料夾合併快捷開關 */}
                             {isInFolder && onUpdatePrintSettings && printSettings && (
                                 <div className="mt-2 mx-1 p-4 bg-brand-secondary/40 dark:bg-brand-primary/10 rounded-2xl border border-brand-primary/10 dark:border-brand-primary/30 shadow-sm space-y-4 animate-in slide-in-from-top-2 duration-300">
                                     <div className="flex items-center gap-2 mb-1">
                                         <div className="p-1.5 bg-brand-primary/10 dark:bg-brand-primary/30 rounded-lg text-brand-primary"><Box size={16} /></div>
-                                        <p className="text-[10px] font-bold text-brand-primary uppercase tracking-widest">儲存庫合併選項</p>
+                                        <p className="text-[10px] font-bold text-brand-primary uppercase tracking-widest">資料夾合併選項</p>
                                     </div>
 
                                     <label className="flex items-center justify-between cursor-pointer group">

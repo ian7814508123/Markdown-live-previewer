@@ -249,7 +249,7 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
 
     // 決定要渲染的文件列表
     const docsToRenderIds = useMemo(() => {
-        // 修正：只有當開啟了「合併列印 (PDF)」時，才讀取整個儲存庫的文件
+        // 修正：只有當開啟了「合併列印 (PDF)」時，才讀取整個資料夾的文件
         if (mergeVaultOnPdfExport && currentDoc?.folderId) {
             return (documents ?? [])
                 .filter((d: any) => d.folderId === currentDoc.folderId && d.mode === 'markdown')

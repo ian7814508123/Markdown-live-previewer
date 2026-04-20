@@ -9,9 +9,9 @@ export interface PrintSettings {
     /** 'fit' = 符合頁面, 'actual' = 實際大小, number = 自訂百分比 (10–200) */
     scale: 'fit' | 'actual' | number;
     margin: 'normal' | 'narrow' | 'none';
-    /** 匯出 MD 時合併儲存庫 */
+    /** 匯出 MD 時合併資料夾 */
     mergeVaultOnMdExport: boolean;
-    /** 下載 PDF 時合併儲存庫 */
+    /** 下載 PDF 時合併資料夾 */
     mergeVaultOnPdfExport: boolean;
     /** 在預覽區顯示列印預覽（邊界與分頁線） */
     showPrintPreview: boolean;
@@ -94,9 +94,9 @@ export function useAppSettings() {
                     };
                 }
                 // stored 存在但沒有 customMacros，補上預設後回傳
-                return { 
-                    ...DEFAULT_SETTINGS, 
-                    ...parsed, 
+                return {
+                    ...DEFAULT_SETTINGS,
+                    ...parsed,
                     printSettings: parsed.printSettings ?? DEFAULT_PRINT_SETTINGS
                 };
             }

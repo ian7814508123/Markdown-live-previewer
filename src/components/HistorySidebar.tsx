@@ -227,11 +227,11 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                         </div>
                     ) : (
                         <div className="py-2 space-y-4">
-                            {/* 資料夾區域 (儲存庫) */}
+                            {/* 資料夾區域 (資料夾) */}
                             {folders.length > 0 && (
                                 <div className="space-y-1">
                                     <div className="px-4 py-1">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">儲存庫 (Vaults)</span>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">資料夾 (Folders)</span>
                                     </div>
                                     {folders.map(folder => {
                                         const isExpanded = expandedFolders.has(folder.id);

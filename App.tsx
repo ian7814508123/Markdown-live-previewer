@@ -862,7 +862,7 @@ const App: React.FC = () => {
     const diagramElements = document.querySelectorAll('.diagram-block-container');
     const diagramsToWait = diagramElements.length;
     const imagesToWait = document.querySelectorAll('.prose img').length;
-    
+
     // 追蹤已完成的圖表 ID
     const completedDiagrams = new Set<string>();
     let completedImages = 0;
@@ -878,7 +878,7 @@ const App: React.FC = () => {
     const onDiagramReady = (event: Event) => {
       const detail = (event as CustomEvent<{ blockId?: string; printSessionId?: number }>).detail;
       if (!detail || detail.printSessionId !== currentPrintSessionId || !detail.blockId) return;
-      
+
       completedDiagrams.add(detail.blockId);
       checkAllReady();
     };
@@ -939,7 +939,7 @@ const App: React.FC = () => {
     let contentToDownload = code;
     let fileName = currentDocument?.name ? sanitizeFileName(currentDocument.name) : `document-${Date.now()}`;
 
-    // 如果開啟了「合併儲存庫 (Markdown)」且文件在資料夾中
+    // 如果開啟了「合併資料夾 (Markdown)」且文件在資料夾中
     if (settings.printSettings.mergeVaultOnMdExport && currentDocument?.folderId) {
       const vaultDocs = documents.filter(d => d.folderId === currentDocument.folderId && d.mode === 'markdown');
       if (vaultDocs.length > 1) {

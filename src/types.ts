@@ -1,5 +1,5 @@
 /**
- * 資料夾 (儲存庫/Vault) 型別
+ * 資料夾 (資料夾/Vault) 型別
  */
 export interface FolderRecord {
     id: string;                          // UUID

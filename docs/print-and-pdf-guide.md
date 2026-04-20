@@ -1,6 +1,6 @@
 # Markdown Live Previewer 功能說明：列印預覽與 PDF 合併
 
-本文件說明 Markdown Live Previewer 在儲存庫模式下的列印預覽與合併列印 PDF 的實作機制與操作方式。
+本文件說明 Markdown Live Previewer 在資料夾模式下的列印預覽與合併列印 PDF 的實作機制與操作方式。
 
 ## 1. 列印預覽 (Print Preview)
 在 Markdown 模式下，使用者可以透過「列印預覽」功能在瀏覽器中直接查看列印後的排版效果。
@@ -16,7 +16,7 @@
 ---
 
 ## 2. 合併列印 PDF (Merge Export)
-當使用者在儲存庫模式（資料夾內）工作時，可以選擇將整個資料夾的內容合併為一個文件進行列印或下載。
+當使用者在資料夾模式（資料夾內）工作時，可以選擇將整個資料夾的內容合併為一個文件進行列印或下載。
 
 ### A. Markdown 合併儲存 (Merge Markdown)
 - **觸發點**：Header 下載選單中的「合併下載 (Markdown)」開關。

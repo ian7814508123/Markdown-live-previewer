@@ -212,7 +212,7 @@ export function useDocumentStorage() {
      */
     const createFolder = useCallback((name?: string) => {
         const now = Date.now();
-        const base = "儲存庫";
+        const base = "資料夾";
         let finalName = name?.trim();
 
         if (!finalName) {

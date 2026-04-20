@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { Download, ChevronDown, Image as ImageIcon, FileImage, FileJson, FileText, Printer, Sun, Moon, FileUp, Settings, Box } from 'lucide-react';
 import { parseExcelToMarkdown } from '../services/excelParser';
 import RippleButton from './RippleButton';
+import InteractiveLogo from './InteractiveLogo';
 
 interface HeaderProps {
     mode: 'mermaid' | 'markdown';
@@ -49,6 +50,7 @@ const Header: React.FC<HeaderProps> = ({
     const downloadMenuRef = useRef<HTMLDivElement>(null);
     const themeMenuRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [logoVariant, setLogoVariant] = useState<'v1' | 'v2'>('v1');
 
     // 主顕選句映射
     const THEMES: { value: string; label: string; emoji: string }[] = [
@@ -165,14 +167,17 @@ const Header: React.FC<HeaderProps> = ({
 
             {/* Logo + 標題 */}
             <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-brand-primary rounded-2xl flex items-center justify-center text-white overflow-hidden">
-                    <img src="./image/markdown_liveditor.svg" alt="Logo" className="w-10 h-10" />
+                <div
+                    onClick={() => setLogoVariant(prev => prev === 'v1' ? 'v2' : 'v1')}
+                >
+                    <InteractiveLogo size={40} variant={logoVariant} />
                 </div>
                 <div>
                     <h1 className="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100">Markdown Live Previewer</h1>
                     <p className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">專業的線上編輯器 給 標註掉落</p>
                 </div>
             </div>
+
 
             {/* 右側工具列 */}
             <div className="flex items-center gap-1">

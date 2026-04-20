@@ -23,6 +23,10 @@
         /* 亮藍：互動強調 */
         --brand-surface: #F8FAFC;
         /* 極淺灰藍：介面底色 */
+        --logo-stroke: #FFFFFF;
+        --logo-bg: var(--brand-primary);
+        --logo-blur: 0px;
+        --logo-border: transparent;
 
         /* 程式碼與圖表變數 (淺色預設) */
         --code-bg: #f8f9fa;
@@ -67,6 +71,10 @@
         /* 互動 */
         --brand-surface: #0F172A;
         /* 底色 */
+        --logo-stroke: #FFFFFF;
+        --logo-bg: linear-gradient(135deg, color-mix(in srgb, var(--brand-secondary), transparent 20%), color-mix(in srgb, var(--brand-secondary), transparent 60%));
+        --logo-blur: 10px;
+        --logo-border: rgba(255, 255, 255, 0.4);
 
         /* 程式碼與圖表變數 (深色預設) */
         --code-bg: #1e1e1e;
@@ -474,11 +482,13 @@
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     border: 1px solid #e2e8f0;
     word-break: break-word;
-    display: inline; /* 確保它是行內元素 */
+    display: inline;
+    /* 確保它是行內元素 */
 }
 
 .dark .prose .inline-code {
-    background-color: #1e293b; /* slate-800 */
+    background-color: #1e293b;
+    /* slate-800 */
     color: var(--brand-primary);
     border-color: #334155;
 }

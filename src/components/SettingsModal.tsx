@@ -4,6 +4,7 @@ import { X, Save, RotateCcw, AlertCircle, Check, FileText, Printer, Box, Package
 import RippleButton from './RippleButton';
 import { PrintSettings } from '../hooks/useAppSettings';
 import pkg from '../../package.json';
+import InteractiveLogo from './InteractiveLogo';
 
 interface SettingsModalProps {
     isOpen: boolean;
@@ -190,6 +191,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
     const [showChangelog, setShowChangelog] = useState(false);
+    const [logoVariant, setLogoVariant] = useState<'v1' | 'v2'>('v1');
     const version = pkg.version;
 
     useEffect(() => {
@@ -312,18 +314,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         ) : (
                             <div key="about-main" className="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
                                 <div className="flex flex-col items-center text-center space-y-6">
-                                    <div className="
-                                    w-24 h-24 rounded-[2.5rem] flex items-center justify-center text-white overflow-hidden transform transition-transform hover:scale-[1.02] duration-300
-                                    /* 基礎漸層 (淺色模式) */
-                                    bg-gradient-to-br from-brand-primary to-brand-secondary 
-                                    /* 深色模式下的漸層修改 */
-                                    dark:from-brand-secondary dark:to-brand-accent
-                                    /* 其他深色模式樣式 */
-                                    shadow-xl shadow-slate-200 dark:shadow-black/70 
-                                    border-4 border-white dark:border-slate-800 
-                                    ring-1 ring-slate-100 dark:ring-slate-700/50
-                                    ">
-                                        <img src="./image/markdown_liveditor.svg?v=2" alt="Logo" className="w-16 h-16 drop-shadow-sm" />
+                                    <div
+                                        onClick={() => setLogoVariant(prev => prev === 'v1' ? 'v2' : 'v1')}
+                                    >
+                                        <InteractiveLogo size={60} variant={logoVariant} />
                                     </div>
                                     <div className="pt-0">
                                         <h3 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">Markdown Live Previewer</h3>

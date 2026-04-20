@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Sparkles, Zap, Layout, Printer, MousePointer2, Keyboard, Microscope, Music, BarChart3, HelpCircle, BookOpen, ChevronRight, Files, Wrench, Share2 } from 'lucide-react';
 import RippleButton from './RippleButton';
+import InteractiveLogo from './InteractiveLogo';
 
 interface IntroModalProps {
   isOpen: boolean;
@@ -58,6 +59,8 @@ const IntroModal: React.FC<IntroModalProps> = ({ isOpen, onClose }) => {
     </div>
   );
 
+
+
   return createPortal(
     <>
       <div className="fixed inset-0 bg-black/60 z-[100] backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose} />
@@ -66,11 +69,11 @@ const IntroModal: React.FC<IntroModalProps> = ({ isOpen, onClose }) => {
         {/* Header Section */}
         <div className="relative shrink-0 p-5 pb-2 text-center overflow-hidden">
           <div className="flex items-center justify-center gap-4 mb-3">
-            <img src="./image/markdown_liveditor.svg?v=2" alt="Logo 1" className="w-10 h-10 drop-shadow-sm" />
+            <InteractiveLogo size={40} variant="v1" />
             <h2 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
               歡迎使用 Markdown Live Previewer
             </h2>
-            <img src="./image/markdown_liveditor2.svg?v=2" alt="Logo 2" className="w-10 h-10 drop-shadow-sm" />
+            <InteractiveLogo size={40} variant="v2" />
           </div>
 
           {/* Tab Switcher */}

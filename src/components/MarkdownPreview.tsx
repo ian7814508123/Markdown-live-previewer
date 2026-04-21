@@ -416,7 +416,13 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
     // 優先使用 Props 以確保 React 渲染週期同步，避免 reliance on DOM queries
     const isActuallyPrinting = !!isPrinting || !!showPrintPreview;
     const shouldShowDark = isDarkMode && !isActuallyPrinting;
-    const processedContent = useMemo(() => content.replace(/\[\[(.*?)\]\]/g, '[$1](#wikilink-$1)'), [content]);
+    const processedContent = useMemo(() => {
+        return content
+            .replace(/\[\[(.*?)\]\]/g, '[$1](#wikilink-$1)')
+            .replace(/^\\pagebreak\s*$/gm, '<div class="page-break"></div>\n\n')
+            .replace(/^\[page-break\]\s*$/gm, '<div class="page-break"></div>\n\n')
+            .replace(/^---pb---\s*$/gm, '<div class="page-break"></div>\n\n');
+    }, [content]);
     const debouncedContent = useDebounce(processedContent, 200);
     // 在 MarkdownPreview 頂層呼叫一次，避免每個 LocalImage 獨立開啟 DB 連線
     const { getImage } = useImageStorage();

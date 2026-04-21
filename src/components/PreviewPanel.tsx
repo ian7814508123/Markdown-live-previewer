@@ -8,20 +8,34 @@ import MarkdownPreview from './MarkdownPreview';
 const PageBreaksOverlay: React.FC<{
     contentHeight: number;
     pageHeightPx: number;
+    manualBreaks: number[];
     isVisible: boolean;
-}> = ({ contentHeight, pageHeightPx, isVisible }) => {
-    if (!isVisible || contentHeight <= pageHeightPx) return null;
+}> = ({ contentHeight, pageHeightPx, manualBreaks, isVisible }) => {
+    if (!isVisible) return null;
 
-    const pageCount = Math.floor(contentHeight / pageHeightPx);
-    const indicators = Array.from({ length: pageCount }, (_, i) => i + 1);
+    // 計算分頁指標：手動分頁會重置基準點
+    const indicators: number[] = [];
+    const segments = [0, ...manualBreaks, contentHeight];
+
+    for (let i = 0; i < segments.length - 1; i++) {
+        const start = segments[i];
+        const end = segments[i + 1];
+        const segmentHeight = end - start;
+
+        // 在目前的區段（從上一個分頁點到下一個分頁點）中，計算需要多少預估分頁線
+        const pagesInSegment = Math.floor((segmentHeight - 1) / pageHeightPx);
+        for (let p = 1; p <= pagesInSegment; p++) {
+            indicators.push(start + p * pageHeightPx);
+        }
+    }
 
     return (
         <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
-            {indicators.map(page => (
+            {indicators.map((top, idx) => (
                 <div
-                    key={page}
+                    key={idx}
                     className="page-break-indicator absolute left-0 right-0"
-                    style={{ top: `${page * pageHeightPx}px` }}
+                    style={{ top: `${top}px` }}
                 />
             ))}
         </div>
@@ -75,16 +89,35 @@ const PrintPaper: React.FC<PrintPaperProps> = ({
     scrollRef
 }) => {
     const [contentHeight, setContentHeight] = useState(0);
+    const [manualBreaks, setManualBreaks] = useState<number[]>([]);
     const paperRef = useRef<HTMLDivElement>(null);
+
+    // 重新計算手動分頁位置
+    const updateMetrics = () => {
+        if (!paperRef.current) return;
+        const proseContainer = paperRef.current.querySelector('.prose-container');
+        if (!proseContainer) return;
+
+        const containerRect = proseContainer.getBoundingClientRect();
+        // 更新總高度
+        setContentHeight(containerRect.height);
+
+        // 搜尋所有手動分頁元素，獲取相對於容器顶部的位移
+        const breakElements = proseContainer.querySelectorAll('.page-break');
+        const positions: number[] = [];
+        breakElements.forEach((el: HTMLElement) => {
+            const elRect = el.getBoundingClientRect();
+            // 計算相對於 prose-container 頂部的距離
+            positions.push(elRect.top - containerRect.top);
+        });
+        setManualBreaks(positions.sort((a, b) => a - b));
+    };
 
     useEffect(() => {
         if (!showPrintPreview) return;
 
-        const observer = new ResizeObserver((entries) => {
-            for (let entry of entries) {
-                // 獲取 prose-container 的內容高度
-                setContentHeight(entry.contentRect.height);
-            }
+        const observer = new ResizeObserver(() => {
+            updateMetrics();
         });
 
         const proseContainer = paperRef.current?.querySelector('.prose-container');
@@ -92,7 +125,15 @@ const PrintPaper: React.FC<PrintPaperProps> = ({
             observer.observe(proseContainer);
         }
 
-        return () => observer.disconnect();
+        // 監聽特定渲染事件
+        window.addEventListener('content-layout-ready', updateMetrics);
+        window.addEventListener('preview-content-height-change', updateMetrics);
+
+        return () => {
+            observer.disconnect();
+            window.removeEventListener('content-layout-ready', updateMetrics);
+            window.removeEventListener('preview-content-height-change', updateMetrics);
+        };
     }, [showPrintPreview, doc?.content]);
 
     return (
@@ -128,6 +169,7 @@ const PrintPaper: React.FC<PrintPaperProps> = ({
                     <PageBreaksOverlay
                         contentHeight={contentHeight}
                         pageHeightPx={paperPx.h}
+                        manualBreaks={manualBreaks}
                         isVisible={showPrintPreview}
                     />
                 )}
@@ -135,6 +177,7 @@ const PrintPaper: React.FC<PrintPaperProps> = ({
         </div>
     );
 };
+
 // 導入独立元件避免在 forwardRef 內部的條件分支中呼叫 hooks（違反 Rules of Hooks）
 // activatedDocIds 追蹤「已被用戶訪問過的 tab」，尚未訪問的 tab 不會在背景被渲染
 // 這就消除了 MathJax 在 display:none 容器中渲染時發生的 null DOM 錯誤

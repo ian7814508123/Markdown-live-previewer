@@ -304,6 +304,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                             <li>讓設計動起來！支援動圖渲染功能。</li>
                                             <li>![立即試試](./image/livelogo_v1.svg "還有 v2 可以玩玩看哦！")
                                                 (提醒：若匯出 PDF 等靜態格式，動圖將固定於特定幀，建議僅在數位展示環境下使用。)</li>
+                                            <li>使用 \pagebreak , [page-break] , ---pb--- 指令強制換頁 (開啟列印預覽下可以看到強制換頁線)</li>
                                         </ul>
                                     </div>
                                 </div>

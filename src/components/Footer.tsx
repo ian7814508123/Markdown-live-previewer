@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
-import { ChevronUp, ChevronDown, ExternalLink, Sparkles } from 'lucide-react';
-import IntroModal from './IntroModal';
+import { ChevronUp, ChevronDown, ExternalLink } from 'lucide-react';
 
 interface FooterProps {
   showIntroTrigger?: boolean;
+  onOpenIntro?: () => void;
 }
 
-const Footer: React.FC<FooterProps> = ({ showIntroTrigger = true }) => {
+const Footer: React.FC<FooterProps> = ({ showIntroTrigger = true, onOpenIntro }) => {
   const [isCollapsed, setIsCollapsed] = useState(true);
-  const [isIntroOpen, setIsIntroOpen] = useState(false);
 
   return (
     <footer className={`w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 transition-all duration-500 ease-in-out relative z-40 print:hidden ${isCollapsed ? 'py-2 px-6' : 'py-8 px-6'}`}>
@@ -90,18 +89,6 @@ const Footer: React.FC<FooterProps> = ({ showIntroTrigger = true }) => {
           </div>
 
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => setIsIntroOpen(true)}
-              className={`
-                flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all text-[10px] font-black uppercase tracking-widest group
-                ${showIntroTrigger
-                  ? 'opacity-100 bg-transparent border-slate-200 dark:border-slate-700 text-slate-500 hover:text-brand-primary hover:border-brand-primary/30 dark:text-slate-400 cursor-pointer'
-                  : 'opacity-0 pointer-events-none cursor-default'
-                }
-              `}
-            >
-              功能介紹
-            </button>
             <span className="hidden sm:inline-block w-1 h-1 bg-slate-300 dark:bg-slate-700 rounded-full"></span>
             <p className="text-[10px] text-slate-600 dark:text-slate-300 font-black uppercase tracking-tighter italic">
               Local-First • Privacy Focused • High Performance
@@ -109,7 +96,6 @@ const Footer: React.FC<FooterProps> = ({ showIntroTrigger = true }) => {
           </div>
         </div>
       </div>
-      <IntroModal isOpen={isIntroOpen} onClose={() => setIsIntroOpen(false)} />
     </footer>
   );
 };

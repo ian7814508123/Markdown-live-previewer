@@ -12,6 +12,7 @@ import CreateDocModal from './src/components/CreateDocModal';
 import SettingsModal from './src/components/SettingsModal';
 import SEOContent from './src/components/SEOContent';
 import Footer from './src/components/Footer';
+import IntroModal from './src/components/IntroModal';
 import { usePanZoom } from './src/hooks/usePanZoom';
 import { useDocumentStorage } from './src/hooks/useDocumentStorage';
 import { hashString, debounce } from './src/utils';
@@ -131,6 +132,7 @@ const App: React.FC = () => {
   const [isSyncScroll, setIsSyncScroll] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isIntroModalOpen, setIsIntroModalOpen] = useState(false);
   const [initialDocName, setInitialDocName] = useState('');
   const [pendingFolderId, setPendingFolderId] = useState<string | null>(null);
   const [openDocIds, setOpenDocIds] = useState<string[]>([]);
@@ -944,12 +946,24 @@ const App: React.FC = () => {
       const vaultDocs = documents.filter(d => d.folderId === currentDocument.folderId && d.mode === 'markdown');
       if (vaultDocs.length > 1) {
         contentToDownload = vaultDocs
-          .map(d => `--- \n# ${d.name}\n\n${d.content}`)
+          .map(d => {
+             // 替換所有WikiLink為錨點連結
+             const processedDocContent = d.content.replace(/\[\[(.*?)\]\]/g, (match, p1) => {
+                return `[${p1}](#wikilink-${encodeURIComponent(p1)})`;
+             });
+             return `--- \n# ${d.name}\n<a id="wikilink-${encodeURIComponent(d.name)}"></a>\n\n${processedDocContent}`;
+          })
           .join('\n\n');
 
         const folder = folders.find(f => f.id === currentDocument.folderId);
         fileName = folder ? `${sanitizeFileName(folder.name)}-full` : `${fileName}-merged`;
+      } else {
+        // 單檔匯出：原本的 WikiLink 失去作用，直接剝離 [] 轉作純文字
+        contentToDownload = code.replace(/\[\[(.*?)\]\]/g, '$1');
       }
+    } else {
+      // 單檔匯出：原本的 WikiLink 失去作用，直接剝離 [] 轉作純文字
+      contentToDownload = code.replace(/\[\[(.*?)\]\]/g, '$1');
     }
 
     const blob = new Blob([contentToDownload], { type: 'text/markdown;charset=utf-8' });
@@ -1327,7 +1341,9 @@ const App: React.FC = () => {
         </main>
 
         {/* 可見的頁腳 - 增加 AdSense 文字密度與連結 */}
-        <Footer showIntroTrigger={openDocIds.length > 0} />
+        <Footer showIntroTrigger={openDocIds.length > 0} onOpenIntro={() => setIsIntroModalOpen(true)} />
+
+        <IntroModal isOpen={isIntroModalOpen} onClose={() => setIsIntroModalOpen(false)} />
 
         {/* SEO Content - Hidden from visual display but visible to search engines */}
         <SEOContent />
@@ -1343,6 +1359,7 @@ const App: React.FC = () => {
           currentPrintSettings={settings.printSettings}
           onSavePrintSettings={updatePrintSettings}
           isStandalone={!documents.find(d => d.id === currentDocId)?.folderId}
+          onOpenIntro={() => setIsIntroModalOpen(true)}
         />
       </div>
     </MathJaxContext>

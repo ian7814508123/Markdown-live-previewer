@@ -27,6 +27,7 @@ interface MarkdownPreviewProps {
     isPrinting?: boolean;
     showPrintPreview?: boolean;
     printSessionId?: number;
+    isMergedPrint?: boolean;
 }
 
 // 原有的輔助 Hook 與組件已抽離至 DiagramBlock.tsx 與 ResizableWrapper.tsx 處理
@@ -264,10 +265,18 @@ interface WikiLinkProps {
     currentDocId?: string | null;
     onSelectDocument?: (docId: string) => void;
     onCreateMissing?: (name: string) => void;
+    isActuallyPrinting?: boolean;
+    isMergedPrint?: boolean;
 }
 
-const WikiLink: React.FC<WikiLinkProps> = React.memo(({ name, children, documents, currentDocId, onSelectDocument, onCreateMissing }) => {
+const WikiLink: React.FC<WikiLinkProps> = React.memo(({ name, children, documents, currentDocId, onSelectDocument, onCreateMissing, isActuallyPrinting, isMergedPrint }) => {
     const decodedName = decodeURIComponent(name);
+    
+    // 如果正在列印/匯出，且並非合併列印，則轉化為純文字（單檔 PDF 無目標頁面可跳轉）
+    if (isActuallyPrinting && !isMergedPrint) {
+        return <span>{children}</span>;
+    }
+
     const currentDoc = documents.find((d: any) => d.id === currentDocId);
     const isInVault = !!currentDoc?.folderId;
     if (!isInVault) return <span>[[{children}]]</span>;
@@ -411,7 +420,7 @@ const EnhancedCodeBlock: React.FC<EnhancedCodeBlockProps> = ({
 // ─── 區塊判斷上下文：用於解決 react-markdown v10 移除 inline prop 後的辨識問題 ───────
 const IsInPreContext = React.createContext(false);
 
-const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDarkMode, documents = [], onSelectDocument, onCreateMissing, currentDocId, isPrinting, showPrintPreview, printSessionId = 0 }) => {
+const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDarkMode, documents = [], onSelectDocument, onCreateMissing, currentDocId, isPrinting, showPrintPreview, printSessionId = 0, isMergedPrint }) => {
     // 關鍵修正：判斷當前是否處於「需要白色底」或「列印中」的狀態
     // 優先使用 Props 以確保 React 渲染週期同步，避免 reliance on DOM queries
     const isActuallyPrinting = !!isPrinting || !!showPrintPreview;
@@ -443,6 +452,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
         isPrinting,
         showPrintPreview,
         printSessionId,
+        isMergedPrint,
         getImage
     };
 
@@ -563,6 +573,8 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
                         currentDocId={ctx.currentDocId}
                         onSelectDocument={ctx.onSelectDocument}
                         onCreateMissing={ctx.onCreateMissing}
+                        isActuallyPrinting={ctx.isActuallyPrinting}
+                        isMergedPrint={ctx.isMergedPrint}
                     >
                         {children}
                     </WikiLink>

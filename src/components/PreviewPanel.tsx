@@ -58,6 +58,7 @@ interface PrintPaperProps {
     isVisibleInPrint: boolean;
     isPrinting: boolean;
     printSessionId: number;
+    isMergedPrint: boolean;
     theme: any;
     isDarkMode: boolean;
     documents: any[];
@@ -80,6 +81,7 @@ const PrintPaper: React.FC<PrintPaperProps> = ({
     isVisibleInPrint,
     isPrinting,
     printSessionId,
+    isMergedPrint,
     theme,
     isDarkMode,
     documents,
@@ -163,6 +165,7 @@ const PrintPaper: React.FC<PrintPaperProps> = ({
                     isPrinting={isPrinting}
                     showPrintPreview={showPrintPreview}
                     printSessionId={printSessionId}
+                    isMergedPrint={isMergedPrint}
                 />
                 {/* 覆蓋層顯示分頁指示線 */}
                 {showPrintPreview && (
@@ -417,6 +420,7 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
                                     isVisibleInPrint={isVisibleInPrint}
                                     isPrinting={isPrinting}
                                     printSessionId={printSessionId}
+                                    isMergedPrint={isMergedMode}
                                     theme={theme}
                                     isDarkMode={isDarkMode}
                                     documents={documents}

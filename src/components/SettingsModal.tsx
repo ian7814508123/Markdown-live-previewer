@@ -17,6 +17,7 @@ interface SettingsModalProps {
     currentPrintSettings: PrintSettings;
     onSavePrintSettings: (patch: Partial<PrintSettings>) => void;
     isStandalone?: boolean;
+    onOpenIntro?: () => void;
 }
 
 // ── PDF 設定面板 ────────────────────────────────────────────────────────────
@@ -185,6 +186,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     currentPrintSettings,
     onSavePrintSettings,
     isStandalone = false,
+    onOpenIntro,
 }) => {
     const [activeTab, setActiveTab] = useState<'editor' | 'print' | 'about'>('editor');
     const [jsonInput, setJsonInput] = useState('');
@@ -303,8 +305,18 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                         <ul className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed ml-11 list-disc list-outside space-y-1.5 pl-4 opacity-90">
                                             <li>讓設計動起來！支援動圖渲染功能。</li>
                                             <li>![立即試試](./image/livelogo_v1.svg "還有 v2 可以玩玩看哦！")
-                                                (提醒：若匯出 PDF 等靜態格式，動圖將固定於特定幀，建議僅在數位展示環境下使用。)</li>
-                                            <li>使用 \pagebreak , [page-break] , ---pb--- 指令強制換頁 (開啟列印預覽下可以看到強制換頁線)</li>
+                                                <ol>(提醒：若匯出 PDF 等靜態格式，動圖將固定於特定幀，建議僅在數位展示環境下使用。)</ol></li>
+                                            <li>使用<strong>\pagebreak</strong> , <strong>[page-break]</strong> , <strong>---pb---</strong> 指令強制換頁 (開啟列印預覽下可以看到強制換頁線)</li>
+                                            <li>增強 WikiLink 匯出相容性：合併匯出時自動轉為內部跳轉錨點 (注意:列印時要選擇Save to PDF，而不是Print to PDF)，單檔匯出則自動降級為純文字以避免死連結。</li>
+                                            <li><strong>注意: 目前資料夾模式下的列印預覽功能與同步滾動功能尚在測試中，若發現：</strong>
+                                                <ol>
+                                                    <li><strong>1. 同步滾動位置偏移或跳躍</strong></li>
+                                                    <li><strong>2. 列印時樣式跑版或顯示異常</strong></li>
+                                                    <li><strong>3. 其他異常狀況</strong></li>
+                                                </ol>
+                                                <strong>請暫時關閉功能或嘗試重新整理頁面後再試</strong>
+                                            </li>
+
                                         </ul>
                                     </div>
                                 </div>
@@ -333,27 +345,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                 </div>
 
                                 <div className="space-y-6">
-                                    <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-                                        <FileText size={16} className="text-brand-primary opacity-80" />
-                                        <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">功能特色 (Features)</h4>
-                                    </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
-                                        <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-700/50">
-                                            <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">即時預覽與編輯</h5>
-                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">支持 GFM 標準與即時同步滾動，提供極速的 Markdown 編輯體驗。</p>
-                                        </div>
-                                        <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-700/50">
-                                            <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">專業圖表渲染</h5>
-                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">內建 Mermaid (流程圖、時序圖) 與 Vega-Lite 數據可視化支持。</p>
-                                        </div>
-                                        <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-700/50">
-                                            <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">科學公式與計算</h5>
-                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">完美支援 LaTeX 數學公式、化學符號及樂譜渲染。</p>
-                                        </div>
-                                        <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-700/50">
-                                            <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">隱私與安全</h5>
-                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">100% 瀏覽器本地運行，不對外傳輸您的任何文檔數據。</p>
-                                        </div>
+                                    <div className="flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+                                        <FileText size={24} className="text-brand-primary/50 mb-3" />
+                                        <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">想了解更多功能細節？</h5>
+                                        <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed mb-4 text-center max-w-[250px]">前往功能導覽，學習如何使用快捷鍵、資料夾管理及更多高階與隱藏技巧。</p>
+                                        <RippleButton 
+                                            variant="outlined" 
+                                            className="px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:border-brand-primary"
+                                            onClick={() => {
+                                                if(onOpenIntro) onOpenIntro();
+                                                onClose();
+                                            }}
+                                        >
+                                            打開完整使用手冊
+                                        </RippleButton>
                                     </div>
                                 </div>
 

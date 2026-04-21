@@ -170,7 +170,7 @@ const IntroModal: React.FC<IntroModalProps> = ({ isOpen, onClose }) => {
                 title="文檔管理與組織"
                 items={[
                   { label: "資料夾概念", detail: "點擊側邊欄的「資料夾」圖示建立資料夾。您可以將相關文件放入其中，方便分類與批次處理。" },
-                  { label: "雙向連結", detail: "在內容中使用 [[檔名]] 即可快速連結到另一個文件。注意：連結功能目前僅限於同一資料夾內有效。" },
+                  { label: "雙向連結與安全匯出", detail: "在內容中使用 [[檔名]] 即可快速連結到另一個文件。若採用合併匯出 (MD/PDF)，連結將無縫轉換為文件內部的跳轉錨點；單檔匯出則自動降級為純文字。" },
                   { label: "智慧歷史記錄", detail: "所有文檔皆儲存於瀏覽器本地 (IndexedDB)，即便重新整理頁面，您的創作也不會遺失。" }
                 ]}
               />
@@ -206,7 +206,7 @@ const IntroModal: React.FC<IntroModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Footer actions */}
-        <div className="shrink-0 p-6 pt-2 flex justify-center">
+        <div className="shrink-0 p-4 pt-2 flex justify-center">
           <RippleButton
             variant="filled"
             onClick={onClose}

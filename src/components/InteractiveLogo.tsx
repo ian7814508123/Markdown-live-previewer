@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, Variants } from 'framer-motion';
+import { motion, Variants, useMotionValue, useTransform } from 'framer-motion';
 
 interface InteractiveLogoProps {
   className?: string;
@@ -8,25 +8,25 @@ interface InteractiveLogoProps {
 }
 
 const InteractiveLogo: React.FC<InteractiveLogoProps> = ({ className, size = 40, variant = 'v1' }) => {
-  // Define paths for both versions
+  // 建立進度值，由 0 到 1
+  const progress = useMotionValue(0);
+
+  // 定義路徑
   const paths = {
     v1: {
       m: "M 18 46 V 18 L 32 34 L 46 18 V 46",
-      arrowHead: [
-        "M 46 46 L 41 41",
-        "M 46 46 L 51 41"
-      ]
+      arrow: "M -6 -5 L 0 0 L -6 5" // 指向右方 (+X)，配合 offsetRotate: auto
     },
     v2: {
-      m: "M 14 42 L 24 16 L 32 38 L 40 16 L 50 45",
-      arrowHead: [
-        "M 50 47 L 43 44",
-        "M 50 47 L 55 43"
-      ]
+      m: "M 14 42 L 24 16 L 32 38 L 40 16 L 50 46",
+      arrow: "M -6 -5 L 0 0 L -6 5"
     }
   };
 
   const currentPaths = paths[variant];
+
+  // 轉換進度為 offsetDistance 的百分比字串
+  const offsetDistance = useTransform(progress, [0, 1], ["0%", "100%"]);
 
   const containerVariants: Variants = {
     initial: {},
@@ -48,30 +48,26 @@ const InteractiveLogo: React.FC<InteractiveLogoProps> = ({ className, size = 40,
       opacity: 1,
       filter: "drop-shadow(0 0 8px rgba(255,255,255,0.8))",
       transition: {
-        duration: 1.2,
+        duration: 1.5,
         ease: "easeInOut",
       }
     }
   };
 
   const arrowVariants: Variants = {
-    initial: { pathLength: 0, opacity: 0 },
+    initial: { opacity: 0, scale: 0 },
     animate: {
-      pathLength: 1,
       opacity: 1,
+      scale: 1,
       transition: {
-        delay: 1.2,
-        duration: 0.5,
-        ease: "easeOut",
+        duration: 0.3,
       }
     },
     hover: {
-      pathLength: [0, 1],
-      opacity: 1,
+      opacity: [0, 1],
+      scale: [0.8, 1],
       transition: {
-        delay: 0.8,
-        duration: 0.4,
-        ease: "easeOut",
+        duration: 0.3,
       }
     }
   };
@@ -96,7 +92,6 @@ const InteractiveLogo: React.FC<InteractiveLogoProps> = ({ className, size = 40,
         backdropFilter: "blur(calc(var(--logo-blur) / 2))",
         scale: 0.92
       }}
-
       variants={containerVariants}
     >
       <svg
@@ -105,28 +100,37 @@ const InteractiveLogo: React.FC<InteractiveLogoProps> = ({ className, size = 40,
         viewBox="0 0 64 64"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
+        style={{ strokeLinecap: "round", strokeLinejoin: "round" }}
       >
+        {/* 主路徑：負責畫線 */}
         <motion.path
           d={currentPaths.m}
           stroke="var(--logo-stroke)"
           strokeWidth="4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
           variants={pathVariants}
+          onUpdate={(latest: any) => {
+            if (latest.pathLength !== undefined) {
+              progress.set(latest.pathLength);
+            }
+          }}
         />
 
-        {currentPaths.arrowHead.map((d, index) => (
-          <motion.path
-            key={index}
-            d={d}
+        {/* 火車頭：箭頭群組 */}
+        <motion.g
+          style={{
+            offsetPath: `path("${currentPaths.m}")`,
+            offsetDistance: offsetDistance,
+            offsetRotate: "auto",
+          }}
+          variants={arrowVariants}
+        >
+          <path
+            d={currentPaths.arrow}
             stroke="var(--logo-stroke)"
             strokeWidth="4"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            variants={arrowVariants}
+            fill="none"
           />
-        ))}
-
+        </motion.g>
       </svg>
 
       <motion.div
@@ -139,8 +143,5 @@ const InteractiveLogo: React.FC<InteractiveLogoProps> = ({ className, size = 40,
     </motion.div>
   );
 };
-
-
-
 
 export default InteractiveLogo;

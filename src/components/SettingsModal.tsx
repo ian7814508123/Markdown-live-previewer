@@ -282,8 +282,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     </div>
                                 </div>
                                 <div className="space-y-4">
-                                    <div className="p-5 bg-gradient-to-br from-indigo-50 to-white dark:from-slate-800 dark:to-slate-800/50 rounded-2xl border border-indigo-100/50 dark:border-slate-700/50 shadow-sm">
-                                        <div className="flex items-center gap-3 mb-3">
+                                    {/*<div className="p-5 bg-gradient-to-br from-indigo-50 to-white dark:from-slate-800 dark:to-slate-800/50 rounded-2xl border border-indigo-100/50 dark:border-slate-700/50 shadow-sm">
+                                         <div className="flex items-center gap-3 mb-3">
                                             <div className="p-2 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-500 dark:text-indigo-400 rounded-xl">
                                                 <PackagePlus size={18} />
                                             </div>
@@ -291,8 +291,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                         </div>
                                         <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed ml-11">
                                             現在您可以直接在 Markdown 文件中使用 <code className="px-1 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-[10px] font-mono mx-1">abc</code> 語法區塊來編寫傳統五線譜！系統會自動將其渲染為高解析度、可自由縮放的高品質向量樂譜，並深度優化深色模式與文件列印的顯示效果。
-                                        </p>
-                                    </div>
+                                        </p> 
+                                    </div> */}
                                     <div className="p-5 bg-gradient-to-br from-indigo-50 to-white dark:from-slate-800 dark:to-slate-800/50 rounded-2xl border border-indigo-100/50 dark:border-slate-700/50 shadow-sm">
                                         <div className="flex items-center gap-3 mb-3">
                                             <div className="p-2 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-xl">
@@ -301,12 +301,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                             <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">體驗優化與修正</h4>
                                         </div>
                                         <ul className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed ml-11 list-disc list-outside space-y-1.5 pl-4 opacity-90">
-                                            <li>改善列印模式，強制將包含圖表與樂譜在內的所有元件配色還原為高對比黑色。</li>
-                                            <li>在「新增文檔」選單追加了「音樂樂譜」範本，便於快速建立教學文件。</li>
-                                            <li>優化表格產生器,可直接從外部試算表複製表格並轉換成markdown語法。</li>
-                                            <li>修正元件樣式。</li>
-                                            <li>列印時可以支援內嵌圖表縮放設定了。</li>
-                                            <li>修正圖表與方程式的跳動問題</li>
+                                            <li>讓設計動起來！支援動圖渲染功能。</li>
+                                            <li>![立即試試](./image/livelogo_v1.svg "還有 v2 可以玩玩看哦！")
+                                                (提醒：若匯出 PDF 等靜態格式，動圖將固定於特定幀，建議僅在數位展示環境下使用。)</li>
                                         </ul>
                                     </div>
                                 </div>

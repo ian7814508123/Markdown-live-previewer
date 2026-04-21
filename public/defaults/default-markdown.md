@@ -88,7 +88,7 @@ _你也可以 **混合使用** 不同樣式_
 ## 圖片（Images）
 
 ![這是替代文字](./image/markdown_liveditor.svg "這是一張範例圖片")
-![這是替代文字](./image/markdown_liveditor.svg2 "這還是一張範例圖片")
+![這是替代文字](./image/markdown_liveditor2.svg "這還是一張範例圖片")
 
 ---
 

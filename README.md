@@ -1,5 +1,5 @@
 <h1 align="left">
-  <img src="public/favicon.svg" alt="Logo" width="50" style="vertical-align: middle;">
+  <img src="public/image/livelogo_v1.svg" alt="Logo" width="50" style="vertical-align: middle;">
   <span style="vertical-align: middle; margin-left: 10px;">Markdown Live Previewer</span>
 </h1>
 

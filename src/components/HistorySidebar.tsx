@@ -423,17 +423,6 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                             </div>
                         </div>
                     </div>
-
-                    {/* 側邊欄廣告位 */}
-                    <div ref={adContainerRef} className="px-4 py-3 bg-slate-50/30 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800/50 min-h-[120px] flex flex-col items-center justify-center relative overflow-hidden">
-                        <ins className="adsbygoogle"
-                            style={{ display: 'block' }}
-                            data-ad-client="ca-pub-8170892352848798"
-                            data-ad-slot="1864612249"
-                            data-ad-format="rectangle, horizontal"
-                            data-full-width-responsive="true"></ins>
-                        <span className="absolute bottom-1 right-2 text-[8px] font-bold uppercase tracking-widest text-slate-300 dark:text-slate-700 pointer-events-none">贊助內容</span>
-                    </div>
                 </div>
             </aside>
 

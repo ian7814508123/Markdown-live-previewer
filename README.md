@@ -1,4 +1,8 @@
-# 🧜‍♀️ Markdown Live Previewer
+<h1 align="left">
+  <img src="public/favicon.svg" alt="Logo" width="50" style="vertical-align: middle;">
+  <span style="vertical-align: middle; margin-left: 10px;">Markdown Live Previewer</span>
+</h1>
+
 
 **專業、實時、隱私優先的 Mermaid 圖表與 Markdown 編輯器**
 

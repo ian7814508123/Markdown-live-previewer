@@ -314,17 +314,6 @@ const Header: React.FC<HeaderProps> = ({
                                     </label>
                                 </div>
                             )}
-
-                            {/* AdSense In-Menu Ad */}
-                            <div ref={adContainerRef} className="mx-2 mt-4 p-2 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 min-h-[100px] flex items-center justify-center relative overflow-hidden">
-                                <ins className="adsbygoogle"
-                                    style={{ display: 'block' }}
-                                    data-ad-client="ca-pub-8170892352848798"
-                                    data-ad-slot="1864612249"
-                                    data-ad-format="horizontal"
-                                    data-full-width-responsive="true"></ins>
-                                <span className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-10 text-[8px] font-bold uppercase tracking-widest">贊助廣告</span>
-                            </div>
                         </div>
                     </div>
 
@@ -440,17 +429,6 @@ const Header: React.FC<HeaderProps> = ({
                                     </label>
                                 </div>
                             )}
-
-                            {/* AdSense In-Menu Ad */}
-                            <div ref={adContainerRef} className="mx-2 mt-4 p-2 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 min-h-[100px] flex items-center justify-center relative overflow-hidden">
-                                <ins className="adsbygoogle"
-                                    style={{ display: 'block' }}
-                                    data-ad-client="ca-pub-8170892352848798"
-                                    data-ad-slot="1864612249"
-                                    data-ad-format="horizontal"
-                                    data-full-width-responsive="true"></ins>
-                                <span className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-10 text-[8px] font-bold uppercase tracking-widest">贊助廣告</span>
-                            </div>
                         </div>
                     </div>
 

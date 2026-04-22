@@ -98,50 +98,61 @@ export function useDocumentStorage() {
      * 建立新文檔
      */
     const createDocument = useCallback((mode: 'markdown' | 'mermaid', content: string = '', name?: string, folderId: string | null = null, templateId: string | null = null) => {
-        if (state.documents.length >= MAX_DOCUMENTS) {
-            alert(`最多只能建立 ${MAX_DOCUMENTS} 個文檔，請刪除部分舊文檔`);
-            return null;
-        }
+        const id = generateId();
 
-        const now = Date.now();
-        const base = "未命名文檔";
-        let finalName = name?.trim(); // 使用 trim() 避免只有空格的名稱
-
-        if (!finalName) {
-            const existingSet = new Set(state.documents.map(d => d.name));
-
-            // 檢查第一個預設名稱「未命名文檔」是否已存在
-            if (!existingSet.has(base)) {
-                finalName = base;
-            } else {
-                let n = 1;
-                // 從 (1) 開始遞增檢查
-                while (existingSet.has(`${base}(${n})`)) {
-                    n++;
-                }
-                finalName = `${base}(${n})`;
+        setState(prev => {
+            if (prev.documents.length >= MAX_DOCUMENTS) {
+                alert(`最多只能建立 ${MAX_DOCUMENTS} 個文檔，請刪除部分舊文檔`);
+                return prev;
             }
-        }
 
-        const newDoc: DocumentRecord = {
-            id: generateId(),
-            name: finalName,
-            mode,
-            content,
-            templateId,
-            folderId,
-            createdAt: now,
-            updatedAt: now,
-        };
+            const now = Date.now();
+            const base = "未命名文檔";
+            let finalName = name?.trim();
 
-        setState(prev => ({
-            ...prev,
-            currentDocId: newDoc.id,
-            documents: [...prev.documents, newDoc],
-        }));
+            if (!finalName) {
+                const existingSet = new Set(prev.documents.map(d => d.name));
+                if (!existingSet.has(base)) {
+                    finalName = base;
+                } else {
+                    let n = 1;
+                    while (existingSet.has(`${base}(${n})`)) {
+                        n++;
+                    }
+                    finalName = `${base}(${n})`;
+                }
+            }
 
-        return newDoc.id;
-    }, []); // Changed [state.documents.length] to [] to avoid unnecessary re-creations, using functional update in setState if needed or checking length internally. Actually, keep [] if using direct setState, but let's be safe.
+            // 計算在目標資料夾中的排序
+            let order = 0;
+            if (folderId) {
+                const folderDocs = prev.documents.filter(d => d.folderId === folderId);
+                if (folderDocs.length > 0) {
+                    order = Math.max(...folderDocs.map(d => d.order ?? 0)) + 1;
+                }
+            }
+
+            const newDoc: DocumentRecord = {
+                id,
+                name: finalName,
+                mode,
+                content,
+                templateId,
+                folderId,
+                order,
+                createdAt: now,
+                updatedAt: now,
+            };
+
+            return {
+                ...prev,
+                currentDocId: id,
+                documents: [...prev.documents, newDoc],
+            };
+        });
+
+        return id;
+    }, []);
 
 
     /**
@@ -283,12 +294,23 @@ export function useDocumentStorage() {
      * 將文檔移入/移出資料夾
      */
     const moveDocument = useCallback((docId: string, folderId: string | null) => {
-        setState(prev => ({
-            ...prev,
-            documents: prev.documents.map(doc =>
-                doc.id === docId ? { ...doc, folderId, updatedAt: Date.now() } : doc
-            ),
-        }));
+        setState(prev => {
+            // 計算在目標資料夾中的排序 (如果是移入資料夾)
+            let order = 0;
+            if (folderId) {
+                const folderDocs = prev.documents.filter(d => d.folderId === folderId);
+                if (folderDocs.length > 0) {
+                    order = Math.max(...folderDocs.map(d => d.order ?? 0)) + 1;
+                }
+            }
+
+            return {
+                ...prev,
+                documents: prev.documents.map(doc =>
+                    doc.id === docId ? { ...doc, folderId, order, updatedAt: Date.now() } : doc
+                ),
+            };
+        });
     }, []);
 
     /**

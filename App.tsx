@@ -437,12 +437,6 @@ const App: React.FC = () => {
         }
 
         if (l1 !== -1) {
-          // 自動切換文件邏輯
-          const topElement = target.querySelector(`[data-line="${l1}"]`);
-          const paper = topElement?.closest('.print-paper');
-          const newDocId = paper?.getAttribute('data-doc-id');
-          if (newDocId && newDocId !== currentDocId) handleDocumentSwitch(newDocId);
-
           if (l2 !== -1) {
             // 插值計算編輯器位置
             const p1 = map.get(l1)!;
@@ -665,6 +659,9 @@ const App: React.FC = () => {
             background-color: white !important;
             color: black !important;
             color-scheme: light !important;
+            box-shadow: none !important;
+            --tw-ring-shadow: none !important;
+            --tw-ring-offset-shadow: none !important;
         }
 
         /* 內容容器展開 */
@@ -691,6 +688,8 @@ const App: React.FC = () => {
 
         .print-paper { 
             box-shadow: none !important; 
+            --tw-ring-shadow: none !important;
+            --tw-ring-offset-shadow: none !important;
             margin: 0 !important; 
             width: 100% !important; 
             height: auto !important;
@@ -1239,7 +1238,7 @@ const App: React.FC = () => {
           onUpdatePrintSettings={updatePrintSettings}
         />
 
-        <main className="flex-1 flex overflow-hidden print:block print:overflow-visible">
+        <main className="flex-1 flex justify-center overflow-hidden print:block print:overflow-visible bg-slate-200/40 dark:bg-black/20">
           {/* 歷史側邊欄 */}
           <HistorySidebar
             isOpen={isSidebarOpen}
@@ -1274,7 +1273,7 @@ const App: React.FC = () => {
             initialName={initialDocName}
           />
           {/* 移除 key={docFadeKey} 以防止全組件樹重掛造成的渲染跳動 */}
-          <div className="flex flex-1 overflow-hidden print:block">
+          <div className="layout-main-content print:block">
             <Editor
               ref={editorRef}
               mode={mode}

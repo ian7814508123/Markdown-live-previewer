@@ -271,7 +271,7 @@ interface WikiLinkProps {
 
 const WikiLink: React.FC<WikiLinkProps> = React.memo(({ name, children, documents, currentDocId, onSelectDocument, onCreateMissing, isActuallyPrinting, isMergedPrint }) => {
     const decodedName = decodeURIComponent(name);
-    
+
     // 如果正在列印/匯出，且並非合併列印，則轉化為純文字（單檔 PDF 無目標頁面可跳轉）
     if (isActuallyPrinting && !isMergedPrint) {
         return <span>{children}</span>;
@@ -492,7 +492,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
     }), []);
 
     const components = useMemo(() => ({
-        pre: ({ children }: any) => <IsInPreContext.Provider value={true}>{children}</IsInPreContext.Provider>, 
+        pre: ({ children }: any) => <IsInPreContext.Provider value={true}>{children}</IsInPreContext.Provider>,
         code({ node, className, children, ...props }: any) {
             const isBlock = React.useContext(IsInPreContext);
             const ctx = renderContextRef.current;
@@ -503,10 +503,10 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
             const line = node?.position?.start?.line;
 
             if (isBlock) {
-                if (language === 'mermaid') return <div data-line={line} className="not-prose"><MermaidBlock key={stableKey} code={codeString} isDarkMode={ctx.isDarkMode} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} printSessionId={ctx.printSessionId} /></div>;
-                if (language === 'vega' || language === 'vega-lite') return <div data-line={line} className="not-prose"><VegaBlock key={stableKey} code={codeString} isDarkMode={ctx.isDarkMode} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} printSessionId={ctx.printSessionId} /></div>;
-                if (language === 'smiles') return <div data-line={line} className="not-prose"><SmilesBlock key={stableKey} code={codeString} isDarkMode={ctx.isDarkMode} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} printSessionId={ctx.printSessionId} /></div>;
-                if (language === 'abc') return <React.Suspense fallback={<div className="p-4 flex justify-center items-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs">樂譜加載中...</div>}><div data-line={line} className="not-prose"><AbcBlock key={stableKey} code={codeString} isDarkMode={ctx.isDarkMode} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} printSessionId={ctx.printSessionId} /></div></React.Suspense>;
+                if (language === 'mermaid') return <div data-line={line} className="not-prose"><MermaidBlock key={stableKey} code={codeString} isDarkMode={ctx.shouldShowDark} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} printSessionId={ctx.printSessionId} /></div>;
+                if (language === 'vega' || language === 'vega-lite') return <div data-line={line} className="not-prose"><VegaBlock key={stableKey} code={codeString} isDarkMode={ctx.shouldShowDark} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} printSessionId={ctx.printSessionId} /></div>;
+                if (language === 'smiles') return <div data-line={line} className="not-prose"><SmilesBlock key={stableKey} code={codeString} isDarkMode={ctx.shouldShowDark} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} printSessionId={ctx.printSessionId} /></div>;
+                if (language === 'abc') return <React.Suspense fallback={<div className="p-4 flex justify-center items-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs">樂譜加載中...</div>}><div data-line={line} className="not-prose"><AbcBlock key={stableKey} code={codeString} isDarkMode={ctx.shouldShowDark} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} printSessionId={ctx.printSessionId} /></div></React.Suspense>;
 
                 return (
                     <div data-line={line} className="code-block-wrapper not-prose">

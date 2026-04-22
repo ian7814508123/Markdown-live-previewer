@@ -144,16 +144,24 @@ const PrintPaper: React.FC<PrintPaperProps> = ({
             data-doc-id={docId}
             ref={node => {
                 (paperRef as any).current = node;
-                // 在非預覽模式下，將 scrollRef 綁定到當前活動文件的容器
                 if (!showPrintPreview && isActive) {
                     if (typeof scrollRef === 'function') scrollRef(node);
                     else if (scrollRef) (scrollRef as any).current = node;
                 }
             }}
             onScroll={!showPrintPreview && isActive ? onScroll : undefined}
-            className={`${showPrintPreview ? 'print-paper bg-white shadow-2xl mx-auto paper-' + paperSize.toLowerCase() + ' paper-' + orientation + ' margin-' + margin : 'print:print-paper print:paper-' + paperSize.toLowerCase() + ' print:paper-' + orientation + ' print:margin-' + margin + ' absolute inset-0 overflow-auto custom-scrollbar p-8 bg-white dark:bg-slate-900 shadow-inner'} transition-all duration-300 print:max-w-none print:w-full print:shadow-none print:ring-0 print:bg-white print:p-0 print:border-none print:rounded-none print:static print:inset-auto print:h-auto print:overflow-visible ${isVisibleOnScreen ? 'block' : 'hidden'} ${!isVisibleOnScreen && isVisibleInPrint ? 'print:block' : ''} ${!isActive && (!showPrintPreview && !isVisibleInPrint) ? 'tab-inactive' : ''} ${isActive && showPrintPreview ? 'ring-4 ring-brand-primary/50' : ''}`}
+            className={`
+                ${showPrintPreview
+                    ? `print-paper bg-white shadow-2xl mx-auto paper-${paperSize.toLowerCase()} paper-${orientation} margin-${margin} relative`
+                    : `flex-1 w-full h-full overflow-auto custom-scrollbar bg-white dark:bg-slate-900 transition-colors duration-200`}
+                ${isVisibleOnScreen ? 'block' : 'hidden'} 
+                ${!isVisibleOnScreen && isVisibleInPrint ? 'print:block' : ''} 
+                ${!isActive && (!showPrintPreview && !isVisibleInPrint) ? 'tab-inactive' : ''} 
+                ${isActive && showPrintPreview ? 'ring-4 ring-[#0284C7]' : ''}
+                print:block print:static print:p-0 print:shadow-none print:ring-0
+            `}
         >
-            <div className={showPrintPreview ? 'prose-container relative' : 'print:prose-container max-w-[850px] mx-auto min-h-full bg-white dark:bg-slate-900 p-12 shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-none dark:border dark:border-slate-800 rounded-sm print:shadow-none print:border-none print:p-0 print:bg-white'}>
+            <div className={showPrintPreview ? 'prose-container relative' : 'max-w-4xl mx-auto p-8 lg:p-12 min-h-full print:p-0'}>
                 <MarkdownPreview
                     content={doc?.content ?? ''}
                     theme={theme}
@@ -167,7 +175,6 @@ const PrintPaper: React.FC<PrintPaperProps> = ({
                     printSessionId={printSessionId}
                     isMergedPrint={isMergedPrint}
                 />
-                {/* 覆蓋層顯示分頁指示線 */}
                 {showPrintPreview && (
                     <PageBreaksOverlay
                         contentHeight={contentHeight}
@@ -378,9 +385,13 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
                 if (onMouseLeave) onMouseLeave();
             }}
         >
-            <div className={`flex-1 relative ${showPrintPreview ? 'overflow-auto custom-scrollbar p-12 print:p-0' : 'overflow-hidden'} print:overflow-visible print:h-auto print:static print:p-0`} ref={showPrintPreview ? (node => { containerRef.current = node; if (typeof scrollRef === 'function') scrollRef(node); else if (scrollRef) (scrollRef as any).current = node; }) : undefined} onScroll={showPrintPreview ? onScroll : undefined}>
+            <div
+                className={`flex-1 relative ${showPrintPreview ? 'overflow-auto custom-scrollbar p-12 bg-slate-200/40 dark:bg-black/20' : 'overflow-hidden'} print:overflow-visible print:h-auto print:static print:p-0`}
+                ref={showPrintPreview ? (node => { containerRef.current = node; if (typeof scrollRef === 'function') scrollRef(node); else if (scrollRef) (scrollRef as any).current = node; }) : undefined}
+                onScroll={showPrintPreview ? onScroll : undefined}
+            >
                 <div
-                    className={`mx-auto transition-all duration-300 origin-top-left ${showPrintPreview ? 'print-outer-wrapper' : 'print:print-outer-wrapper max-w-[850px] relative h-full flex flex-col gap-8 print:block print:h-auto print:max-w-none'}`}
+                    className={`mx-auto transition-all duration-300 origin-top-left ${showPrintPreview ? 'print-outer-wrapper py-8' : 'w-full h-full'}`}
                     style={showPrintPreview ? {
                         width: paperPx.w * activeScale,
                         height: 'auto',
@@ -388,7 +399,7 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
                     } : {}}
                 >
                     <div
-                        className={showPrintPreview ? 'print-preview-container origin-top-left flex flex-col gap-8 print:block print:h-auto' : 'print:print-preview-container print:gap-0 w-full h-full flex flex-col gap-8 print:block print:h-auto'}
+                        className={showPrintPreview ? 'print-preview-container origin-top-left flex flex-col gap-8 print:block print:h-auto' : 'w-full h-full'}
                         style={showPrintPreview ? {
                             transform: `scale(${activeScale})`,
                             width: paperPx.w,
@@ -397,13 +408,8 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
                         {docsToRenderIds.map(docId => {
                             const doc = documents?.find((d: any) => d.id === docId);
                             const isActive = docId === currentDocId;
-
-                            // 邏輯優化：區分「螢幕顯示」與「列印顯示」
                             const isMergedMode = mergeVaultOnPdfExport && currentDoc?.folderId;
-
-                            // 螢幕上何時可見：或是目前活動文件，或是開啟了預覽模式下的合併
                             const isVisibleOnScreen = showPrintPreview ? (isMergedMode || isActive) : isActive;
-                            // 列印時何時可見：或是目前活動文件，或是開啟了合併列印
                             const isVisibleInPrint = isMergedMode || isActive;
 
                             return (

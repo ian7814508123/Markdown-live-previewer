@@ -215,6 +215,17 @@ const App: React.FC = () => {
     }
   }, [documents.length, createDocument, defaultContents, isLoadingDefaults]);
 
+  const originalTitle = useRef(document.title);
+
+  // 同步分頁標題
+  useEffect(() => {
+    if (currentDocument?.name) {
+      document.title = currentDocument.name;
+    } else {
+      document.title = originalTitle.current;
+    }
+  }, [currentDocument?.name]);
+
   // Custom Hook for Navigation
   const {
     zoom,
@@ -618,8 +629,18 @@ const App: React.FC = () => {
 
   /** 統一下載 / 列印：注入 @page CSS 後呼叫 window.print() */
   const handlePrint = useCallback((printMode: EditorMode) => {
-    const { paperSize, orientation, scale, margin } = settings.printSettings;
+    const { paperSize, orientation, scale, margin, mergeVaultOnMdExport } = settings.printSettings;
     const marginMap: Record<string, string> = { normal: '1.5cm', narrow: '0.5cm', none: '0' };
+
+    // 計算列印時的檔案名稱
+    let printFileName = currentDocument?.name || 'document';
+    if (printMode === 'markdown' && mergeVaultOnMdExport && currentDocument?.folderId) {
+      const vaultDocs = documents.filter(d => d.folderId === currentDocument.folderId && d.mode === 'markdown');
+      if (vaultDocs.length > 1) {
+        const folder = folders.find(f => f.id === currentDocument.folderId);
+        printFileName = folder ? `${folder.name}` : `${printFileName}`;
+      }
+    }
 
     // 縮放與佈局樣式
     let additionalCSS = '';
@@ -871,7 +892,16 @@ const App: React.FC = () => {
     const finalizePrint = () => {
       window.removeEventListener('diagram-render-complete', onDiagramReady);
       window.removeEventListener('content-layout-ready', onImageReady);
+
+      // 暫時更換標題以確保 PDF 檔名正確
+      const prevTitle = document.title;
+      document.title = sanitizeFileName(printFileName);
+
       window.print();
+
+      // 恢復原本的標題 (或 currentDocument.name)
+      document.title = prevTitle;
+
       setIsPrinting(false);
       document.getElementById('app-print-override')?.remove();
     };
@@ -921,7 +951,7 @@ const App: React.FC = () => {
         finalizePrint();
       }
     }, 6000);
-  }, [mode, settings.printSettings, isDarkMode, documents]);
+  }, [mode, settings.printSettings, isDarkMode, documents, folders, currentDocument]);
 
   // 攔截 Ctrl + P (原生列印捷徑)
   useEffect(() => {
@@ -946,11 +976,11 @@ const App: React.FC = () => {
       if (vaultDocs.length > 1) {
         contentToDownload = vaultDocs
           .map(d => {
-             // 替換所有WikiLink為錨點連結
-             const processedDocContent = d.content.replace(/\[\[(.*?)\]\]/g, (match, p1) => {
-                return `[${p1}](#wikilink-${encodeURIComponent(p1)})`;
-             });
-             return `--- \n# ${d.name}\n<a id="wikilink-${encodeURIComponent(d.name)}"></a>\n\n${processedDocContent}`;
+            // 替換所有WikiLink為錨點連結
+            const processedDocContent = d.content.replace(/\[\[(.*?)\]\]/g, (match, p1) => {
+              return `[${p1}](#wikilink-${encodeURIComponent(p1)})`;
+            });
+            return `--- \n# ${d.name}\n<a id="wikilink-${encodeURIComponent(d.name)}"></a>\n\n${processedDocContent}`;
           })
           .join('\n\n');
 

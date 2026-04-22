@@ -1,10 +1,10 @@
 
 import React, { forwardRef, useState } from 'react';
 import { FileCode, Check, Copy, RefreshCw, Trash2, Menu, X, FileText, FileSearch } from 'lucide-react';
-import RippleButton from './RippleButton';
+import RippleButton from '../ui/RippleButton';
 import CodeMirrorEditor from './CodeMirrorEditor';
 import { ReactCodeMirrorRef } from '@uiw/react-codemirror';
-import IntroModal from './IntroModal';
+import IntroModal from '../modals/IntroModal';
 
 interface EditorProps {
     mode: 'mermaid' | 'markdown';

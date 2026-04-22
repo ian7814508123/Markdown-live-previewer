@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Save, RotateCcw, AlertCircle, Check, FileText, Printer, Box, PackagePlus, ChevronLeft } from 'lucide-react';
-import RippleButton from './RippleButton';
-import { PrintSettings } from '../hooks/useAppSettings';
-import pkg from '../../package.json';
-import InteractiveLogo from './InteractiveLogo';
+import RippleButton from '../ui/RippleButton';
+import DraggableSwitch from '../ui/DraggableSwitch';
+import GlassRailSelector from '../ui/GlassRailSelector';
+import { PrintSettings } from '../../hooks/useAppSettings';
+import pkg from '../../../package.json';
+import InteractiveLogo from '../ui/InteractiveLogo';
 
 interface SettingsModalProps {
     isOpen: boolean;
@@ -29,39 +31,8 @@ const PdfSettingsPanel: React.FC<{
     const [customScale, setCustomScale] = useState<number>(
         typeof settings.scale === 'number' ? settings.scale : 100
     );
-
-    /** 通用 Toggle Group */
-    function ToggleGroup<T extends string | number>({
-        label, options, value, onSelect,
-    }: {
-        label: string;
-        options: { label: string; value: T; hint?: string }[];
-        value: T;
-        onSelect: (v: T) => void;
-    }) {
-        return (
-            <div className="space-y-2">
-                <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{label}</p>
-                <div className="flex flex-wrap gap-2">
-                    {options.map(opt => (
-                        <button
-                            key={String(opt.value)}
-                            onClick={() => onSelect(opt.value)}
-                            className={[
-                                'flex flex-col items-center px-4 py-2.5 rounded-xl border text-xs font-semibold transition-all active:scale-95',
-                                value === opt.value
-                                    ? 'bg-brand-secondary dark:bg-brand-primary/40 border-brand-primary/30 dark:border-brand-primary/70 text-brand-primary dark:text-brand-primary shadow-sm'
-                                    : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-brand-primary/20 dark:hover:border-brand-primary/80',
-                            ].join(' ')}
-                        >
-                            <span>{opt.label}</span>
-                            {opt.hint && <span className="text-[9px] opacity-60 mt-0.5 font-medium">{opt.hint}</span>}
-                        </button>
-                    ))}
-                </div>
-            </div>
-        );
-    }
+    // 將 settings.scale 映射為字串鍵供 GlassRailSelector 使用
+    const scaleKey = typeof settings.scale === 'number' ? 'custom' : settings.scale;
 
     return (
         <div className="px-6 py-4 space-y-6 bg-slate-50/30 dark:bg-slate-900/30">
@@ -72,24 +43,22 @@ const PdfSettingsPanel: React.FC<{
                     <p className="text-[10px] font-bold text-brand-primary uppercase tracking-widest">預覽行為</p>
                 </div>
 
-                <label className="flex items-center justify-between cursor-pointer group">
+                {/* DraggableSwitch：同時支援點擊切換與拖曳切換 */}
+                <div className="flex items-center justify-between">
                     <div className="flex flex-col">
-                        <span className="text-xs font-bold text-slate-700 dark:text-slate-200 group-hover:text-brand-primary transition-colors">顯示列印預覽</span>
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-200">顯示列印預覽</span>
                         <span className="text-[10px] text-slate-400 dark:text-slate-500">在編輯器旁模擬紙張邊界與分頁線</span>
                     </div>
-                    <div
-                        onClick={() => {
-                            const nextShow = !settings.showPrintPreview;
-                            const patch: Partial<PrintSettings> = { showPrintPreview: nextShow };
-                            // 當開啟預覽時，預設切換到 fit 模式以確保使用者能看到完整紙張
-                            if (nextShow) patch.scale = 'fit';
+                    <DraggableSwitch
+                        checked={settings.showPrintPreview}
+                        onChange={(v) => {
+                            const patch: Partial<PrintSettings> = { showPrintPreview: v };
+                            // 開啟預覽時預設切到 fit 模式，確保使用者看到完整紙張
+                            if (v) patch.scale = 'fit';
                             onChange(patch);
                         }}
-                        className={`w-11 h-6 rounded-full transition-all relative ${settings.showPrintPreview ? 'bg-brand-primary' : 'bg-slate-200 dark:bg-slate-700'}`}
-                    >
-                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${settings.showPrintPreview ? 'left-6' : 'left-1'}`} />
-                    </div>
-                </label>
+                    />
+                </div>
             </div>
 
 
@@ -100,52 +69,50 @@ const PdfSettingsPanel: React.FC<{
                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">頁面佈局參數</p>
                 </div>
 
-                <ToggleGroup
-                    label="紙張尺寸"
-                    options={[
-                        { label: 'A4', value: 'A4', hint: '預設' },
-                        { label: 'A3', value: 'A3', hint: '大圖' },
-                        { label: 'Letter', value: 'Letter', hint: '美制' },
-                    ]}
-                    value={settings.paperSize}
-                    onSelect={(v) => onChange({ paperSize: v as PrintSettings['paperSize'] })}
-                />
+                {/* GlassRailSelector: 紙張尺寸 */}
+                <div className="space-y-2">
+                    <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">紙張尺寸</p>
+                    <GlassRailSelector
+                        options={[
+                            { label: 'A4', value: 'A4', hint: '預設' },
+                            { label: 'A3', value: 'A3', hint: '大圖' },
+                            { label: 'Letter', value: 'Letter', hint: '美制' },
+                        ]}
+                        value={settings.paperSize}
+                        onChange={(v) => onChange({ paperSize: v as PrintSettings['paperSize'] })}
+                    />
+                </div>
 
-                <ToggleGroup
-                    label="方向"
-                    options={[
-                        { label: '橫向 ↔', value: 'landscape', hint: 'Landscape' },
-                        { label: '直向 ↕', value: 'portrait', hint: 'Portrait' },
-                    ]}
-                    value={settings.orientation}
-                    onSelect={(v) => onChange({ orientation: v as PrintSettings['orientation'] })}
-                />
+                {/* GlassRailSelector: 方向 */}
+                <div className="space-y-2">
+                    <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">方向</p>
+                    <GlassRailSelector
+                        options={[
+                            { label: '橫向 ↔', value: 'landscape', hint: 'Landscape' },
+                            { label: '直向 ↕', value: 'portrait', hint: 'Portrait' },
+                        ]}
+                        value={settings.orientation}
+                        onChange={(v) => onChange({ orientation: v as PrintSettings['orientation'] })}
+                    />
+                </div>
 
-                <div className="space-y-3">
+                {/* GlassRailSelector: 比例縮放 */}
+                <div className="space-y-2">
                     <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">比例縮放</p>
-                    <div className="flex flex-wrap gap-2">
-                        {([
-                            { label: '符合', value: 'fit' as PrintSettings['scale'], hint: 'Fit' },
-                            { label: '100%', value: 'actual' as PrintSettings['scale'], hint: 'Actual' },
-                            { label: '自訂', value: customScale as PrintSettings['scale'], hint: `${customScale}%` },
-                        ]).map(opt => {
-                            const isCustom = typeof opt.value === 'number';
-                            const isActive = isCustom ? typeof settings.scale === 'number' : settings.scale === opt.value;
-                            return (
-                                <button key={String(opt.value)} onClick={() => onChange({ scale: opt.value })}
-                                    className={[
-                                        'px-3 py-2 rounded-xl border text-xs font-bold transition-all',
-                                        isActive
-                                            ? 'bg-brand-secondary dark:bg-brand-primary/40 border-brand-primary/20 dark:border-brand-primary/70 text-brand-primary dark:text-brand-primary'
-                                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300',
-                                    ].join(' ')}
-                                >
-                                    {opt.label}
-                                </button>
-                            );
-                        })}
-                    </div>
-                    {typeof settings.scale === 'number' && (
+                    <GlassRailSelector
+                        options={[
+                            { label: '符合', value: 'fit', hint: 'Fit' },
+                            { label: '100%', value: 'actual', hint: 'Actual' },
+                            { label: '自訂', value: 'custom', hint: `${customScale}%` },
+                        ]}
+                        value={scaleKey}
+                        onChange={(v) => {
+                            if (v === 'custom') onChange({ scale: customScale });
+                            else onChange({ scale: v as 'fit' | 'actual' });
+                        }}
+                    />
+                    {/* 自訂比例時顯示滑桿 */}
+                    {scaleKey === 'custom' && (
                         <div className="flex items-center gap-4 pt-1 px-1">
                             <input type="range" min={10} max={200} step={5} value={customScale}
                                 onChange={(e) => { const v = Number(e.target.value); setCustomScale(v); onChange({ scale: v }); }}
@@ -156,16 +123,19 @@ const PdfSettingsPanel: React.FC<{
                     )}
                 </div>
 
-                <ToggleGroup
-                    label="邊距 (Margins)"
-                    options={[
-                        { label: '標準', value: 'normal', hint: '1.5cm' },
-                        { label: '緊湊', value: 'narrow', hint: '0.5cm' },
-                        { label: '無', value: 'none', hint: '0' },
-                    ]}
-                    value={settings.margin}
-                    onSelect={(v) => onChange({ margin: v as PrintSettings['margin'] })}
-                />
+                {/* GlassRailSelector: 邊距 */}
+                <div className="space-y-2">
+                    <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">邊距 (Margins)</p>
+                    <GlassRailSelector
+                        options={[
+                            { label: '標準', value: 'normal', hint: '1.5cm' },
+                            { label: '緊湊', value: 'narrow', hint: '0.5cm' },
+                            { label: '無', value: 'none', hint: '0' },
+                        ]}
+                        value={settings.margin}
+                        onChange={(v) => onChange({ margin: v as PrintSettings['margin'] })}
+                    />
+                </div>
             </div>
 
             <div className="rounded-2xl bg-brand-secondary/30 dark:bg-brand-primary/10 px-5 py-4 text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed border border-brand-primary/15 dark:border-brand-primary/30">
@@ -244,29 +214,16 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         </RippleButton>
                     </div>
 
-                    <div className="flex p-1.5 bg-slate-100 dark:bg-slate-800/50 rounded-2xl w-full">
-                        <button
-                            onClick={() => setActiveTab('editor')}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'editor' ? 'bg-white dark:bg-slate-700 text-brand-primary shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                        >
-                            <Box size={14} />
-                            編輯器設定
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('print')}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'print' ? 'bg-white dark:bg-slate-700 text-brand-primary shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                        >
-                            <Printer size={14} />
-                            列印與匯出
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('about')}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'about' ? 'bg-white dark:bg-slate-700 text-brand-primary shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                        >
-                            <AlertCircle size={14} />
-                            關於
-                        </button>
-                    </div>
+                    {/* Tab 導航：玻璃滑軌，支援拖曳切換分頁 */}
+                    <GlassRailSelector
+                        options={[
+                            { label: '編輯器設定', value: 'editor', icon: <Box size={13} /> },
+                            { label: '列印與匯出', value: 'print', icon: <Printer size={13} /> },
+                            { label: '關於', value: 'about', icon: <AlertCircle size={13} /> },
+                        ]}
+                        value={activeTab}
+                        onChange={(v) => setActiveTab(v as 'editor' | 'print' | 'about')}
+                    />
                 </div>
 
                 {/* 內容區 */}
@@ -349,11 +306,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                         <FileText size={24} className="text-brand-primary/50 mb-3" />
                                         <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">想了解更多功能細節？</h5>
                                         <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed mb-4 text-center max-w-[250px]">前往功能導覽，學習如何使用快捷鍵、資料夾管理及更多高階與隱藏技巧。</p>
-                                        <RippleButton 
-                                            variant="outlined" 
+                                        <RippleButton
+                                            variant="outlined"
                                             className="px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:border-brand-primary"
                                             onClick={() => {
-                                                if(onOpenIntro) onOpenIntro();
+                                                if (onOpenIntro) onOpenIntro();
                                                 onClose();
                                             }}
                                         >

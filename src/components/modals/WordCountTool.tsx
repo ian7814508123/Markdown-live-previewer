@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { BarChart2, Copy, Check, ChevronDown, ChevronUp, FileText, ClipboardPaste } from 'lucide-react';
-import RippleButton from './RippleButton';
+import RippleButton from '../ui/RippleButton';
 
 // ── 特殊區塊的偵測 Regex ─────────────────────────────────────────────
 

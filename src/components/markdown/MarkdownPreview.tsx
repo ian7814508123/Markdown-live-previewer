@@ -8,13 +8,13 @@ import mermaid from 'mermaid';
 import embed from 'vega-embed';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import SmilesDrawer from 'smiles-drawer';
-import { useImageStorage } from '../hooks/useImageStorage';
+import { useImageStorage } from '../../hooks/useImageStorage';
 import { WrapText } from 'lucide-react';
 import DiagramBlock from './DiagramBlock';
-import { ResizableWrapper } from './ResizableWrapper';
-import { hashString } from '../utils';
-import { useDebounce } from '../hooks/useDebounce';
-import { usePersistentCanvasSettings } from '../hooks/usePersistentCanvasSettings';
+import { ResizableWrapper } from '../ui/ResizableWrapper';
+import { hashString } from '../../utils';
+import { useDebounce } from '../../hooks/useDebounce';
+import { usePersistentCanvasSettings } from '../../hooks/usePersistentCanvasSettings';
 
 interface MarkdownPreviewProps {
     content: string;

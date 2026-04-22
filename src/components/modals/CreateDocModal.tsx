@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Plus, FileText, Image as ImageIcon, ChevronLeft, Zap, File, Ruler, BarChart2, GitBranch, Music } from 'lucide-react';
-import RippleButton from './RippleButton';
+import RippleButton from '../ui/RippleButton';
 
 interface CreateDocModalProps {
     isOpen: boolean;

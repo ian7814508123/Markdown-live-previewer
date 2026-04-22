@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { Upload, Image as ImageIcon, Trash2, Copy, Check, AlertTriangle, Clock } from 'lucide-react';
-import { useImageStorage, formatExpiryDate, formatFileSize } from '../hooks/useImageStorage';
-import RippleButton from './RippleButton';
+import { useImageStorage, formatExpiryDate, formatFileSize } from '../../hooks/useImageStorage';
+import RippleButton from '../ui/RippleButton';
 
 interface ImageUploaderToolProps {
     /** 當前文檔內容，用於 LRU 淘汰判斷 */

@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import { hashString } from '../utils';
-import { usePersistentCanvasSettings } from '../hooks/usePersistentCanvasSettings';
-import { useDebounce } from '../hooks/useDebounce';
-import { ResizableWrapper } from './ResizableWrapper';
+import { hashString } from '../../utils';
+import { usePersistentCanvasSettings } from '../../hooks/usePersistentCanvasSettings';
+import { useDebounce } from '../../hooks/useDebounce';
+import { ResizableWrapper } from '../ui/ResizableWrapper';
 
 interface DiagramBlockProps {
     code: string;

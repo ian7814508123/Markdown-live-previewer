@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { PDFDocument } from 'pdf-lib';
 import { FilePlus2, Trash2, Download, GripVertical, FileText, Image as ImageIcon, X, Loader2 } from 'lucide-react';
-import RippleButton from './RippleButton';
+import RippleButton from '../ui/RippleButton';
 
 /** 使用者加入的合併項目 */
 interface MergeItem {

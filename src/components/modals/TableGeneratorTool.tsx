@@ -3,7 +3,7 @@ import {
     Table, Copy, Check, AlignLeft, AlignCenter, AlignRight,
     Plus, Minus, FileInput, AlertTriangle, ClipboardPaste, ArrowRight,
 } from 'lucide-react';
-import RippleButton from './RippleButton';
+import RippleButton from '../ui/RippleButton';
 
 // ─────────────────────────────────────────────────────────────
 // 型別定義

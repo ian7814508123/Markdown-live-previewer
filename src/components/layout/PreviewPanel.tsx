@@ -1,6 +1,6 @@
 import React, { forwardRef, useState, useEffect, useRef, useMemo } from 'react';
 import { AlertCircle, Trash2, RefreshCw, Sparkles, ZoomIn, ZoomOut, Maximize, Hand, ChevronLeft, ChevronRight, Activity } from 'lucide-react';
-import MarkdownPreview from './MarkdownPreview';
+import MarkdownPreview from '../markdown/MarkdownPreview';
 
 /** ── PageBreaksOverlay ──────────────────────────────────────────────────
  * 根據內容高度與每頁可用高度，動態計算並繪製分頁線

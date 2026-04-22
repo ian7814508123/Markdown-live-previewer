@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import abcjs from 'abcjs';
 import DiagramBlock from './DiagramBlock';
-import { hashString } from '../utils';
+import { hashString } from '../../utils';
 
 interface AbcBlockProps {
     code: string;

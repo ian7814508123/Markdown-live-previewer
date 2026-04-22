@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Sparkles, Zap, Layout, Printer, MousePointer2, Keyboard, Microscope, Music, BarChart3, HelpCircle, BookOpen, ChevronRight, Files, Wrench, Share2 } from 'lucide-react';
-import RippleButton from './RippleButton';
-import InteractiveLogo from './InteractiveLogo';
+import RippleButton from '../ui/RippleButton';
+import InteractiveLogo from '../ui/InteractiveLogo';
+import GlassRailSelector from '../ui/GlassRailSelector';
+import MagneticButton from '../ui/MagneticButton';
 
 interface IntroModalProps {
   isOpen: boolean;
@@ -76,23 +78,14 @@ const IntroModal: React.FC<IntroModalProps> = ({ isOpen, onClose }) => {
             <InteractiveLogo size={40} variant="v2" />
           </div>
 
-          {/* Tab Switcher */}
-          <div className="flex justify-center p-1 bg-slate-200/50 dark:bg-slate-800/50 rounded-2xl w-fit mx-auto mt-1">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`flex items-center gap-2 py-2 px-6 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${activeTab === 'overview' ? 'bg-white dark:bg-slate-900 text-brand-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-            >
-              <Sparkles size={14} />
-              特色總覽
-            </button>
-            <button
-              onClick={() => setActiveTab('manual')}
-              className={`flex items-center gap-2 py-2 px-6 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${activeTab === 'manual' ? 'bg-white dark:bg-slate-900 text-brand-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-            >
-              <BookOpen size={14} />
-              使用手冊
-            </button>
-          </div>
+          {/* Tab 導航：玻璃滑軌，支援拖曳切換分頁 */}
+          <GlassRailSelector
+            options={[
+              { label: '特色總覽', value: 'overview', icon: <Sparkles size={14} /> }, { label: '使用手冊', value: 'manual', icon: <BookOpen size={14} /> },
+            ]}
+            value={activeTab}
+            onChange={(v) => setActiveTab(v as 'manual' | 'overview')}
+          />
         </div>
 
         {/* Content Section */}
@@ -208,13 +201,13 @@ const IntroModal: React.FC<IntroModalProps> = ({ isOpen, onClose }) => {
 
         {/* Footer actions */}
         <div className="shrink-0 p-4 pt-2 flex justify-center">
-          <RippleButton
+          <MagneticButton
             variant="filled"
             onClick={onClose}
             className="px-12 py-3.5 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-lg shadow-brand-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
           >
             馬上開始
-          </RippleButton>
+          </MagneticButton>
         </div>
       </div>
     </>,

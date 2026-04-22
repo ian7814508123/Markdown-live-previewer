@@ -4,7 +4,7 @@ import PdfMergeTool from './PdfMergeTool';
 import TableGeneratorTool from './TableGeneratorTool';
 import WordCountTool from './WordCountTool';
 import ImageUploaderTool from './ImageUploaderTool';
-import RippleButton from './RippleButton';
+import RippleButton from '../ui/RippleButton';
 
 interface ToolsModalProps {
     isOpen: boolean;

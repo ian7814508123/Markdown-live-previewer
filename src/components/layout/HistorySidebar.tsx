@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Plus, FolderOpen, FileText, Wrench, ChevronDown, ChevronRight, Files, FolderPlus, Trash2 } from 'lucide-react';
-import { DocumentRecord } from '../types';
-import DocumentItem from './DocumentItem';
-import ToolsModal from './ToolsModal';
-import RippleButton from './RippleButton';
+import { DocumentRecord } from '../../types';
+import DocumentItem from '../ui/DocumentItem';
+import ToolsModal from '../modals/ToolsModal';
+import RippleButton from '../ui/RippleButton';
 
 interface HistorySidebarProps {
     isOpen: boolean;

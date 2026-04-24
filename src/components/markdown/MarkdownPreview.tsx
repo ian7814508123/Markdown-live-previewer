@@ -369,7 +369,14 @@ const EnhancedCodeBlock: React.FC<EnhancedCodeBlockProps> = ({
     }, [effectiveWrapped]);
 
     return (
-        <div className="relative group/codeblock w-full">
+        <div className="relative group/codeblock w-full my-6">
+            {/* 語言標籤 */}
+            {language && (
+                <div className="absolute top-0 left-0 px-3 py-1 text-[10px] font-mono tracking-wider uppercase text-slate-600 dark:text-slate-300 bg-slate-200/60 dark:bg-slate-700/50 rounded-tl-lg rounded-br-lg z-10 pointer-events-none select-none">
+                    {language}
+                </div>
+            )}
+
             {/* 切換換行的按鈕 (不給列印時顯示) */}
             {!isActuallyPrinting && (
                 <button
@@ -394,8 +401,8 @@ const EnhancedCodeBlock: React.FC<EnhancedCodeBlockProps> = ({
                     language={language || 'text'}
                     useInlineStyles={false}
                     customStyle={{
-                        margin: '1.5rem 0',
-                        padding: '1rem',
+                        margin: '0',
+                        padding: '1.5rem 1rem 1rem 1rem',
                         fontSize: '0.875rem',
                         lineHeight: '1.5',
                         backgroundColor: 'transparent',

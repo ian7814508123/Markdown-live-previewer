@@ -18,7 +18,7 @@ const InteractiveLogo: React.FC<InteractiveLogoProps> = ({ className, size = 40,
       arrow: "M -6 -5 L 0 0 L -6 5" // 指向右方 (+X)，配合 offsetRotate: auto
     },
     v2: {
-      m: "M 14 42 L 24 16 L 32 38 L 40 16 L 50 46",
+      m: "M 14 42 L 24 16 L 32 38 L 40 16 L 50 42",
       arrow: "M -6 -5 L 0 0 L -6 5"
     }
   };

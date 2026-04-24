@@ -200,11 +200,11 @@ const IntroModal: React.FC<IntroModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Footer actions */}
-        <div className="shrink-0 p-4 pt-2 flex justify-center">
+        <div className="shrink-0 p-2  flex justify-center">
           <MagneticButton
             variant="filled"
             onClick={onClose}
-            className="px-12 py-3.5 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-lg shadow-brand-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+            className="px-10 py-3.5 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-lg shadow-brand-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
           >
             馬上開始
           </MagneticButton>

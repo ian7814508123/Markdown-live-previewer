@@ -111,61 +111,63 @@ function GlassRailSelector<T extends string | number>({
             style={{ userSelect: 'none', cursor: 'pointer' }}
             className={[
                 // 軌道：磨砂玻璃底板
-                'relative flex rounded-2xl p-1.5 select-none',
+                'relative flex rounded-full p-1.5 select-none',
                 'bg-slate-100/70 dark:bg-slate-800/60',
                 'border border-slate-200/80 dark:border-slate-700/50',
                 'backdrop-blur-sm',
                 className,
             ].join(' ')}
         >
-            {/* 玻璃滑塊：用 animate 驅動 spring 位移 */}
-            <motion.div
-                className="absolute top-1.5 bottom-1.5 rounded-xl pointer-events-none z-0"
-                animate={{ left: sliderLeft }}
-                style={{ width: sliderWidth }}
-                transition={{ type: 'spring', stiffness: 420, damping: 32, mass: 0.7 }}
-            >
-                {/* 玻璃質感：白色半透明 + 模糊 + 微陰影 */}
-                <div className="w-full h-full rounded-xl bg-white/90 dark:bg-white/12 shadow-md dark:shadow-black/30 border border-white dark:border-white/15 backdrop-blur-sm" />
-            </motion.div>
+            <div className="relative flex w-full h-full">
+                {/* 玻璃滑塊：用 animate 驅動 spring 位移 */}
+                <motion.div
+                    className="absolute top-0 bottom-0 px-1 py-0.5 rounded-full pointer-events-none z-0"
+                    animate={{ left: sliderLeft }}
+                    style={{ width: sliderWidth }}
+                    transition={{ type: 'spring', stiffness: 420, damping: 32, mass: 0.7 }}
+                >
+                    {/* 玻璃質感：白色半透明 + 模糊 + 微陰影 */}
+                    <div className="w-full h-full rounded-full bg-white/90 dark:bg-white/12 shadow-md dark:shadow-black/30 border border-white dark:border-white/15 backdrop-blur-sm" />
+                </motion.div>
 
-            {/* 選項文字層 */}
-            {options.map((opt) => {
-                const isActive = opt.value === value;
-                return (
-                    <div
-                        key={String(opt.value)}
-                        className="relative z-10 flex-1 flex flex-col items-center justify-center py-2 px-1 gap-0.5"
-                    >
-                        {opt.icon && (
-                            <span className={`transition-colors duration-200 ${isActive
-                                ? 'text-brand-primary'
-                                : 'text-slate-400 dark:text-slate-500'
-                            }`}>
-                                {opt.icon}
-                            </span>
-                        )}
-                        <span className={[
-                            'text-xs font-black tracking-wide leading-none transition-colors duration-200',
-                            isActive
-                                ? 'text-brand-primary'
-                                : 'text-slate-500 dark:text-slate-400',
-                        ].join(' ')}>
-                            {opt.label}
-                        </span>
-                        {opt.hint && (
+                {/* 選項文字層 */}
+                {options.map((opt) => {
+                    const isActive = opt.value === value;
+                    return (
+                        <div
+                            key={String(opt.value)}
+                            className="relative z-10 flex-1 flex flex-col items-center justify-center py-2 px-1 gap-0.5"
+                        >
+                            {opt.icon && (
+                                <span className={`transition-colors duration-200 ${isActive
+                                    ? 'text-brand-primary'
+                                    : 'text-slate-400 dark:text-slate-500'
+                                    }`}>
+                                    {opt.icon}
+                                </span>
+                            )}
                             <span className={[
-                                'text-[9px] font-medium leading-none transition-colors duration-200',
+                                'text-xs font-black tracking-wide leading-none transition-colors duration-200',
                                 isActive
-                                    ? 'text-brand-primary/60'
-                                    : 'text-slate-400 dark:text-slate-500',
+                                    ? 'text-brand-primary'
+                                    : 'text-slate-500 dark:text-slate-400',
                             ].join(' ')}>
-                                {opt.hint}
+                                {opt.label}
                             </span>
-                        )}
-                    </div>
-                );
-            })}
+                            {opt.hint && (
+                                <span className={[
+                                    'text-[9px] font-medium leading-none transition-colors duration-200',
+                                    isActive
+                                        ? 'text-brand-primary/60'
+                                        : 'text-slate-400 dark:text-slate-500',
+                                ].join(' ')}>
+                                    {opt.hint}
+                                </span>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
         </div>
     );
 }

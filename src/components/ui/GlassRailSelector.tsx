@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
 export interface GlassRailOption<T> {
@@ -67,6 +67,7 @@ function GlassRailSelector<T extends string | number>({
 }: GlassRailSelectorProps<T>) {
     const trackRef = useRef<HTMLDivElement>(null);
     const isDraggingRef = useRef(false);
+    const [isPressed, setIsPressed] = useState(false);
 
     // 計算當前選中 index（找不到時預設 0）
     const activeIndex = Math.max(0, options.findIndex(o => o.value === value));
@@ -90,7 +91,10 @@ function GlassRailSelector<T extends string | number>({
             if (!isDraggingRef.current) return;
             selectByX(e.clientX);
         };
-        const onUp = () => { isDraggingRef.current = false; };
+        const onUp = () => { 
+            isDraggingRef.current = false; 
+            setIsPressed(false);
+        };
 
         window.addEventListener('mousemove', onMove);
         window.addEventListener('mouseup', onUp);
@@ -106,6 +110,7 @@ function GlassRailSelector<T extends string | number>({
             onMouseDown={(e) => {
                 e.preventDefault(); // 防止文字選取
                 isDraggingRef.current = true;
+                setIsPressed(true);
                 selectByX(e.clientX);
             }}
             style={{ userSelect: 'none', cursor: 'pointer' }}
@@ -126,8 +131,10 @@ function GlassRailSelector<T extends string | number>({
                     style={{ width: sliderWidth }}
                     transition={{ type: 'spring', stiffness: 420, damping: 32, mass: 0.7 }}
                 >
-                    {/* 玻璃質感：白色半透明 + 模糊 + 微陰影 */}
-                    <div className="w-full h-full rounded-full bg-white/90 dark:bg-white/12 shadow-md dark:shadow-black/30 border border-white dark:border-white/15 backdrop-blur-sm" />
+                    {/* 玻璃質感：白色半透明 + 模糊 + 動態陰影 */}
+                    <div className={`w-full h-full rounded-full bg-white/90 dark:bg-white/12 border border-white dark:border-white/15 backdrop-blur-sm transition-all duration-300 ${
+                        isPressed ? 'shadow-md dark:shadow-black/40 scale-100' : 'shadow-none scale-100'
+                    }`} />
                 </motion.div>
 
                 {/* 選項文字層 */}

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Sparkles, Zap, Layout, Printer, MousePointer2, Keyboard, Microscope, Music, BarChart3, HelpCircle, BookOpen, ChevronRight, Files, Wrench, Share2 } from 'lucide-react';
+import { X, Sparkles, Zap, Layout, Printer, MousePointer2, Keyboard, Microscope, Music, BarChart3, HelpCircle, BookOpen, ChevronRight, Files, Wrench, Share2, AlertCircle } from 'lucide-react';
 import RippleButton from '../ui/RippleButton';
 import InteractiveLogo from '../ui/InteractiveLogo';
 import GlassRailSelector from '../ui/GlassRailSelector';
 import MagneticButton from '../ui/MagneticButton';
+
 
 interface IntroModalProps {
   isOpen: boolean;
@@ -195,12 +196,22 @@ const IntroModal: React.FC<IntroModalProps> = ({ isOpen, onClose }) => {
                   { label: "資料夾批次匯出", detail: "當您在資料夾中工作時，下載選單可切換「合併下載」或「合併列印」，一次導出整個資料夾內容。" }
                 ]}
               />
+              <ManualSection
+                icon={<AlertCircle size={16} />}
+                title='注意'
+                items={[
+                  {
+                    label: "同步滾動位置偏移或跳躍、列印時樣式跑版或顯示異常、其他異常狀況",
+                    detail: "目前資料夾模式下的列印預覽功能與同步滾動功能尚在測試中，若發現：同步滾動位置偏移或跳躍、列印時樣式跑版或顯示異常、其他異常狀況，請暫時關閉功能或嘗試重新整理頁面後再試。",
+                  }
+                ]}
+              />
             </div>
           )}
         </div>
 
         {/* Footer actions */}
-        <div className="shrink-0 p-2  flex justify-center">
+        <div className="shrink-0 p-2 pt-1 flex justify-center">
           <MagneticButton
             variant="filled"
             onClick={onClose}

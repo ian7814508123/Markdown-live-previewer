@@ -265,14 +265,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                                 <ol>(提醒：若匯出 PDF 等靜態格式，動圖將固定於特定幀，建議僅在數位展示環境下使用。)</ol></li>
                                             <li>使用<strong>\pagebreak</strong> , <strong>[page-break]</strong> , <strong>---pb---</strong> 指令強制換頁 (開啟列印預覽下可以看到強制換頁線)</li>
                                             <li>增強 WikiLink 匯出相容性：合併匯出時自動轉為內部跳轉錨點 (注意:列印時要選擇Save to PDF，而不是Print to PDF)，單檔匯出則自動降級為純文字以避免死連結。</li>
-                                            <li><strong>注意: 目前資料夾模式下的列印預覽功能與同步滾動功能尚在測試中，若發現：</strong>
-                                                <ol>
-                                                    <li><strong>1. 同步滾動位置偏移或跳躍</strong></li>
-                                                    <li><strong>2. 列印時樣式跑版或顯示異常</strong></li>
-                                                    <li><strong>3. 其他異常狀況</strong></li>
-                                                </ol>
-                                                <strong>請暫時關閉功能或嘗試重新整理頁面後再試</strong>
-                                            </li>
+                                            <li>按鈕變得更Q彈了，可以試著長按並滑動他們。</li>
 
                                         </ul>
                                     </div>
@@ -292,7 +285,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                             <p className="text-1xl font-bold text-slate-600 dark:text-slate-300 capitalize tracking-widest">Version {version}</p>
                                             <button
                                                 onClick={() => setShowChangelog(true)}
-                                                className="flex items-center gap-1.5 px-2.5 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-500 dark:text-indigo-600 rounded-lg text-[10px] font-black hover:bg-indigo-200 dark:hover:bg-indigo-800/60 transition-colors"
+                                                className="flex items-center gap-1.5 px-2.5 py-1 bg-[#F0F9FF] dark:bg-[#0C4A6E]/40 text-[#005B94] dark:text-[#0284C7] rounded-lg text-[10px] font-black hover:bg-[#E0F2FE] dark:hover:bg-[#0C4A6E]/60 transition-colors"
+
+
+
                                             >
                                                 發行內容
                                             </button>

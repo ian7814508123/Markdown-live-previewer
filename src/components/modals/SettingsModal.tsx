@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Save, RotateCcw, AlertCircle, Check, FileText, Printer, Box, PackagePlus, ChevronLeft } from 'lucide-react';
 import RippleButton from '../ui/RippleButton';
+import MagneticButton from '../ui/MagneticButton';
 import DraggableSwitch from '../ui/DraggableSwitch';
 import GlassRailSelector from '../ui/GlassRailSelector';
 import { PrintSettings } from '../../hooks/useAppSettings';
@@ -201,17 +202,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white dark:bg-slate-900 rounded-[2rem] shadow-[0_30px_90px_rgba(0,0,0,0.3)] border border-slate-200 dark:border-slate-800/80 z-[101] flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 fade-in duration-300">
 
                 {/* Header & Tabs */}
-                <div className="px-8 pt-8 pb-4 shrink-0">
+                <div className="px-8 pt-6 pb-2 shrink-0">
                     <div className="flex items-center justify-between mb-6">
                         <div>
                             <h2 className="text-xl font-black text-slate-800 dark:text-slate-100 tracking-tight">偏好設定</h2>
                             <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-[0.2em] mt-1">Application Configuration</p>
                         </div>
-                        <RippleButton variant="icon" onClick={onClose}
+                        <MagneticButton variant="icon" onClick={onClose}
                             aria-label="關閉偏好設定"
                             className="w-10 h-10 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 rounded-full transition-all">
                             <X size={20} />
-                        </RippleButton>
+                        </MagneticButton>
                     </div>
 
                     {/* Tab 導航：玻璃滑軌，支援拖曳切換分頁 */}
@@ -243,7 +244,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                 <div className="space-y-4">
                                     {/*<div className="p-5 bg-gradient-to-br from-indigo-50 to-white dark:from-slate-800 dark:to-slate-800/50 rounded-2xl border border-indigo-100/50 dark:border-slate-700/50 shadow-sm">
                                          <div className="flex items-center gap-3 mb-3">
-                                            <div className="p-2 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-500 dark:text-indigo-400 rounded-xl">
+                                            <div className="p-2 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-500 dark:text-indigo-400 rounded-2xl">
                                                 <PackagePlus size={18} />
                                             </div>
                                             <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">音樂樂譜渲染 (abc notation)</h4>
@@ -254,7 +255,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     </div> */}
                                     <div className="p-5 bg-gradient-to-br from-indigo-50 to-white dark:from-slate-800 dark:to-slate-800/50 rounded-2xl border border-indigo-100/50 dark:border-slate-700/50 shadow-sm">
                                         <div className="flex items-center gap-3 mb-3">
-                                            <div className="p-2 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-xl">
+                                            <div className="p-2 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-2xl">
                                                 <Check size={18} />
                                             </div>
                                             <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">體驗優化與修正</h4>
@@ -304,7 +305,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                         <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed mb-4 text-center max-w-[250px]">前往功能導覽，學習如何使用快捷鍵、資料夾管理及更多高階與隱藏技巧。</p>
                                         <RippleButton
                                             variant="outlined"
-                                            className="px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:border-brand-primary"
+                                            className="px-6 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-brand-primary"
                                             onClick={() => {
                                                 if (onOpenIntro) onOpenIntro();
                                                 onClose();
@@ -386,8 +387,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                             還原預設
                                         </RippleButton>
                                         <div className="flex items-center gap-4">
-                                            <RippleButton variant="outlined" onClick={onClose} className="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest">取消</RippleButton>
-                                            <RippleButton variant="filled" onClick={handleSaveMacros} className={`px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg transition-all ${success ? 'bg-green-500 shadow-green-500/20' : 'bg-brand-primary hover:bg-brand-primary/90 shadow-brand-primary/20'}`}>
+                                            <RippleButton variant="outlined" onClick={onClose} className="px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest">取消</RippleButton>
+                                            <RippleButton variant="filled" onClick={handleSaveMacros} className={`px-8 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg transition-all ${success ? 'bg-green-500 shadow-green-500/20' : 'bg-brand-primary hover:bg-brand-primary/90 shadow-brand-primary/20'}`}>
                                                 {success ? <Check size={16} /> : <Save size={16} />}
                                                 {success ? '已儲存' : '儲存變更'}
                                             </RippleButton>

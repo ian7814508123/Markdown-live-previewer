@@ -4,6 +4,8 @@ import { DocumentRecord } from '../../types';
 import DocumentItem from '../ui/DocumentItem';
 import ToolsModal from '../modals/ToolsModal';
 import RippleButton from '../ui/RippleButton';
+import MarkdownPreview from '../markdown/MarkdownPreview';
+import MagneticButton from '../ui/MagneticButton';
 
 interface HistorySidebarProps {
     isOpen: boolean;
@@ -175,7 +177,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                         <h2 className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">我的文檔</h2>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
-                        <RippleButton
+                        <MagneticButton
                             variant="icon"
                             onClick={() => {
                                 let targetFolderId: string | null = null;
@@ -193,9 +195,9 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                             aria-label="新建文檔"
                         >
                             <FileText size={18} strokeWidth={2.5} />
-                        </RippleButton>
+                        </MagneticButton>
 
-                        <RippleButton
+                        <MagneticButton
                             variant="icon"
                             onClick={() => onCreateFolder('')}
                             className="w-10 h-10 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800"
@@ -203,9 +205,9 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                             aria-label="新建資料夾"
                         >
                             <FolderPlus size={18} strokeWidth={2.5} />
-                        </RippleButton>
+                        </MagneticButton>
 
-                        <RippleButton
+                        <MagneticButton
                             variant="icon"
                             onClick={onClose}
                             title="關閉"
@@ -213,7 +215,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                             className="w-10 h-10 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                         >
                             <X size={20} />
-                        </RippleButton>
+                        </MagneticButton>
                     </div>
                 </div>
 

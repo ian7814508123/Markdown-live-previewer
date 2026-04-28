@@ -626,6 +626,16 @@
             padding: 0.125rem 0.4rem;
             border-radius: 4px;
         }
+
+        /* 7. 語言標籤列印樣式：強制使用淺色風格 */
+        .code-lang-label {
+            color: #475569 !important;
+            /* slate-600 */
+            background-color: rgba(226, 232, 240, 0.6) !important;
+            /* slate-200/60 */
+            border-bottom: 1px solid #cbd5e1;
+            border-right: 1px solid #cbd5e1;
+        }
     }
 
     /* ── 預覽模式：清除 .prose pre 外層容器的干擾樣式 ──
@@ -695,7 +705,7 @@
 
     /* 深色模式下的行號顏色 */
     .enhanced-codeblock[data-theme-style="dark"] .code-line::before {
-        color: #64748b;
+        color: #7e8b9c;
     }
 
     /* 淺色/列印模式下的行號顏色 */

@@ -54,6 +54,11 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: b
         });
 
         const id = `mermaid-${hashString(renderCode + (isDark ? 'dark' : 'light'))}`;
+        
+        // 1. 先進行語法檢查，避免 mermaid.render 回傳 "Syntax error in text" 的 SVG
+        await mermaid.parse(renderCode, { suppressErrors: false });
+
+        // 2. 只有語法正確才會執行到這裡
         const { svg: renderedSvg } = await mermaid.render(id, renderCode);
         container.innerHTML = cleanMermaidSvg(renderedSvg);
     }, []);
@@ -510,10 +515,10 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
             const line = node?.position?.start?.line;
 
             if (isBlock) {
-                if (language === 'mermaid') return <div data-line={line} className="not-prose"><MermaidBlock key={stableKey} code={codeString} isDarkMode={ctx.shouldShowDark} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} printSessionId={ctx.printSessionId} /></div>;
-                if (language === 'vega' || language === 'vega-lite') return <div data-line={line} className="not-prose"><VegaBlock key={stableKey} code={codeString} isDarkMode={ctx.shouldShowDark} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} printSessionId={ctx.printSessionId} /></div>;
-                if (language === 'smiles') return <div data-line={line} className="not-prose"><SmilesBlock key={stableKey} code={codeString} isDarkMode={ctx.shouldShowDark} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} printSessionId={ctx.printSessionId} /></div>;
-                if (language === 'abc') return <React.Suspense fallback={<div className="p-4 flex justify-center items-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs">樂譜加載中...</div>}><div data-line={line} className="not-prose"><AbcBlock key={stableKey} code={codeString} isDarkMode={ctx.shouldShowDark} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} printSessionId={ctx.printSessionId} /></div></React.Suspense>;
+                if (language === 'mermaid') return <div data-line={line} className="not-prose"><MermaidBlock code={codeString} isDarkMode={ctx.shouldShowDark} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} printSessionId={ctx.printSessionId} /></div>;
+                if (language === 'vega' || language === 'vega-lite') return <div data-line={line} className="not-prose"><VegaBlock code={codeString} isDarkMode={ctx.shouldShowDark} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} printSessionId={ctx.printSessionId} /></div>;
+                if (language === 'smiles') return <div data-line={line} className="not-prose"><SmilesBlock code={codeString} isDarkMode={ctx.shouldShowDark} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} printSessionId={ctx.printSessionId} /></div>;
+                if (language === 'abc') return <React.Suspense fallback={<div className="p-4 flex justify-center items-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs">樂譜加載中...</div>}><div data-line={line} className="not-prose"><AbcBlock code={codeString} isDarkMode={ctx.shouldShowDark} isPrinting={ctx.isPrinting} showPrintPreview={ctx.showPrintPreview} printSessionId={ctx.printSessionId} /></div></React.Suspense>;
 
                 return (
                     <div data-line={line} className="code-block-wrapper not-prose">

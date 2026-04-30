@@ -41,6 +41,8 @@ const DiagramBlock: React.FC<DiagramBlockProps> = React.memo(({
     const containerRef = useRef<HTMLDivElement>(null);
     const [isPending, setIsPending] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    // 使用 Ref 儲存最後有效的 HTML，避免更新 state 觸發無限迴圈
+    const lastValidHtml = useRef<string | null>(null);
     const isMounted = useRef(true);
 
     // 2. 從代碼註解中讀取初始設定 (通用支持)
@@ -66,27 +68,37 @@ const DiagramBlock: React.FC<DiagramBlockProps> = React.memo(({
     const debouncedCode = useDebounce(code, 400);
     const renderCode = isPrinting ? code : debouncedCode;
 
+    // 用 ref 追蹤最新值，讓 notifyReady 不需要列入依賴陣列
+    // 解決：code 變 → storageKey 變 → notifyReady 重建 → useEffect 重跑 的問題
+    const storageKeyRef = useRef(storageKey);
+    storageKeyRef.current = storageKey;
+    const printSessionIdRef = useRef(printSessionId);
+    printSessionIdRef.current = printSessionId;
+
+    // 零依賴：函式引用永遠穩定，不會觸發 useEffect 重跑
     const notifyReady = useCallback(() => {
         window.dispatchEvent(new CustomEvent('content-layout-ready'));
         window.dispatchEvent(new CustomEvent('diagram-render-complete', {
-            detail: { blockId: storageKey, printSessionId }
+            detail: { blockId: storageKeyRef.current, printSessionId: printSessionIdRef.current }
         }));
-    }, [storageKey, printSessionId]);
+    }, []);
 
     useEffect(() => {
         if (!renderCode) return;
 
-        isMounted.current = true;
         setIsPending(true);
         setError(null);
 
         const timer = setTimeout(async () => {
             if (!containerRef.current) return;
+            // 每次 effect 重新執行（包含列印結束後），重設掛載標誌
+            isMounted.current = true;
             try {
                 // 調用外部傳入的專屬渲染邏輯
                 await render(containerRef.current, renderCode, isDark);
                 
                 if (isMounted.current) {
+                    lastValidHtml.current = containerRef.current.innerHTML;
                     setError(null);
                     notifyReady();
                 }
@@ -94,6 +106,10 @@ const DiagramBlock: React.FC<DiagramBlockProps> = React.memo(({
                 console.error(`${type} render error:`, err);
                 if (isMounted.current) {
                     setError(err.message || 'Syntax Error');
+                    // 如果渲染過程清空了容器 (例如 Vega)，則恢復最後一次有效的內容
+                    if (containerRef.current && containerRef.current.innerHTML === '' && lastValidHtml.current) {
+                        containerRef.current.innerHTML = lastValidHtml.current;
+                    }
                     notifyReady();
                 }
             } finally {
@@ -107,18 +123,14 @@ const DiagramBlock: React.FC<DiagramBlockProps> = React.memo(({
             isMounted.current = false;
             clearTimeout(timer);
         };
-    }, [renderCode, isDark, render, type, notifyReady]);
+    // isActuallyPrinting 加入依賴：列印結束後 containerRef 換了新 DOM，需強制重新渲染
+    // lastValidHtml 使用 Ref，不放入依賴陣列，避免觸發無限迴圈
+    }, [renderCode, isDark, render, type, notifyReady, isActuallyPrinting]);
 
-    if (error) {
-        return (
-            <div className="my-6 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-xs font-mono whitespace-pre-wrap">
-                <div className="font-bold mb-2">{errorTitle}</div>
-                {error}
-            </div>
-        );
-    }
+    // 渲染邏輯保持不變，但我們不再因為 error 就回傳完全不同的組件
+    // 這樣可以保留 containerRef 裡的內容 (上一次成功的渲染)
 
-    // 列印模式簡化
+    // 列印模式：套用使用者調整的 width 與 scale，確保列印結果與預覽一致
     if (isPrinting || showPrintPreview) {
         return (
             <div
@@ -126,42 +138,66 @@ const DiagramBlock: React.FC<DiagramBlockProps> = React.memo(({
                 data-diagram-id={storageKey}
                 className={`diagram-block-container ${containerClassName}`}
                 style={{
-                    width: '100%',
-                    margin: '1rem 0',
+                    width,                    // 套用使用者調整的寬度 (e.g., "80%")
+                    margin: '1rem auto',
                     display: 'flex',
                     justifyContent: 'center',
                 }}
             >
-                <div ref={containerRef} className="w-full flex justify-center" />
+                {/* 套用使用者調整的 scale，使用 zoom 而非 transform 確保列印不裁切 */}
+                <div
+                    className="w-full flex justify-center"
+                    style={{
+                        zoom: scale !== 1 ? scale : undefined,
+                    }}
+                >
+                    <div ref={containerRef} className="w-full flex justify-center" />
+                </div>
             </div>
         );
     }
 
+
     return (
-        <ResizableWrapper
-            width={width}
-            height={height}
-            scale={scale}
-            onWidthChange={updateWidth}
-            onHeightChange={updateHeight}
-            onScaleChange={updateScale}
-            onReset={reset}
-            isDarkMode={isDarkMode}
-        >
-            <div
-                data-diagram-type={type}
-                data-diagram-id={storageKey}
-                className={`diagram-block-container flex justify-center p-6 rounded-2xl shadow-sm border overflow-auto transition-opacity duration-300 ${isDark ? 'border-slate-700/50' : 'border-slate-200/50'} ${isPending ? 'opacity-50' : 'opacity-100'} ${containerClassName}`}
-                style={{ width: '100%', height: 'auto', backgroundColor: 'var(--code-bg)' }}
+        <div className="group/diagram-wrapper w-full">
+            <ResizableWrapper
+                width={width}
+                height={height}
+                scale={scale}
+                onWidthChange={updateWidth}
+                onHeightChange={updateHeight}
+                onScaleChange={updateScale}
+                onReset={reset}
+                isDarkMode={isDarkMode}
             >
-                <div ref={containerRef} className="w-full flex justify-center" />
-            </div>
-            {isPending && (
-                <div className="absolute top-2 right-2">
-                    <div className="w-4 h-4 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
+                <div
+                    data-diagram-type={type}
+                    data-diagram-id={storageKey}
+                    className={`diagram-block-container flex justify-center p-6 rounded-2xl shadow-sm border overflow-auto transition-opacity duration-300 ${isDark ? 'border-slate-700/50' : 'border-slate-200/50'} ${isPending ? 'opacity-50' : 'opacity-100'} ${containerClassName}`}
+                    style={{ width: '100%', height: 'auto', backgroundColor: 'var(--code-bg)' }}
+                >
+                    <div ref={containerRef} className="w-full flex justify-center" />
+                </div>
+                {isPending && (
+                    <div className="absolute top-2 right-2">
+                        <div className="w-4 h-4 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
+                    </div>
+                )}
+            </ResizableWrapper>
+
+            {/* 語法錯誤提醒：in-flow 元素，緊接在 ResizableWrapper 下方，不遮蓋任何內容 */}
+            {error && !isActuallyPrinting && (
+                <div className="-mt-4 mx-4 mb-2 p-3 bg-red-50/95 dark:bg-red-900/60 backdrop-blur-md rounded-xl border border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 text-[11px] font-mono shadow-xl animate-in fade-in slide-in-from-top-1 duration-300">
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="flex-shrink-0 w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                        <span className="font-bold uppercase tracking-wider">{errorTitle}</span>
+                    </div>
+                    <div className="opacity-90 line-clamp-3 hover:line-clamp-none transition-all cursor-default">
+                        {error}
+                    </div>
                 </div>
             )}
-        </ResizableWrapper>
+        </div>
     );
 });
 

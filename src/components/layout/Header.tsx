@@ -318,7 +318,7 @@ const Header: React.FC<HeaderProps> = ({
                                                 checked={printSettings.mergeVaultOnPdfExport}
                                                 onChange={(e) => onUpdatePrintSettings({ mergeVaultOnPdfExport: e.target.checked })}
                                             />
-                                            <div className={`w-10 h-5.5 rounded-full transition-all relative ${printSettings.mergeVaultOnPdfExport ? 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.3)]' : 'bg-slate-200 dark:bg-slate-700'}`}>
+                                            <div className={`w-10 h-5.5 rounded-full transition-all relative ${printSettings.mergeVaultOnPdfExport ? 'bg-brand-primary shadow-[0_0_10px_rgba(14,165,233,0.3)]' : 'bg-slate-200 dark:bg-slate-700'}`}>
                                                 <div className={`absolute top-0.75 left-0.75 w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-300 ${printSettings.mergeVaultOnPdfExport ? 'translate-x-4.5' : 'translate-x-0'}`} />
                                             </div>
                                         </label>

@@ -579,7 +579,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
             <div
                 ref={hudRef}
                 className={`
-                    absolute bottom-10 right-8 z-50 flex items-center h-12 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]
+                    absolute bottom-10 right-8 z-30 flex items-center h-12 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]
                     ${isHUDExpanded
                         ? 'bg-white/95 dark:bg-slate-900/95 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.7),0_0_30px_rgba(14,165,233,0.1)] px-3 rounded-full border border-slate-300 dark:border-white/20'
                         : 'bg-white/60 dark:bg-slate-950/40 shadow-xl p-1.5 rounded-full border border-white/30 dark:border-white/10'

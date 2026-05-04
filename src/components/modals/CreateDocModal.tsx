@@ -6,9 +6,11 @@ import RippleButton from '../ui/RippleButton';
 interface CreateDocModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onCreate: (mode: 'markdown' | 'mermaid', name: string, templateId?: string) => void;
+    onCreate: (mode: 'markdown' | 'mermaid', name: string, templateId?: string, icon?: string) => void;
     initialName?: string;
 }
+
+const COMMON_ICONS = ['📝', '📊', '💡', '📅', '🚀', '🛠️', '🎨', '🔒', '🌟', '📁'];
 
 const MD_TEMPLATES = [
     { id: 'markdown-standard', name: '進階導覽', desc: '包含所有語法與進階引擎示範', icon: Zap, color: 'text-amber-500', bg: 'bg-amber-100 dark:bg-amber-900/40' },
@@ -30,21 +32,24 @@ const MMD_TEMPLATES = [
 
 const CreateDocModal: React.FC<CreateDocModalProps> = ({ isOpen, onClose, onCreate, initialName = '' }) => {
     const [name, setName] = useState('');
+    const [selectedIcon, setSelectedIcon] = useState<string>('');
+    const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
     const [step, setStep] = useState<'type' | 'template'>('type');
-    const [selectedMode, setSelectedMode] = useState<'markdown' | 'mermaid'>('markdown');
+    const [selectedMode, setSelectedMode] = useState<'markdown' | 'mermaid' | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
     // Reset when opening
     useEffect(() => {
         if (isOpen) {
             setName(initialName);
+            setSelectedIcon('');
+            setIsIconPickerOpen(false);
             setStep('type');
-            setSelectedMode('markdown');
+            setSelectedMode(null);
             // Focus after animation
             setTimeout(() => {
                 inputRef.current?.focus();
             }, 100);
-
             // 初始化 AdSense - 延遲執行並判斷寬度 (xl 螢幕: 1280px)
             const adTimer = setTimeout(() => {
                 try {
@@ -80,7 +85,7 @@ const CreateDocModal: React.FC<CreateDocModalProps> = ({ isOpen, onClose, onCrea
 
     const handleSubmit = (templateId: string = '') => {
         const finalTid = templateId || (selectedMode === 'markdown' ? 'markdown-standard' : 'mermaid-standard');
-        onCreate(selectedMode, name.trim(), finalTid);
+        onCreate(selectedMode, name.trim(), finalTid, selectedIcon || undefined);
         onClose();
     };
 
@@ -134,46 +139,102 @@ const CreateDocModal: React.FC<CreateDocModalProps> = ({ isOpen, onClose, onCrea
                 </div>
 
                 {/* Body with Animation Container */}
-                <div className="relative min-h-[220px]">
+                <div className="relative min-h-[300px]">
                     {/* Step 1: Type Selection */}
-                    <div className={`p-6 flex flex-col gap-6 transition-all duration-300 ${step === 'type' ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0 pointer-events-none absolute inset-0'}`}>
-                        {/* Name Input */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">文檔名稱</label>
-                            <input
-                                ref={inputRef}
-                                type="text"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                placeholder="輸入名稱 (選填)"
-                                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
-                            />
+                    <div className={`p-5 flex flex-col gap-6 transition-all duration-300 ${step === 'type' ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0 pointer-events-none absolute inset-0'}`}>
+
+                        {/* Unified Input Row */}
+                        <div className="flex items-end gap-3">
+                            {/* Icon Square Block */}
+                            <div className="flex flex-col gap-1">
+                                <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">圖示</label>
+                                <button
+                                    onClick={() => setIsIconPickerOpen(!isIconPickerOpen)}
+                                    className={`w-12 h-12 flex items-center justify-center rounded-2xl text-2xl transition-all border shadow-sm ${isIconPickerOpen
+                                        ? 'border-brand-primary bg-brand-secondary/30 dark:bg-brand-primary/20 ring-4 ring-brand-primary/10'
+                                        : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                        }`}
+                                >
+                                    {selectedIcon || (selectedMode === 'markdown' ? '📝' : '📊')}
+                                </button>
+                            </div>
+
+                            {/* Name Rectangle Block */}
+                            <div className="flex-1 flex flex-col gap-1">
+                                <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">文檔名稱</label>
+                                <input
+                                    ref={inputRef}
+                                    type="text"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder="輸入名稱 (選填)"
+                                    className="w-full h-12 px-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Collapsible Icon Picker */}
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateRows: isIconPickerOpen ? '1fr' : '0fr',
+                            transition: 'grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                        }} className="overflow-hidden">
+                            <div className="min-h-0">
+                                <div className="p-3 g-slate-50/50 dark:bg-slate-800/30 rounded-3xl border border-slate-100 dark:border-slate-800 mb-2">
+                                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 ml-1">選擇圖示 (選填)</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {COMMON_ICONS.map(icon => (
+                                            <button
+                                                key={icon}
+                                                onClick={() => {
+                                                    setSelectedIcon(selectedIcon === icon ? '' : icon);
+                                                    setIsIconPickerOpen(false);
+                                                }}
+                                                className={`w-9 h-9 flex items-center justify-center rounded-xl text-lg transition-all ${selectedIcon === icon
+                                                    ? 'bg-brand-primary text-white shadow-md scale-110'
+                                                    : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm'
+                                                    }`}
+                                            >
+                                                {icon}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Mode Buttons */}
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-2 gap-3 pt-2">
                             <button
                                 onClick={() => handleSelectType('markdown')}
-                                className="flex flex-col items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/50 hover:bg-blue-50 dark:hover:bg-blue-900/20 border border-slate-200 dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-800 rounded-3xl transition-all group"
+                                className={`flex flex-col items-center gap-3 p-4 rounded-3xl transition-all group border ${selectedMode === 'markdown'
+                                    ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                                    : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-blue-900/10 hover:border-blue-100'
+                                    }`}
                             >
-                                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${selectedMode === 'markdown' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' : 'bg-slate-100 dark:bg-slate-700 text-slate-400'
+                                    }`}>
                                     <FileText size={24} />
                                 </div>
                                 <div className="text-center">
-                                    <span className="block text-sm font-bold text-slate-700 dark:text-slate-200">標記掉落</span>
+                                    <span className={`block text-sm font-bold ${selectedMode === 'markdown' ? 'text-blue-700 dark:text-blue-300' : 'text-slate-600 dark:text-slate-400'}`}>標記掉落</span>
                                     <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-medium">Markdown</span>
                                 </div>
                             </button>
 
                             <button
                                 onClick={() => handleSelectType('mermaid')}
-                                className="flex flex-col items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/50 hover:bg-purple-50 dark:hover:bg-purple-900/20 border border-slate-200 dark:border-slate-700 hover:border-purple-200 dark:hover:border-purple-800 rounded-3xl transition-all group"
+                                className={`flex flex-col items-center gap-3 p-4 rounded-3xl transition-all group border ${selectedMode === 'mermaid'
+                                    ? 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800'
+                                    : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:bg-purple-50 dark:hover:bg-purple-900/10 hover:border-purple-100'
+                                    }`}
                             >
-                                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${selectedMode === 'mermaid' ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400' : 'bg-slate-100 dark:bg-slate-700 text-slate-400'
+                                    }`}>
                                     <ImageIcon size={24} />
                                 </div>
                                 <div className="text-center">
-                                    <span className="block text-sm font-bold text-slate-700 dark:text-slate-200">美人魚</span>
+                                    <span className={`block text-sm font-bold ${selectedMode === 'mermaid' ? 'text-purple-700 dark:text-purple-300' : 'text-slate-600 dark:text-slate-400'}`}>美人魚</span>
                                     <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-medium">Mermaid</span>
                                 </div>
                             </button>
@@ -210,16 +271,6 @@ const CreateDocModal: React.FC<CreateDocModalProps> = ({ isOpen, onClose, onCrea
                         提示：{step === 'type' ? '選擇類別後展開範本' : '點擊任一範本即可快速建立'}
                     </p>
                 </div>
-            </div>
-
-            {/* Right Skyscraper Ad (Wide screen only) */}
-            <div className="hidden xl:flex absolute right-8 w-40 h-[600px] bg-white/5 border border-white/10 rounded-2xl items-center justify-center overflow-hidden">
-                <ins className="adsbygoogle"
-                    style={{ display: 'block' }}
-                    data-ad-client="ca-pub-8170892352848798"
-                    data-ad-slot="1864612249"
-                    data-ad-format="vertical"
-                    data-full-width-responsive="true"></ins>
             </div>
         </div>,
         document.body

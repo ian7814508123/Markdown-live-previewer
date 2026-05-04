@@ -103,8 +103,12 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
 
                 <div className="flex items-start gap-2 flex-1 min-w-0">
                     {/* 模式圖示 */}
-                    <div className={`mt-0.5 shrink-0 ${isActive ? 'text-brand-primary' : 'text-slate-400 dark:text-slate-600'}`}>
-                        {document.mode === 'mermaid' ? <FileCode2 size={16} /> : <FileText size={16} />}
+                    <div className={`mt-0.5 shrink-0 flex items-center justify-center w-4 h-4 ${isActive ? 'text-brand-primary' : 'text-slate-400 dark:text-slate-600'}`}>
+                        {document.icon ? (
+                            <span className="text-sm leading-none">{document.icon}</span>
+                        ) : (
+                            document.mode === 'mermaid' ? <FileCode2 size={16} /> : <FileText size={16} />
+                        )}
                     </div>
 
                     {/* 文檔名稱 */}

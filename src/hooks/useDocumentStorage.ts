@@ -97,7 +97,7 @@ export function useDocumentStorage() {
     /**
      * 建立新文檔
      */
-    const createDocument = useCallback((mode: 'markdown' | 'mermaid', content: string = '', name?: string, folderId: string | null = null, templateId: string | null = null) => {
+    const createDocument = useCallback((mode: 'markdown' | 'mermaid', content: string = '', name?: string, folderId: string | null = null, templateId: string | null = null, icon?: string) => {
         const id = generateId();
 
         setState(prev => {
@@ -137,6 +137,7 @@ export function useDocumentStorage() {
                 name: finalName,
                 mode,
                 content,
+                icon,
                 templateId,
                 folderId,
                 order,

@@ -520,7 +520,7 @@ const App: React.FC = () => {
   };
 
   // 處理新增文檔
-  const handleCreateDocument = (newMode: 'markdown' | 'mermaid', name: string, templateId: string = '') => {
+  const handleCreateDocument = (newMode: 'markdown' | 'mermaid', name: string, templateId: string = '', icon?: string) => {
     if (!defaultContents) return;
 
     const modeToUse = newMode || (currentDocument?.mode || 'markdown');
@@ -537,7 +537,7 @@ const App: React.FC = () => {
     // 使用傳入的資料夾 ID (來自側邊欄偵測或是 Wikilink 偵測)
     const folderId = pendingFolderId;
 
-    createDocument(modeToUse, defaultContent, name, folderId, modeToUse === 'mermaid' ? (templateId || 'mermaid-standard') : (templateId || 'markdown-standard'));
+    createDocument(modeToUse, defaultContent, name, folderId, modeToUse === 'mermaid' ? (templateId || 'mermaid-standard') : (templateId || 'markdown-standard'), icon);
     setInitialDocName(''); // Reset
     setPendingFolderId(null); // Reset
   };

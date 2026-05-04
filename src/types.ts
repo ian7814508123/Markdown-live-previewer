@@ -16,6 +16,7 @@ export interface DocumentRecord {
     name: string;                        // 使用者自訂名稱
     mode: 'markdown' | 'mermaid';        // 文檔類型
     content: string;                     // 編輯內容
+    icon?: string;                        // 使用者自訂圖示 (Emoji 或 Lucide 名稱)
     templateId?: string | null;           // 來源範本 ID
     folderId?: string | null;            // 所屬資料夾 ID (null 為獨立檔案)
     order?: number;                      // 排序順序

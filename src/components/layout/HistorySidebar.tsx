@@ -303,7 +303,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                                                     </div>
                                                 </div>
 
-                                                {/* CSS Grid 彈性展開動畫：內容常駐提高渲染額費，不再条件淡入 */}
+                                                {/* CSS Grid 彈性展開動畫：內容常駐提高渲染額費，不再條件淡入 */}
                                                 <div style={{
                                                     display: 'grid',
                                                     gridTemplateRows: isExpanded ? '1fr' : '0fr',
@@ -318,7 +318,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                                                             ? 'opacity 0.3s ease 0.05s, transform 0.3s ease 0.05s'
                                                             : 'opacity 0.18s ease, transform 0.18s ease',
                                                     }}>
-                                                        <div className="pl-4 space-y-0.5 border-l-2 border-brand-primary/10 dark:border-brand-primary/30 ml-6 mb-2">
+                                                        <div className="pl-1 space-y-0.2 border-l border-brand-primary/10 dark:border-brand-primary/30 ml-6 mb-2">
                                                             {folderDocs.length === 0 ? (
                                                                 <p className="px-4 py-2 text-[10px] text-slate-400 dark:text-slate-600 italic">無文件</p>
                                                             ) : (

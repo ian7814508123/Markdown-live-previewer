@@ -5,6 +5,7 @@ import RippleButton from '../ui/RippleButton';
 import CodeMirrorEditor from './CodeMirrorEditor';
 import { ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import IntroModal from '../modals/IntroModal';
+import { DocumentRecord } from '../../types';
 
 interface EditorProps {
     mode: 'mermaid' | 'markdown';
@@ -22,7 +23,7 @@ interface EditorProps {
     // Tab 相關
     openDocIds?: string[];
     currentDocId?: string | null;
-    documents?: any[]; // 用來取得標題與模式
+    documents?: DocumentRecord[]; // 用來取得標題與模式
     onSwitchTab?: (docId: string) => void;
     onCloseTab?: (docId: string, e: React.MouseEvent) => void;
 }
@@ -92,19 +93,30 @@ const Editor = forwardRef<ReactCodeMirrorRef, EditorProps>(({
                                 className={`
                                     flex items-center gap-2 px-2.5 py-2 text-[10px] font-medium cursor-pointer transition-all relative group
                                     ${isActive
-                                        ? 'bg-white dark:bg-slate-900 text-brand-primary rounded-t-xl shadow-[0_-8px_20px_rgba(0,0,0,0.04)] dark:shadow-[0_-8px_20px_rgba(0,0,0,0.15)] z-10 flex-[2_2_0%]'
-                                        : 'text-slate-500 dark:text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 bg-slate-200/50 dark:bg-slate-800/30 rounded-t-lg mb-0.5 mx-0.5 flex-1'
+                                        ? 'bg-white dark:bg-slate-900 text-brand-primary rounded-t-xl shadow-[0_-8px_20px_rgba(0,0,0,0.04)] dark:shadow-[0_-8px_20px_rgba(0,0,0,0.15)] z-10 flex-[2_2_0%] min-w-[120px]'
+                                        : 'text-slate-500 dark:text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 bg-slate-200/50 dark:bg-slate-800/30 rounded-t-lg mb-0.5 mx-0.5 flex-1 min-w-[36px]'
                                     }
                                 `}
-                                style={{ minWidth: isActive ? '120px' : '44px', maxWidth: '180px' }}
+                                style={{ maxWidth: '180px' }}
+                                title={doc.name}
                             >
-                                {doc.mode === 'mermaid' ? <FileCode size={12} className={isActive ? 'text-brand-primary' : 'opacity-60'} /> : <FileText size={12} className={isActive ? 'text-brand-primary' : 'opacity-60'} />}
-                                <span className={`truncate flex-1 ${isActive ? 'font-bold' : ''}`}>{doc.name}</span>
+                                <div className="flex items-center justify-center shrink-0 w-4 h-4">
+                                    {doc.icon ? (
+                                        <span className="text-xs leading-none">{doc.icon}</span>
+                                    ) : (
+                                        doc.mode === 'mermaid' 
+                                            ? <FileCode size={12} className={isActive ? 'text-brand-primary' : 'opacity-60'} /> 
+                                            : <FileText size={12} className={isActive ? 'text-brand-primary' : 'opacity-60'} />
+                                    )}
+                                </div>
+                                <span className={`truncate flex-1 transition-opacity duration-200 ${isActive ? 'font-bold opacity-100' : 'opacity-100 group-hover:opacity-100'}`}>
+                                    {doc.name}
+                                </span>
                                 <button
                                     onClick={(e) => onCloseTab?.(id, e)}
                                     aria-label="關閉此分頁"
                                     className={`
-                                        p-0.5 rounded-full transition-all flex items-center justify-center
+                                        p-0.5 rounded-full transition-all flex items-center justify-center shrink-0
                                         ${isActive
                                             ? 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600'
                                             : 'opacity-0 group-hover:opacity-100 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-500'

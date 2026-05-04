@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Plus, FolderOpen, FileText, Wrench, ChevronDown, ChevronRight, Files, FolderPlus, Trash2 } from 'lucide-react';
-import { DocumentRecord } from '../types';
-import DocumentItem from './DocumentItem';
-import ToolsModal from './ToolsModal';
-import RippleButton from './RippleButton';
+import { DocumentRecord } from '../../types';
+import DocumentItem from '../ui/DocumentItem';
+import ToolsModal from '../modals/ToolsModal';
+import RippleButton from '../ui/RippleButton';
+import MarkdownPreview from '../markdown/MarkdownPreview';
+import MagneticButton from '../ui/MagneticButton';
 
 interface HistorySidebarProps {
     isOpen: boolean;
@@ -175,7 +177,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                         <h2 className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">我的文檔</h2>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
-                        <RippleButton
+                        <MagneticButton
                             variant="icon"
                             onClick={() => {
                                 let targetFolderId: string | null = null;
@@ -193,9 +195,9 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                             aria-label="新建文檔"
                         >
                             <FileText size={18} strokeWidth={2.5} />
-                        </RippleButton>
+                        </MagneticButton>
 
-                        <RippleButton
+                        <MagneticButton
                             variant="icon"
                             onClick={() => onCreateFolder('')}
                             className="w-10 h-10 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800"
@@ -203,9 +205,9 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                             aria-label="新建資料夾"
                         >
                             <FolderPlus size={18} strokeWidth={2.5} />
-                        </RippleButton>
+                        </MagneticButton>
 
-                        <RippleButton
+                        <MagneticButton
                             variant="icon"
                             onClick={onClose}
                             title="關閉"
@@ -213,7 +215,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                             className="w-10 h-10 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                         >
                             <X size={20} />
-                        </RippleButton>
+                        </MagneticButton>
                     </div>
                 </div>
 
@@ -227,11 +229,11 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                         </div>
                     ) : (
                         <div className="py-2 space-y-4">
-                            {/* 資料夾區域 (儲存庫) */}
+                            {/* 資料夾區域 (資料夾) */}
                             {folders.length > 0 && (
                                 <div className="space-y-1">
                                     <div className="px-4 py-1">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">儲存庫 (Vaults)</span>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">資料夾 (Folders)</span>
                                     </div>
                                     {folders.map(folder => {
                                         const isExpanded = expandedFolders.has(folder.id);
@@ -422,17 +424,6 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    {/* 側邊欄廣告位 */}
-                    <div ref={adContainerRef} className="px-4 py-3 bg-slate-50/30 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800/50 min-h-[120px] flex flex-col items-center justify-center relative overflow-hidden">
-                        <ins className="adsbygoogle"
-                            style={{ display: 'block' }}
-                            data-ad-client="ca-pub-8170892352848798"
-                            data-ad-slot="1864612249"
-                            data-ad-format="rectangle, horizontal"
-                            data-full-width-responsive="true"></ins>
-                        <span className="absolute bottom-1 right-2 text-[8px] font-bold uppercase tracking-widest text-slate-300 dark:text-slate-700 pointer-events-none">贊助內容</span>
                     </div>
                 </div>
             </aside>

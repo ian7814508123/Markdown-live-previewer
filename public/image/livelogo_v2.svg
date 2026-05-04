@@ -1,0 +1,90 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    /* 1. 基礎樣式：預設為淺色模式 */
+    .bg-box {
+      fill: #005B94;
+      stroke: #0284C7;
+      stroke-width: 1;
+    }
+
+    .main-line,
+    .arrow-head {
+      stroke: #ffffff;
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .main-line {
+      stroke-dasharray: 110;
+      stroke-dashoffset: 110;
+      /* 調整 easing 讓斜線段滑動更順暢 */
+      animation: draw-v2 3s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+    }
+
+    .arrow-group {
+      offset-path: path("M 14 42 L 24 16 L 32 38 L 40 16 L 50 46");
+      -webkit-offset-path: path("M 14 42 L 24 16 L 32 38 L 40 16 L 50 46");
+      offset-rotate: auto;
+      animation: move-v2 3s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+    }
+
+    /* 2. 深色模式切換 */
+    @media (prefers-color-scheme: dark) {
+      .bg-box {
+        stroke: #F0F9FF;
+      }
+    }
+
+    /* 3. 動畫定義：同步畫線與移動 */
+    @keyframes draw-v2 {
+
+      0%,
+      10% {
+        stroke-dashoffset: 110;
+        opacity: 0;
+      }
+
+      50%,
+      85% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+      }
+
+      100% {
+        stroke-dashoffset: 0;
+        opacity: 0;
+      }
+    }
+
+    @keyframes move-v2 {
+
+      0%,
+      10% {
+        offset-distance: 0%;
+        opacity: 0;
+      }
+
+      50%,
+      85% {
+        offset-distance: 100%;
+        opacity: 1;
+      }
+
+      100% {
+        offset-distance: 100%;
+        opacity: 0;
+      }
+    }
+  </style>
+
+  <!-- 修正後的結構 -->
+  <rect class="bg-box" x="1" y="1" width="62" height="62" rx="16" />
+
+  <path class="main-line" d="M 14 42 L 24 16 L 32 38 L 40 16 L 50 46" />
+
+  <g class="arrow-group">
+    <!-- 箭頭零件繼承 group 的 stroke -->
+    <path class="arrow-head" d="M -6 -5 L 0 0 L -6 5" fill="none" />
+  </g>
+</svg>

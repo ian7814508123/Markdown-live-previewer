@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FileText, FileCode2, Trash2, Clock, Link as LinkIcon, GripVertical } from 'lucide-react';
-import { DocumentRecord } from '../types';
+import { DocumentRecord } from '../../types';
 
 interface DocumentItemProps {
     document: DocumentRecord;

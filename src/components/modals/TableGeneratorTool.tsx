@@ -3,8 +3,8 @@ import {
     Table, Copy, Check, AlignLeft, AlignCenter, AlignRight,
     Plus, Minus, FileInput, AlertTriangle, ClipboardPaste, ArrowRight,
 } from 'lucide-react';
-import RippleButton from './RippleButton';
-
+import RippleButton from '../ui/RippleButton';
+import GlassRailSelector from '../ui/GlassRailSelector';
 // ─────────────────────────────────────────────────────────────
 // 型別定義
 // ─────────────────────────────────────────────────────────────
@@ -31,11 +31,11 @@ const ALIGN_SEPARATOR: Record<Align, string> = {
 };
 
 const FORMAT_META: Record<FormatType, { label: string; color: string }> = {
-    html:     { label: 'HTML 表格',  color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300' },
-    markdown: { label: 'Markdown',   color: 'bg-brand-secondary text-brand-primary dark:bg-brand-primary/30 dark:text-brand-primary' },
-    tsv:      { label: 'TSV 試算表', color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' },
-    csv:      { label: 'CSV',        color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
-    unknown:  { label: '無法識別',   color: 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500' },
+    html: { label: 'HTML 表格', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300' },
+    markdown: { label: 'Markdown', color: 'bg-brand-secondary text-brand-primary dark:bg-brand-primary/30 dark:text-brand-primary' },
+    tsv: { label: 'TSV 試算表', color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' },
+    csv: { label: 'CSV', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
+    unknown: { label: '無法識別', color: 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500' },
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -127,8 +127,8 @@ function detectAndParse(text: string): { format: FormatType; result: ParsedTable
         if (lines.length >= 2 && MD_SEP_RE.test(lines[1]))
             return { format: 'markdown', result: parseMarkdownTable(t) };
     }
-    if (t.includes('\t'))  return { format: 'tsv', result: parseTSV(t) };
-    if (t.includes(','))   return { format: 'csv', result: parseCSV(t) };
+    if (t.includes('\t')) return { format: 'tsv', result: parseTSV(t) };
+    if (t.includes(',')) return { format: 'csv', result: parseCSV(t) };
     return { format: 'unknown', result: null };
 }
 
@@ -158,17 +158,17 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
     const [activeTab, setActiveTab] = useState<'manual' | 'paste'>('manual');
 
     // ── 手動建立 狀態 ───────────────────────────────────────
-    const [cols, setCols]   = useState(DEFAULT_COLS);
-    const [rows, setRows]   = useState(DEFAULT_ROWS);
-    const [grid, setGrid]   = useState<string[][]>(() => makeGrid(DEFAULT_COLS, DEFAULT_ROWS));
+    const [cols, setCols] = useState(DEFAULT_COLS);
+    const [rows, setRows] = useState(DEFAULT_ROWS);
+    const [grid, setGrid] = useState<string[][]>(() => makeGrid(DEFAULT_COLS, DEFAULT_ROWS));
     const [aligns, setAligns] = useState<Align[]>(() => makeAligns(DEFAULT_COLS));
-    const [copied, setCopied]   = useState(false);
+    const [copied, setCopied] = useState(false);
     const [inserted, setInserted] = useState(false);
 
     // ── 貼上匯入 狀態 ───────────────────────────────────────
     const [pasteInput, setPasteInput] = useState('');
     const [pasteAligns, setPasteAligns] = useState<Align[]>([]);
-    const [pasteCopied, setPasteCopied]   = useState(false);
+    const [pasteCopied, setPasteCopied] = useState(false);
     const [pasteInserted, setPasteInserted] = useState(false);
 
     const { format, result: parsedTable } = useMemo(() => detectAndParse(pasteInput), [pasteInput]);
@@ -287,7 +287,7 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
     // ── 共用子元件 ───────────────────────────────────────────
     const AlignIcon = ({ align }: { align: Align }) => {
         if (align === 'center') return <AlignCenter size={11} />;
-        if (align === 'right')  return <AlignRight size={11} />;
+        if (align === 'right') return <AlignRight size={11} />;
         return <AlignLeft size={11} />;
     };
 
@@ -297,7 +297,7 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
 
             {/* 標題 */}
             <div className="flex items-center gap-2 shrink-0">
-                <div className="w-7 h-7 bg-brand-secondary dark:bg-brand-primary/40 text-brand-primary rounded-xl flex items-center justify-center">
+                <div className="w-7 h-7 bg-brand-secondary dark:bg-brand-primary/40 text-brand-primary rounded-2xl flex items-center justify-center">
                     <Table size={15} />
                 </div>
                 <div>
@@ -308,7 +308,7 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
 
             {/* Mermaid 模式警告 */}
             {currentDocMode === 'mermaid' ? (
-                <div className="flex flex-col items-center justify-center gap-3 flex-1 py-8 px-4 rounded-xl border-2 border-dashed border-amber-200 dark:border-amber-800/60 bg-amber-50/60 dark:bg-amber-900/10">
+                <div className="flex flex-col items-center justify-center gap-3 flex-1 py-8 px-4 rounded-2xl border-2 border-dashed border-amber-200 dark:border-amber-800/60 bg-amber-50/60 dark:bg-amber-900/10">
                     <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/40 text-amber-500 dark:text-amber-400 rounded-2xl flex items-center justify-center">
                         <AlertTriangle size={20} />
                     </div>
@@ -323,33 +323,25 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
             ) : (
                 <>
                     {/* Tab 切換列 */}
-                    <div className="flex gap-1 p-0.5 bg-slate-100 dark:bg-slate-800 rounded-xl shrink-0">
-                        {([
-                            { id: 'manual', label: '手動建立', icon: <Table size={11} /> },
-                            { id: 'paste',  label: '貼上匯入', icon: <ClipboardPaste size={11} /> },
-                        ] as const).map(tab => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={[
-                                    'flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-200',
-                                    activeTab === tab.id
-                                        ? 'bg-white dark:bg-slate-700 text-brand-primary shadow-sm'
-                                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300',
-                                ].join(' ')}
-                            >
-                                {tab.icon}{tab.label}
-                            </button>
-                        ))}
+                    <div className=" relative shrink-0 px-3 py-2 text-center overflow-hidden ">
+                        {/* Tab 導航：玻璃滑軌，支援拖曳切換分頁 */}
+                        <GlassRailSelector
+                            options={[
+                                { label: '手動建立', value: 'manual', icon: <Table size={14} /> }, { label: '貼上匯入', value: 'paste', icon: <ClipboardPaste size={14} /> },
+                            ]}
+                            value={activeTab}
+                            onChange={(v) => setActiveTab(v as 'manual' | 'paste')}
+                        />
                     </div>
+
 
                     {/* ═══ 手動建立 Tab ═══ */}
                     {activeTab === 'manual' && (
                         <>
-                            {/* 欄 / 列數調整 */}
-                            <div className="flex items-center gap-4 shrink-0">
+                            {/* 欄 / 列數調整置中中*/}
+                            <div className="flex items-center justify-center gap-4 shrink-0">
                                 {/* 欄數 */}
-                                <div className="flex items-center gap-1.5">
+                                <div className="flex items-center gap-1.5 justify-center">
                                     <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide w-5">欄</span>
                                     <button onClick={() => handleColChange(-1)} disabled={cols <= MIN_COLS} aria-label="減少欄數"
                                         className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-brand-secondary dark:hover:bg-brand-primary/30 hover:text-brand-primary disabled:opacity-30 disabled:pointer-events-none transition-colors">
@@ -363,7 +355,7 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                                 </div>
                                 <div className="w-px h-4 bg-slate-200 dark:bg-slate-700" />
                                 {/* 列數 */}
-                                <div className="flex items-center gap-1.5">
+                                <div className="flex items-center gap-1.5 justify-center">
                                     <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide w-5">列</span>
                                     <button onClick={() => handleRowChange(-1)} disabled={rows <= MIN_ROWS} aria-label="減少列數"
                                         className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-brand-secondary dark:hover:bg-brand-primary/30 hover:text-brand-primary disabled:opacity-30 disabled:pointer-events-none transition-colors">
@@ -378,7 +370,7 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                             </div>
 
                             {/* 視覺化表格編輯區 */}
-                            <div className="flex-1 min-h-[160px] max-h-[260px] rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden relative">
+                            <div className="flex-1 min-h-[160px] max-h-[260px] rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden relative">
                                 <div className="absolute inset-0 overflow-auto custom-scrollbar">
                                     <table className="w-full border-collapse text-[11px]" style={{ minWidth: `${cols * 90}px` }}>
                                         <thead className="sticky top-0 z-20 bg-white dark:bg-slate-900">
@@ -439,7 +431,7 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                                         </RippleButton>
                                     </div>
                                 </div>
-                                <div className="min-h-[100px] max-h-[160px] rounded-xl border border-slate-100 dark:border-slate-700 overflow-hidden relative">
+                                <div className="min-h-[100px] max-h-[160px] rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden relative">
                                     <pre className="absolute inset-0 text-[10.5px] leading-relaxed font-mono text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 p-3 overflow-auto custom-scrollbar whitespace-pre">
                                         {markdown}
                                     </pre>
@@ -458,7 +450,7 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                                     value={pasteInput}
                                     onChange={e => setPasteInput(e.target.value)}
                                     placeholder={`在此貼上表格內容，自動識別以下格式：\n\n• HTML 表格（從網頁 / Word / Excel 複製）\n• TSV（從 Excel / Google Sheets 複製）\n• CSV（逗號分隔文字）\n• Markdown 表格語法`}
-                                    className="w-full h-full min-h-[130px] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-[11px] font-mono text-slate-600 dark:text-slate-300 p-3 pr-24 resize-none focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary/50 transition-all custom-scrollbar placeholder:text-slate-300 dark:placeholder:text-slate-600 placeholder:font-sans"
+                                    className="w-full h-full min-h-[130px] rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-[11px] font-mono text-slate-600 dark:text-slate-300 p-3 pr-24 resize-none focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary/50 transition-all custom-scrollbar placeholder:text-slate-300 dark:placeholder:text-slate-600 placeholder:font-sans"
                                     spellCheck={false}
                                 />
                                 {/* 格式徽章 */}
@@ -471,7 +463,7 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
 
                             {/* 無法識別提示 */}
                             {pasteInput.trim() && format === 'unknown' && (
-                                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/60 shrink-0">
+                                <div className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/60 shrink-0">
                                     <AlertTriangle size={13} className="text-amber-500 shrink-0" />
                                     <p className="text-[11px] text-amber-700 dark:text-amber-300">無法識別格式，請確認貼入有效的表格內容。</p>
                                 </div>
@@ -489,7 +481,7 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                                     </div>
 
                                     {/* Markdown 預覽 */}
-                                    <div className="min-h-[80px] max-h-[150px] rounded-xl border border-slate-100 dark:border-slate-700 overflow-hidden relative">
+                                    <div className="min-h-[80px] max-h-[150px] rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden relative">
                                         <pre className="absolute inset-0 text-[10.5px] leading-relaxed font-mono text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 p-3 overflow-auto custom-scrollbar whitespace-pre">
                                             {pastedMarkdown}
                                         </pre>
@@ -531,8 +523,9 @@ const TableGeneratorTool: React.FC<TableGeneratorToolProps> = ({ onInsertIntoDoc
                         </div>
                     )}
                 </>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 };
 

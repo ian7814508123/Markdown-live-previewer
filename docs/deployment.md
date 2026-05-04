@@ -41,7 +41,7 @@
 npm run build
 npm run preview
 
-# 模擬 GitHub Pages 路徑 (將 repo-name 換成您的儲存庫名稱)
+# 模擬 GitHub Pages 路徑 (將 repo-name 換成您的資料夾名稱)
 BASE_URL=/repo-name/ npm run build
 npm run preview
 ```

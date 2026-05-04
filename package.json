@@ -3,7 +3,7 @@
   "author": "Ian Huang",
   "description": "A desktop application for live previewing Markdown files.",
   "private": true,
-  "version": "3.3.2",
+  "version": "3.4.02",
   "type": "module",
   "main": "electron/main.js",
   "engines": {
@@ -37,6 +37,7 @@
     "codemirror": "^6.0.2",
     "codemirror-lang-mermaid": "^0.5.0",
     "extend": "^3.0.2",
+    "framer-motion": "^12.38.0",
     "lucide-react": "^0.562.0",
     "mermaid": "^11.12.2",
     "pdf-lib": "^1.17.1",

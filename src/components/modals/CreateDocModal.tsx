@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Plus, FileText, Image as ImageIcon, ChevronLeft, Zap, File, Ruler, BarChart2, GitBranch, Music } from 'lucide-react';
-import RippleButton from './RippleButton';
+import RippleButton from '../ui/RippleButton';
 
 interface CreateDocModalProps {
     isOpen: boolean;
@@ -85,9 +86,9 @@ const CreateDocModal: React.FC<CreateDocModalProps> = ({ isOpen, onClose, onCrea
 
     const templates = selectedMode === 'markdown' ? MD_TEMPLATES : MMD_TEMPLATES;
 
-    return (
+    return createPortal(
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in m3-fade-in duration-300"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in m3-fade-in duration-300"
             onClick={onClose}
         >
 
@@ -220,7 +221,8 @@ const CreateDocModal: React.FC<CreateDocModalProps> = ({ isOpen, onClose, onCrea
                     data-ad-format="vertical"
                     data-full-width-responsive="true"></ins>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 

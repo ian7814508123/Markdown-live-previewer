@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Save, RotateCcw, AlertCircle, Check, FileText, Printer, Box, PackagePlus, ChevronLeft } from 'lucide-react';
-import RippleButton from './RippleButton';
-import { PrintSettings } from '../hooks/useAppSettings';
+import RippleButton from '../ui/RippleButton';
+import MagneticButton from '../ui/MagneticButton';
+import DraggableSwitch from '../ui/DraggableSwitch';
+import GlassRailSelector from '../ui/GlassRailSelector';
+import { PrintSettings } from '../../hooks/useAppSettings';
+import pkg from '../../../package.json';
+import InteractiveLogo from '../ui/InteractiveLogo';
 
 interface SettingsModalProps {
     isOpen: boolean;
@@ -14,6 +20,7 @@ interface SettingsModalProps {
     currentPrintSettings: PrintSettings;
     onSavePrintSettings: (patch: Partial<PrintSettings>) => void;
     isStandalone?: boolean;
+    onOpenIntro?: () => void;
 }
 
 // ── PDF 設定面板 ────────────────────────────────────────────────────────────
@@ -25,39 +32,8 @@ const PdfSettingsPanel: React.FC<{
     const [customScale, setCustomScale] = useState<number>(
         typeof settings.scale === 'number' ? settings.scale : 100
     );
-
-    /** 通用 Toggle Group */
-    function ToggleGroup<T extends string | number>({
-        label, options, value, onSelect,
-    }: {
-        label: string;
-        options: { label: string; value: T; hint?: string }[];
-        value: T;
-        onSelect: (v: T) => void;
-    }) {
-        return (
-            <div className="space-y-2">
-                <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{label}</p>
-                <div className="flex flex-wrap gap-2">
-                    {options.map(opt => (
-                        <button
-                            key={String(opt.value)}
-                            onClick={() => onSelect(opt.value)}
-                            className={[
-                                'flex flex-col items-center px-4 py-2.5 rounded-xl border text-xs font-semibold transition-all active:scale-95',
-                                value === opt.value
-                                    ? 'bg-brand-secondary dark:bg-brand-primary/40 border-brand-primary/30 dark:border-brand-primary/70 text-brand-primary dark:text-brand-primary shadow-sm'
-                                    : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-brand-primary/20 dark:hover:border-brand-primary/80',
-                            ].join(' ')}
-                        >
-                            <span>{opt.label}</span>
-                            {opt.hint && <span className="text-[9px] opacity-60 mt-0.5 font-medium">{opt.hint}</span>}
-                        </button>
-                    ))}
-                </div>
-            </div>
-        );
-    }
+    // 將 settings.scale 映射為字串鍵供 GlassRailSelector 使用
+    const scaleKey = typeof settings.scale === 'number' ? 'custom' : settings.scale;
 
     return (
         <div className="px-6 py-4 space-y-6 bg-slate-50/30 dark:bg-slate-900/30">
@@ -68,24 +44,22 @@ const PdfSettingsPanel: React.FC<{
                     <p className="text-[10px] font-bold text-brand-primary uppercase tracking-widest">預覽行為</p>
                 </div>
 
-                <label className="flex items-center justify-between cursor-pointer group">
+                {/* DraggableSwitch：同時支援點擊切換與拖曳切換 */}
+                <div className="flex items-center justify-between">
                     <div className="flex flex-col">
-                        <span className="text-xs font-bold text-slate-700 dark:text-slate-200 group-hover:text-brand-primary transition-colors">顯示列印預覽</span>
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-200">顯示列印預覽</span>
                         <span className="text-[10px] text-slate-400 dark:text-slate-500">在編輯器旁模擬紙張邊界與分頁線</span>
                     </div>
-                    <div
-                        onClick={() => {
-                            const nextShow = !settings.showPrintPreview;
-                            const patch: Partial<PrintSettings> = { showPrintPreview: nextShow };
-                            // 當開啟預覽時，預設切換到 fit 模式以確保使用者能看到完整紙張
-                            if (nextShow) patch.scale = 'fit';
+                    <DraggableSwitch
+                        checked={settings.showPrintPreview}
+                        onChange={(v) => {
+                            const patch: Partial<PrintSettings> = { showPrintPreview: v };
+                            // 開啟預覽時預設切到 fit 模式，確保使用者看到完整紙張
+                            if (v) patch.scale = 'fit';
                             onChange(patch);
                         }}
-                        className={`w-11 h-6 rounded-full transition-all relative ${settings.showPrintPreview ? 'bg-brand-primary' : 'bg-slate-200 dark:bg-slate-700'}`}
-                    >
-                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${settings.showPrintPreview ? 'left-6' : 'left-1'}`} />
-                    </div>
-                </label>
+                    />
+                </div>
             </div>
 
 
@@ -96,52 +70,50 @@ const PdfSettingsPanel: React.FC<{
                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">頁面佈局參數</p>
                 </div>
 
-                <ToggleGroup
-                    label="紙張尺寸"
-                    options={[
-                        { label: 'A4', value: 'A4', hint: '預設' },
-                        { label: 'A3', value: 'A3', hint: '大圖' },
-                        { label: 'Letter', value: 'Letter', hint: '美制' },
-                    ]}
-                    value={settings.paperSize}
-                    onSelect={(v) => onChange({ paperSize: v as PrintSettings['paperSize'] })}
-                />
+                {/* GlassRailSelector: 紙張尺寸 */}
+                <div className="space-y-2">
+                    <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">紙張尺寸</p>
+                    <GlassRailSelector
+                        options={[
+                            { label: 'A4', value: 'A4', hint: '預設' },
+                            { label: 'A3', value: 'A3', hint: '大圖' },
+                            { label: 'Letter', value: 'Letter', hint: '美制' },
+                        ]}
+                        value={settings.paperSize}
+                        onChange={(v) => onChange({ paperSize: v as PrintSettings['paperSize'] })}
+                    />
+                </div>
 
-                <ToggleGroup
-                    label="方向"
-                    options={[
-                        { label: '橫向 ↔', value: 'landscape', hint: 'Landscape' },
-                        { label: '直向 ↕', value: 'portrait', hint: 'Portrait' },
-                    ]}
-                    value={settings.orientation}
-                    onSelect={(v) => onChange({ orientation: v as PrintSettings['orientation'] })}
-                />
+                {/* GlassRailSelector: 方向 */}
+                <div className="space-y-2">
+                    <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">方向</p>
+                    <GlassRailSelector
+                        options={[
+                            { label: '橫向 ↔', value: 'landscape', hint: 'Landscape' },
+                            { label: '直向 ↕', value: 'portrait', hint: 'Portrait' },
+                        ]}
+                        value={settings.orientation}
+                        onChange={(v) => onChange({ orientation: v as PrintSettings['orientation'] })}
+                    />
+                </div>
 
-                <div className="space-y-3">
+                {/* GlassRailSelector: 比例縮放 */}
+                <div className="space-y-2">
                     <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">比例縮放</p>
-                    <div className="flex flex-wrap gap-2">
-                        {([
-                            { label: '符合', value: 'fit' as PrintSettings['scale'], hint: 'Fit' },
-                            { label: '100%', value: 'actual' as PrintSettings['scale'], hint: 'Actual' },
-                            { label: '自訂', value: customScale as PrintSettings['scale'], hint: `${customScale}%` },
-                        ]).map(opt => {
-                            const isCustom = typeof opt.value === 'number';
-                            const isActive = isCustom ? typeof settings.scale === 'number' : settings.scale === opt.value;
-                            return (
-                                <button key={String(opt.value)} onClick={() => onChange({ scale: opt.value })}
-                                    className={[
-                                        'px-3 py-2 rounded-xl border text-xs font-bold transition-all',
-                                        isActive
-                                            ? 'bg-brand-secondary dark:bg-brand-primary/40 border-brand-primary/20 dark:border-brand-primary/70 text-brand-primary dark:text-brand-primary'
-                                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300',
-                                    ].join(' ')}
-                                >
-                                    {opt.label}
-                                </button>
-                            );
-                        })}
-                    </div>
-                    {typeof settings.scale === 'number' && (
+                    <GlassRailSelector
+                        options={[
+                            { label: '符合', value: 'fit', hint: 'Fit' },
+                            { label: '100%', value: 'actual', hint: 'Actual' },
+                            { label: '自訂', value: 'custom', hint: `${customScale}%` },
+                        ]}
+                        value={scaleKey}
+                        onChange={(v) => {
+                            if (v === 'custom') onChange({ scale: customScale });
+                            else onChange({ scale: v as 'fit' | 'actual' });
+                        }}
+                    />
+                    {/* 自訂比例時顯示滑桿 */}
+                    {scaleKey === 'custom' && (
                         <div className="flex items-center gap-4 pt-1 px-1">
                             <input type="range" min={10} max={200} step={5} value={customScale}
                                 onChange={(e) => { const v = Number(e.target.value); setCustomScale(v); onChange({ scale: v }); }}
@@ -152,16 +124,19 @@ const PdfSettingsPanel: React.FC<{
                     )}
                 </div>
 
-                <ToggleGroup
-                    label="邊距 (Margins)"
-                    options={[
-                        { label: '標準', value: 'normal', hint: '1.5cm' },
-                        { label: '緊湊', value: 'narrow', hint: '0.5cm' },
-                        { label: '無', value: 'none', hint: '0' },
-                    ]}
-                    value={settings.margin}
-                    onSelect={(v) => onChange({ margin: v as PrintSettings['margin'] })}
-                />
+                {/* GlassRailSelector: 邊距 */}
+                <div className="space-y-2">
+                    <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">邊距 (Margins)</p>
+                    <GlassRailSelector
+                        options={[
+                            { label: '標準', value: 'normal', hint: '1.5cm' },
+                            { label: '緊湊', value: 'narrow', hint: '0.5cm' },
+                            { label: '無', value: 'none', hint: '0' },
+                        ]}
+                        value={settings.margin}
+                        onChange={(v) => onChange({ margin: v as PrintSettings['margin'] })}
+                    />
+                </div>
             </div>
 
             <div className="rounded-2xl bg-brand-secondary/30 dark:bg-brand-primary/10 px-5 py-4 text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed border border-brand-primary/15 dark:border-brand-primary/30">
@@ -182,12 +157,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     currentPrintSettings,
     onSavePrintSettings,
     isStandalone = false,
+    onOpenIntro,
 }) => {
     const [activeTab, setActiveTab] = useState<'editor' | 'print' | 'about'>('editor');
     const [jsonInput, setJsonInput] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
     const [showChangelog, setShowChangelog] = useState(false);
+    const [logoVariant, setLogoVariant] = useState<'v1' | 'v2'>('v1');
+    const version = pkg.version;
 
     useEffect(() => {
         if (isOpen) {
@@ -218,48 +196,35 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
     if (!isOpen) return null;
 
-    return (
+    return createPortal(
         <>
-            <div className="fixed inset-0 bg-black/40 z-50 backdrop-blur-[2px]" onClick={onClose} />
-            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white dark:bg-slate-900 rounded-[2rem] shadow-[0_30px_90px_rgba(0,0,0,0.3)] border border-slate-200 dark:border-slate-800/80 z-50 flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 fade-in duration-300">
+            <div className="fixed inset-0 bg-black/40 z-[100] backdrop-blur-[2px]" onClick={onClose} />
+            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white dark:bg-slate-900 rounded-[2rem] shadow-[0_30px_90px_rgba(0,0,0,0.3)] border border-slate-200 dark:border-slate-800/80 z-[101] flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 fade-in duration-300">
 
                 {/* Header & Tabs */}
-                <div className="px-8 pt-8 pb-4 shrink-0">
+                <div className="px-8 pt-6 pb-2 shrink-0">
                     <div className="flex items-center justify-between mb-6">
                         <div>
                             <h2 className="text-xl font-black text-slate-800 dark:text-slate-100 tracking-tight">偏好設定</h2>
                             <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-[0.2em] mt-1">Application Configuration</p>
                         </div>
-                        <RippleButton variant="icon" onClick={onClose}
+                        <MagneticButton variant="icon" onClick={onClose}
                             aria-label="關閉偏好設定"
                             className="w-10 h-10 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 rounded-full transition-all">
                             <X size={20} />
-                        </RippleButton>
+                        </MagneticButton>
                     </div>
 
-                    <div className="flex p-1.5 bg-slate-100 dark:bg-slate-800/50 rounded-2xl w-full">
-                        <button
-                            onClick={() => setActiveTab('editor')}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'editor' ? 'bg-white dark:bg-slate-700 text-brand-primary shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                        >
-                            <Box size={14} />
-                            編輯器設定
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('print')}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'print' ? 'bg-white dark:bg-slate-700 text-brand-primary shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                        >
-                            <Printer size={14} />
-                            列印與匯出
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('about')}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'about' ? 'bg-white dark:bg-slate-700 text-brand-primary shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                        >
-                            <AlertCircle size={14} />
-                            關於
-                        </button>
-                    </div>
+                    {/* Tab 導航：玻璃滑軌，支援拖曳切換分頁 */}
+                    <GlassRailSelector
+                        options={[
+                            { label: '編輯器設定', value: 'editor', icon: <Box size={13} /> },
+                            { label: '列印與匯出', value: 'print', icon: <Printer size={13} /> },
+                            { label: '關於', value: 'about', icon: <AlertCircle size={13} /> },
+                        ]}
+                        value={activeTab}
+                        onChange={(v) => setActiveTab(v as 'editor' | 'print' | 'about')}
+                    />
                 </div>
 
                 {/* 內容區 */}
@@ -273,35 +238,36 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     </RippleButton>
                                     <div>
                                         <h3 className="text-xl font-black text-slate-800 dark:text-slate-100">發行內容 (What's New)</h3>
-                                        <p className="text-[10px] font-bold text-brand-primary lowercase tracking-widest mt-0.5">Version 3.3.6</p>
+                                        <p className="text-[10px] font-bold text-brand-primary lowercase tracking-widest mt-0.5">Version {version}</p>
                                     </div>
                                 </div>
                                 <div className="space-y-4">
-                                    <div className="p-5 bg-gradient-to-br from-indigo-50 to-white dark:from-slate-800 dark:to-slate-800/50 rounded-2xl border border-indigo-100/50 dark:border-slate-700/50 shadow-sm">
-                                        <div className="flex items-center gap-3 mb-3">
-                                            <div className="p-2 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-500 dark:text-indigo-400 rounded-xl">
+                                    {/*<div className="p-5 bg-gradient-to-br from-indigo-50 to-white dark:from-slate-800 dark:to-slate-800/50 rounded-2xl border border-indigo-100/50 dark:border-slate-700/50 shadow-sm">
+                                         <div className="flex items-center gap-3 mb-3">
+                                            <div className="p-2 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-500 dark:text-indigo-400 rounded-2xl">
                                                 <PackagePlus size={18} />
                                             </div>
                                             <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">音樂樂譜渲染 (abc notation)</h4>
                                         </div>
                                         <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed ml-11">
                                             現在您可以直接在 Markdown 文件中使用 <code className="px-1 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-[10px] font-mono mx-1">abc</code> 語法區塊來編寫傳統五線譜！系統會自動將其渲染為高解析度、可自由縮放的高品質向量樂譜，並深度優化深色模式與文件列印的顯示效果。
-                                        </p>
-                                    </div>
+                                        </p> 
+                                    </div> */}
                                     <div className="p-5 bg-gradient-to-br from-indigo-50 to-white dark:from-slate-800 dark:to-slate-800/50 rounded-2xl border border-indigo-100/50 dark:border-slate-700/50 shadow-sm">
                                         <div className="flex items-center gap-3 mb-3">
-                                            <div className="p-2 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-xl">
+                                            <div className="p-2 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-2xl">
                                                 <Check size={18} />
                                             </div>
                                             <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">體驗優化與修正</h4>
                                         </div>
                                         <ul className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed ml-11 list-disc list-outside space-y-1.5 pl-4 opacity-90">
-                                            <li>改善列印模式，強制將包含圖表與樂譜在內的所有元件配色還原為高對比黑色。</li>
-                                            <li>在「新增文檔」選單追加了「音樂樂譜」範本，便於快速建立教學文件。</li>
-                                            <li>優化表格產生器,可直接從外部試算表複製表格並轉換成markdown語法。</li>
-                                            <li>修正元件樣式。</li>
-                                            <li>列印時可以支援內嵌圖表縮放設定了。</li>
-                                            <li>修正圖表與方程式的跳動問題</li>
+                                            <li>讓設計動起來！支援動圖渲染功能。</li>
+                                            <li>![立即試試](./image/livelogo_v1.svg "還有 v2 可以玩玩看哦！")
+                                                <ol>(提醒：若匯出 PDF 等靜態格式，動圖將固定於特定幀，建議僅在數位展示環境下使用。)</ol></li>
+                                            <li>使用<strong>\pagebreak</strong> , <strong>[page-break]</strong> , <strong>---pb---</strong> 指令強制換頁 (開啟列印預覽下可以看到強制換頁線)</li>
+                                            <li>增強 WikiLink 匯出相容性：合併匯出時自動轉為內部跳轉錨點 (注意:列印時要選擇Save to PDF，而不是Print to PDF)，單檔匯出則自動降級為純文字以避免死連結。</li>
+                                            <li>按鈕變得更Q彈了，可以試著長按並滑動他們。</li>
+
                                         </ul>
                                     </div>
                                 </div>
@@ -309,26 +275,21 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         ) : (
                             <div key="about-main" className="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
                                 <div className="flex flex-col items-center text-center space-y-6">
-                                    <div className="
-                                    w-24 h-24 rounded-[2.5rem] flex items-center justify-center text-white overflow-hidden transform transition-transform hover:scale-[1.02] duration-300
-                                    /* 基礎漸層 (淺色模式) */
-                                    bg-gradient-to-br from-brand-primary to-brand-secondary 
-                                    /* 深色模式下的漸層修改 */
-                                    dark:from-brand-secondary dark:to-brand-accent
-                                    /* 其他深色模式樣式 */
-                                    shadow-xl shadow-slate-200 dark:shadow-black/70 
-                                    border-4 border-white dark:border-slate-800 
-                                    ring-1 ring-slate-100 dark:ring-slate-700/50
-                                    ">
-                                        <img src="./image/markdown_liveditor.svg?v=2" alt="Logo" className="w-16 h-16 drop-shadow-sm" />
+                                    <div
+                                        onClick={() => setLogoVariant(prev => prev === 'v1' ? 'v2' : 'v1')}
+                                    >
+                                        <InteractiveLogo size={60} variant={logoVariant} />
                                     </div>
                                     <div className="pt-0">
                                         <h3 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">Markdown Live Previewer</h3>
                                         <div className="flex items-center justify-center gap-2 mt-2">
-                                            <p className="text-1xl font-bold text-slate-600 dark:text-slate-300 lowercase tracking-widest">版本 3.3.6</p>
+                                            <p className="text-1xl font-bold text-slate-600 dark:text-slate-300 capitalize tracking-widest">Version {version}</p>
                                             <button
                                                 onClick={() => setShowChangelog(true)}
-                                                className="flex items-center gap-1.5 px-2.5 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-500 dark:text-indigo-600 rounded-lg text-[10px] font-black hover:bg-indigo-200 dark:hover:bg-indigo-800/60 transition-colors"
+                                                className="flex items-center gap-1.5 px-2.5 py-1 bg-[#F0F9FF] dark:bg-[#0C4A6E]/40 text-[#005B94] dark:text-[#0284C7] rounded-lg text-[10px] font-black hover:bg-[#E0F2FE] dark:hover:bg-[#0C4A6E]/60 transition-colors"
+
+
+
                                             >
                                                 發行內容
                                             </button>
@@ -338,27 +299,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                 </div>
 
                                 <div className="space-y-6">
-                                    <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-                                        <FileText size={16} className="text-brand-primary opacity-80" />
-                                        <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">功能特色 (Features)</h4>
-                                    </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
-                                        <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-700/50">
-                                            <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">即時預覽與編輯</h5>
-                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">支持 GFM 標準與即時同步滾動，提供極速的 Markdown 編輯體驗。</p>
-                                        </div>
-                                        <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-700/50">
-                                            <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">專業圖表渲染</h5>
-                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">內建 Mermaid (流程圖、時序圖) 與 Vega-Lite 數據可視化支持。</p>
-                                        </div>
-                                        <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-700/50">
-                                            <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">科學公式與計算</h5>
-                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">完美支援 LaTeX 數學公式、化學符號及樂譜渲染。</p>
-                                        </div>
-                                        <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-700/50">
-                                            <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">隱私與安全</h5>
-                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">100% 瀏覽器本地運行，不對外傳輸您的任何文檔數據。</p>
-                                        </div>
+                                    <div className="flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+                                        <FileText size={24} className="text-brand-primary/50 mb-3" />
+                                        <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">想了解更多功能細節？</h5>
+                                        <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed mb-4 text-center max-w-[250px]">前往功能導覽，學習如何使用快捷鍵、資料夾管理及更多高階與隱藏技巧。</p>
+                                        <RippleButton
+                                            variant="outlined"
+                                            className="px-6 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-brand-primary"
+                                            onClick={() => {
+                                                if (onOpenIntro) onOpenIntro();
+                                                onClose();
+                                            }}
+                                        >
+                                            打開完整使用手冊
+                                        </RippleButton>
                                     </div>
                                 </div>
 
@@ -433,8 +387,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                             還原預設
                                         </RippleButton>
                                         <div className="flex items-center gap-4">
-                                            <RippleButton variant="outlined" onClick={onClose} className="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest">取消</RippleButton>
-                                            <RippleButton variant="filled" onClick={handleSaveMacros} className={`px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg transition-all ${success ? 'bg-green-500 shadow-green-500/20' : 'bg-brand-primary hover:bg-brand-primary/90 shadow-brand-primary/20'}`}>
+                                            <RippleButton variant="outlined" onClick={onClose} className="px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest">取消</RippleButton>
+                                            <RippleButton variant="filled" onClick={handleSaveMacros} className={`px-8 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg transition-all ${success ? 'bg-green-500 shadow-green-500/20' : 'bg-brand-primary hover:bg-brand-primary/90 shadow-brand-primary/20'}`}>
                                                 {success ? <Check size={16} /> : <Save size={16} />}
                                                 {success ? '已儲存' : '儲存變更'}
                                             </RippleButton>
@@ -454,7 +408,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     )}
                 </div>
             </div>
-        </>
+        </>,
+        document.body
     );
 };
 

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { BarChart2, Copy, Check, ChevronDown, ChevronUp, FileText, ClipboardPaste } from 'lucide-react';
-import RippleButton from './RippleButton';
+import RippleButton from '../ui/RippleButton';
+import GlassRailSelector from '../ui/GlassRailSelector';
 
 // ── 特殊區塊的偵測 Regex ─────────────────────────────────────────────
 
@@ -176,7 +177,7 @@ const WordCountTool: React.FC<WordCountToolProps> = ({ currentDocContent }) => {
 
             {/* ── 標題 ── */}
             <div className="flex items-center gap-2 shrink-0">
-                <div className="w-7 h-7 bg-brand-secondary dark:bg-brand-primary/40 text-brand-primary rounded-xl flex items-center justify-center">
+                <div className="w-7 h-7 bg-brand-secondary dark:bg-brand-primary/40 text-brand-primary rounded-2xl flex items-center justify-center">
                     <BarChart2 size={15} />
                 </div>
                 <div>
@@ -186,24 +187,22 @@ const WordCountTool: React.FC<WordCountToolProps> = ({ currentDocContent }) => {
             </div>
 
             {/* ── 模式切換 Tab ── */}
-            <div className="flex shrink-0 rounded-xl bg-slate-200 dark:bg-slate-800 p-0.5 gap-0.5">
-                <ModeTab
-                    active={mode === 'current-doc'}
-                    icon={<FileText size={12} />}
-                    label="目前文檔"
-                    onClick={() => setMode('current-doc')}
-                />
-                <ModeTab
-                    active={mode === 'paste'}
-                    icon={<ClipboardPaste size={12} />}
-                    label="貼上文字"
-                    onClick={() => setMode('paste')}
+
+            <div className=" relative shrink-0 px-3 py-2 text-center overflow-hidden">
+                {/* Tab 導航：玻璃滑軌，支援拖曳切換分頁 */}
+                <GlassRailSelector
+                    options={[
+                        { label: '目前文檔', value: 'current-doc', icon: <FileText size={12} /> }, { label: '貼上文字', value: 'paste', icon: <ClipboardPaste size={12} /> },
+                    ]}
+                    value={mode}
+                    onChange={(v) => setMode(v as 'current-doc' | 'paste')}
                 />
             </div>
 
+
             {/* ── 模式說明 / 輸入區 ── */}
             {mode === 'current-doc' ? (
-                <div className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl bg-brand-secondary dark:bg-brand-primary/15 border border-brand-primary/20 dark:border-brand-primary/40">
+                <div className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-2xl bg-brand-secondary dark:bg-brand-primary/15 border border-brand-primary/20 dark:border-brand-primary/40">
                     <FileText size={13} className="text-brand-primary shrink-0" />
                     <div className="min-w-0">
                         <p className="text-[12px] font-semibold text-brand-primary">
@@ -221,7 +220,7 @@ const WordCountTool: React.FC<WordCountToolProps> = ({ currentDocContent }) => {
                     placeholder={PASTE_PLACEHOLDER}
                     spellCheck={false}
                     className={[
-                        'w-full h-24 resize-none rounded-xl border text-[12px] leading-relaxed shrink-0',
+                        'w-full h-24 resize-none rounded-2xl border text-[12px] leading-relaxed shrink-0',
                         'px-3 py-2.5 font-mono',
                         'text-slate-600 dark:text-slate-300',
                         'bg-slate-50 dark:bg-slate-800/60',
@@ -244,7 +243,7 @@ const WordCountTool: React.FC<WordCountToolProps> = ({ currentDocContent }) => {
 
             {/* ── 略過的特殊區塊 ── */}
             {!isEmpty && stats.skipped.length > 0 && (
-                <div className="shrink-0 rounded-xl border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/10 overflow-hidden">
+                <div className="shrink-0 rounded-2xl border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/10 overflow-hidden">
                     <button
                         onClick={() => setShowSkipped(v => !v)}
                         className="w-full flex items-center justify-between px-3 py-2 hover:bg-amber-100/50 dark:hover:bg-amber-800/20 transition-colors"
@@ -330,7 +329,7 @@ interface StatCardProps {
 
 const StatCard: React.FC<StatCardProps> = ({ label, value, unit, accent, small }) => (
     <div className={[
-        'flex flex-col rounded-xl px-3 py-2',
+        'flex flex-col rounded-2xl px-3 py-2',
         accent
             ? 'bg-brand-secondary dark:bg-brand-primary/20 border border-brand-primary/20 dark:border-brand-primary/40'
             : 'bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50',

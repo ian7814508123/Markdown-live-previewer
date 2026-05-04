@@ -4,7 +4,10 @@ import PdfMergeTool from './PdfMergeTool';
 import TableGeneratorTool from './TableGeneratorTool';
 import WordCountTool from './WordCountTool';
 import ImageUploaderTool from './ImageUploaderTool';
-import RippleButton from './RippleButton';
+import RippleButton from '../ui/RippleButton';
+import MagneticButton from '../ui/MagneticButton';
+import GlassRailSelector from '../ui/GlassRailSelector';
+
 
 interface ToolsModalProps {
     isOpen: boolean;
@@ -103,7 +106,7 @@ const ToolsModal: React.FC<ToolsModalProps> = ({ isOpen, onClose, currentDocCont
                             <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wide">輔助工具列表</p>
                         </div>
                     </div>
-                    <RippleButton
+                    <MagneticButton
                         variant="icon"
                         onClick={onClose}
                         aria-label="關閉工具箱"
@@ -111,7 +114,7 @@ const ToolsModal: React.FC<ToolsModalProps> = ({ isOpen, onClose, currentDocCont
                         title="關閉"
                     >
                         <X size={18} />
-                    </RippleButton>
+                    </MagneticButton>
                 </div>
 
                 {/* Body：左側工具導覽 + 右側內容 */}
@@ -156,16 +159,6 @@ const ToolsModal: React.FC<ToolsModalProps> = ({ isOpen, onClose, currentDocCont
                         </div>
                     </div>
                 </div>
-            </div>
-
-            {/* Right Skyscraper Ad (Wide screen only) */}
-            <div className="hidden xl:flex absolute right-8 w-40 h-[600px] bg-white/5 border border-white/10 rounded-2xl items-center justify-center overflow-hidden">
-                <ins className="adsbygoogle"
-                    style={{ display: 'block' }}
-                    data-ad-client="ca-pub-8170892352848798"
-                    data-ad-slot="1864612249"
-                    data-ad-format="vertical"
-                    data-full-width-responsive="true"></ins>
             </div>
         </div>
     );

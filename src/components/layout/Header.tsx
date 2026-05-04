@@ -1,7 +1,9 @@
 import { useRef, useState, useEffect } from 'react';
 import { Download, ChevronDown, Image as ImageIcon, FileImage, FileJson, FileText, Printer, Sun, Moon, FileUp, Settings, Box } from 'lucide-react';
-import { parseExcelToMarkdown } from '../services/excelParser';
-import RippleButton from './RippleButton';
+import { parseExcelToMarkdown } from '../../services/excelParser';
+import RippleButton from '../ui/RippleButton';
+import MagneticButton from '../ui/MagneticButton';
+import InteractiveLogo from '../ui/InteractiveLogo';
 
 interface HeaderProps {
     mode: 'mermaid' | 'markdown';
@@ -18,7 +20,7 @@ interface HeaderProps {
     onOpenSettings: () => void;
     /** 統一列印 / PDF 呼叫 */
     onPrint: () => void;
-    /** 是否正處於資料夾中（儲存庫模式） */
+    /** 是否正處於資料夾中（資料夾模式） */
     isInFolder?: boolean;
     /** 列印與合併設定 */
     printSettings?: any;
@@ -49,6 +51,7 @@ const Header: React.FC<HeaderProps> = ({
     const downloadMenuRef = useRef<HTMLDivElement>(null);
     const themeMenuRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [logoVariant, setLogoVariant] = useState<'v1' | 'v2'>('v1');
 
     // 主顕選句映射
     const THEMES: { value: string; label: string; emoji: string }[] = [
@@ -165,14 +168,18 @@ const Header: React.FC<HeaderProps> = ({
 
             {/* Logo + 標題 */}
             <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-brand-primary rounded-2xl flex items-center justify-center text-white overflow-hidden">
-                    <img src="./image/markdown_liveditor.svg?v=2" alt="Logo" className="w-10 h-10" />
-                </div>
+                <button
+                    onClick={() => setLogoVariant(prev => prev === 'v1' ? 'v2' : 'v1')}
+                    className="cursor-pointer"
+                >
+                    <InteractiveLogo size={40} variant={logoVariant} />
+                </button>
                 <div>
                     <h1 className="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100">Markdown Live Previewer</h1>
                     <p className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">專業的線上編輯器 給 標註掉落</p>
                 </div>
             </div>
+
 
             {/* 右側工具列 */}
             <div className="flex items-center gap-1">
@@ -183,23 +190,25 @@ const Header: React.FC<HeaderProps> = ({
                 {/* ── Mermaid 模式工具列 ─────────────────────────────────────── */}
                 {mode === 'mermaid' && (<>
 
-                    {/* 深色模式 */}
-                    <RippleButton variant="icon" onClick={(e) => toggleDarkMode(e)}
+                    {/* 深色模式（微磁力：提示使用者此按鈕可互動） */}
+                    <MagneticButton variant="icon" onClick={(e) => toggleDarkMode(e)}
                         aria-label={isDarkMode ? '切換到亮色模式' : '切換到深色模式'}
                         title={isDarkMode ? '切換 到 亮色模式' : '切換 到 深色模式'}
-                        className="text-slate-500 dark:text-slate-400 hover:text-brand-primary">
+                        className="text-slate-500 dark:text-slate-400 hover:text-brand-primary"
+                        magneticOptions={{ maxOffset: 6, radius: 45 }}>
                         {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-                    </RippleButton>
+                    </MagneticButton>
 
                     <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
 
-                    {/* 設定（Mermaid → PDF 版面設定） */}
-                    <RippleButton variant="icon" onClick={onOpenSettings}
+                    {/* 設定（Mermaid → PDF 版面設定，微磁力） */}
+                    <MagneticButton variant="icon" onClick={onOpenSettings}
                         aria-label="PDF 版面設定"
                         title="PDF 版面設定"
-                        className="text-slate-500 dark:text-slate-400 hover:text-brand-primary">
+                        className="text-slate-500 dark:text-slate-400 hover:text-brand-primary"
+                        magneticOptions={{ maxOffset: 6, radius: 45 }}>
                         <Settings size={20} />
-                    </RippleButton>
+                    </MagneticButton>
 
                     <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
 
@@ -236,15 +245,16 @@ const Header: React.FC<HeaderProps> = ({
 
                     <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
 
-                    {/* 下載選單（Mermaid） */}
+                    {/* 下載選單（Mermaid）：主要 CTA，使用較強磁力吸引使用者點擊 */}
                     <div className="relative" ref={downloadMenuRef}>
-                        <RippleButton variant="filled" onClick={() => setIsDownloadMenuOpen(!isDownloadMenuOpen)}
+                        <MagneticButton variant="filled" onClick={() => setIsDownloadMenuOpen(!isDownloadMenuOpen)}
                             aria-label="開啟導出選單"
-                            className="text-sm pr-3">
+                            className="text-sm pr-3"
+                            magneticOptions={{ maxOffset: 14, radius: 70, stiffness: 250, damping: 18 }}>
                             <Download size={16} />
                             <span>下載</span>
                             <ChevronDown size={14} className={`transition-transform duration-200 ${isDownloadMenuOpen ? 'rotate-180' : ''}`} />
-                        </RippleButton>
+                        </MagneticButton>
                         <div style={{
                             position: 'absolute', right: 0, marginTop: '0.5rem', width: '18rem',
                             opacity: isDownloadMenuOpen ? 1 : 0,
@@ -272,12 +282,12 @@ const Header: React.FC<HeaderProps> = ({
                                 <div className="w-9 h-9 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-xl flex items-center justify-center"><Printer size={18} /></div>,
                                 '列印 / PDF', '套用 PDF 版面設定')}
 
-                            {/* 儲存庫合併快捷開關 */}
+                            {/* 資料夾合併快捷開關 */}
                             {isInFolder && onUpdatePrintSettings && printSettings && (
                                 <div className="mt-2 mx-1 p-4 bg-brand-secondary/40 dark:bg-brand-primary/10 rounded-2xl border border-brand-primary/10 dark:border-brand-primary/30 shadow-sm space-y-4 animate-in slide-in-from-top-2 duration-300">
                                     <div className="flex items-center gap-2 mb-1">
                                         <div className="p-1.5 bg-brand-primary/10 dark:bg-brand-primary/30 rounded-lg text-brand-primary"><Box size={15} /></div>
-                                        <p className="text-[12px] font-bold text-brand-primary uppercase tracking-widest">儲存庫合併選項</p>
+                                        <p className="text-[12px] font-bold text-brand-primary uppercase tracking-widest">資料夾合併選項</p>
                                     </div>
 
                                     <label className="flex items-center justify-between cursor-pointer group">
@@ -309,17 +319,6 @@ const Header: React.FC<HeaderProps> = ({
                                     </label>
                                 </div>
                             )}
-
-                            {/* AdSense In-Menu Ad */}
-                            <div ref={adContainerRef} className="mx-2 mt-4 p-2 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 min-h-[100px] flex items-center justify-center relative overflow-hidden">
-                                <ins className="adsbygoogle"
-                                    style={{ display: 'block' }}
-                                    data-ad-client="ca-pub-8170892352848798"
-                                    data-ad-slot="1864612249"
-                                    data-ad-format="horizontal"
-                                    data-full-width-responsive="true"></ins>
-                                <span className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-10 text-[8px] font-bold uppercase tracking-widest">贊助廣告</span>
-                            </div>
                         </div>
                     </div>
 
@@ -328,28 +327,30 @@ const Header: React.FC<HeaderProps> = ({
                 {/* ── Markdown 模式工具列 ────────────────────────────────────── */}
                 {mode === 'markdown' && (<>
 
-                    {/* 深色模式 */}
-                    <RippleButton variant="icon" onClick={(e) => toggleDarkMode(e)}
+                    {/* 深色模式（微磁力：提示使用者此按鈕可互動） */}
+                    <MagneticButton variant="icon" onClick={(e) => toggleDarkMode(e)}
                         aria-label={isDarkMode ? '切換到亮色模式' : '切換到深色模式'}
                         title={isDarkMode ? '切換 到 亮色模式' : '切換 到 深色模式'}
-                        className="text-slate-500 dark:text-slate-400 hover:text-brand-primary">
+                        className="text-slate-500 dark:text-slate-400 hover:text-brand-primary"
+                        magneticOptions={{ maxOffset: 6, radius: 45 }}>
                         {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-                    </RippleButton>
+                    </MagneticButton>
 
                     <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
 
-                    {/* 設定（Markdown → MathJax 巨集） */}
-                    <RippleButton variant="icon" onClick={onOpenSettings}
+                    {/* 設定（Markdown → MathJax 巨集，微磁力） */}
+                    <MagneticButton variant="icon" onClick={onOpenSettings}
                         aria-label="偏好設定"
                         title="偏好設定"
-                        className="text-slate-500 dark:text-slate-400 hover:text-brand-primary">
+                        className="text-slate-500 dark:text-slate-400 hover:text-brand-primary"
+                        magneticOptions={{ maxOffset: 6, radius: 45 }}>
                         <Settings size={20} />
-                    </RippleButton>
+                    </MagneticButton>
 
                     <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
 
                     {/* 同步滾動 */}
-                    <button onClick={() => setIsSyncScroll(!isSyncScroll)} title="同步滾動"
+                    <MagneticButton onClick={() => setIsSyncScroll(!isSyncScroll)} title="同步滾動"
                         style={{ position: 'relative', overflow: 'hidden' }}
                         className={`inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-semibold transition-all select-none
                             ${isSyncScroll
@@ -358,30 +359,31 @@ const Header: React.FC<HeaderProps> = ({
                             }`}>
                         <span className={`w-2 h-2 rounded-full shrink-0 transition-colors ${isSyncScroll ? 'bg-brand-primary animate-pulse' : 'bg-slate-300 dark:bg-slate-600'}`} />
                         同步滾動
-                    </button>
+                    </MagneticButton>
 
                     <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
 
                     {/* 進口檔案 */}
-                    <button onClick={() => fileInputRef.current?.click()}
+                    <MagneticButton onClick={() => fileInputRef.current?.click()}
                         title="進口檔案 (.md, .txt, .xlsx, .csv)"
                         style={{ position: 'relative', overflow: 'hidden' }}
                         className="inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-slate-200 transition-all select-none">
                         <FileUp size={14} />
                         進口檔案
-                    </button>
+                    </MagneticButton>
 
                     <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
 
-                    {/* 下載選單（Markdown） */}
+                    {/* 下載選單（Markdown）：主要 CTA，使用較強磁力吸引使用者點擊 */}
                     <div className="relative" ref={downloadMenuRef}>
-                        <RippleButton variant="filled" onClick={() => setIsDownloadMenuOpen(!isDownloadMenuOpen)}
+                        <MagneticButton variant="filled" onClick={() => setIsDownloadMenuOpen(!isDownloadMenuOpen)}
                             aria-label="開啟導出選單"
-                            className="text-sm pr-3">
+                            className="text-sm pr-3"
+                            magneticOptions={{ maxOffset: 14, radius: 70, stiffness: 250, damping: 18 }}>
                             <Download size={16} />
                             <span>下載</span>
                             <ChevronDown size={14} className={`transition-transform duration-200 ${isDownloadMenuOpen ? 'rotate-180' : ''}`} />
-                        </RippleButton>
+                        </MagneticButton>
                         <div style={{
                             position: 'absolute', right: 0, marginTop: '0.5rem', width: '18rem',
                             opacity: isDownloadMenuOpen ? 1 : 0,
@@ -398,12 +400,12 @@ const Header: React.FC<HeaderProps> = ({
                                 <div className="w-9 h-9 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-xl flex items-center justify-center"><Printer size={18} /></div>,
                                 '列印 / PDF', '套用 PDF 版面設定')}
 
-                            {/* 儲存庫合併快捷開關 */}
+                            {/* 資料夾合併快捷開關 */}
                             {isInFolder && onUpdatePrintSettings && printSettings && (
                                 <div className="mt-2 mx-1 p-4 bg-brand-secondary/40 dark:bg-brand-primary/10 rounded-2xl border border-brand-primary/10 dark:border-brand-primary/30 shadow-sm space-y-4 animate-in slide-in-from-top-2 duration-300">
                                     <div className="flex items-center gap-2 mb-1">
                                         <div className="p-1.5 bg-brand-primary/10 dark:bg-brand-primary/30 rounded-lg text-brand-primary"><Box size={16} /></div>
-                                        <p className="text-[10px] font-bold text-brand-primary uppercase tracking-widest">儲存庫合併選項</p>
+                                        <p className="text-[10px] font-bold text-brand-primary uppercase tracking-widest">資料夾合併選項</p>
                                     </div>
 
                                     <label className="flex items-center justify-between cursor-pointer group">
@@ -435,17 +437,6 @@ const Header: React.FC<HeaderProps> = ({
                                     </label>
                                 </div>
                             )}
-
-                            {/* AdSense In-Menu Ad */}
-                            <div ref={adContainerRef} className="mx-2 mt-4 p-2 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 min-h-[100px] flex items-center justify-center relative overflow-hidden">
-                                <ins className="adsbygoogle"
-                                    style={{ display: 'block' }}
-                                    data-ad-client="ca-pub-8170892352848798"
-                                    data-ad-slot="1864612249"
-                                    data-ad-format="horizontal"
-                                    data-full-width-responsive="true"></ins>
-                                <span className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-10 text-[8px] font-bold uppercase tracking-widest">贊助廣告</span>
-                            </div>
                         </div>
                     </div>
 

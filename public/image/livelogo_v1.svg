@@ -1,0 +1,94 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    /* 1. 基礎樣式與淺色模式顏色 */
+    .bg-box {
+      fill: #005B94;
+      stroke: #0284C7;
+      stroke-width: 1;
+    }
+
+    .main-path {
+      stroke: #ffffff;
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 94;
+      stroke-dashoffset: 94;
+      animation: draw 3s ease-in-out infinite;
+    }
+
+    .arrow-group {
+      stroke: #ffffff;
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      /* 必須同時提供完整屬性以確保 Safari 支援 */
+      offset-path: path("M 18 46 V 18 L 32 34 L 46 18 V 46");
+      offset-rotate: auto;
+      animation: move 3s ease-in-out infinite;
+    }
+
+    /* 2. 深色模式顏色覆蓋 */
+    @media (prefers-color-scheme: dark) {
+      .bg-box {
+        fill: #005B94;
+        stroke: #F0F9FF;
+      }
+
+      .main-path,
+      .arrow-group {
+        stroke: #ffffff;
+      }
+    }
+
+    /* 3. 動畫定義 */
+    @keyframes draw {
+
+      0%,
+      10% {
+        stroke-dashoffset: 94;
+        opacity: 0;
+      }
+
+      50%,
+      85% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+      }
+
+      100% {
+        stroke-dashoffset: 0;
+        opacity: 0;
+      }
+    }
+
+    @keyframes move {
+
+      0%,
+      10% {
+        offset-distance: 0%;
+        opacity: 0;
+      }
+
+      50%,
+      85% {
+        offset-distance: 100%;
+        opacity: 1;
+      }
+
+      100% {
+        offset-distance: 100%;
+        opacity: 0;
+      }
+    }
+  </style>
+
+  <!-- 稍微縮小 rect 避免邊框被邊界切掉 -->
+  <rect class="bg-box" x="1" y="1" width="62" height="62" rx="16" />
+
+  <path class="main-path" d="M 18 46 V 18 L 32 34 L 46 18 V 46" />
+
+  <g class="arrow-group">
+    <path d="M -6 -5 L 0 0 L -6 5" fill="none" />
+  </g>
+</svg>

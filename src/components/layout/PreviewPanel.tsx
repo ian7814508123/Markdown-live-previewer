@@ -163,7 +163,7 @@ const PrintPaper: React.FC<PrintPaperProps> = ({
         >
             <div className={showPrintPreview ? 'prose-container relative' : 'max-w-4xl mx-auto p-8 lg:p-12 min-h-full print:p-0'}>
                 <MarkdownPreview
-                    content={doc?.content ?? ''}
+                    content={doc?.mode === 'mermaid' ? `\`\`\`mermaid\n${doc.content}\n\`\`\`` : (doc?.content ?? '')}
                     theme={theme}
                     isDarkMode={isDarkMode}
                     documents={documents}
@@ -302,16 +302,18 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
 
     // 決定要渲染的文件列表
     const docsToRenderIds = useMemo(() => {
-        // 修正：只有當開啟了「合併列印 (PDF)」時，才讀取整個資料夾的文件
-        if (mergeVaultOnPdfExport && currentDoc?.folderId) {
+        const isMergedActive = (isPrinting || showPrintPreview) && mergeVaultOnPdfExport && currentDoc?.folderId;
+        
+        // 修正：只有當開啟了「合併列印 (PDF)」且處於預覽/列印狀態時，才讀取整個資料夾的文件
+        if (isMergedActive) {
             return (documents ?? [])
-                .filter((d: any) => d.folderId === currentDoc.folderId && d.mode === 'markdown')
+                .filter((d: any) => d.folderId === currentDoc.folderId && (d.mode === 'markdown' || d.mode === 'mermaid'))
                 .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.updatedAt - b.updatedAt)
                 .map((d: any) => d.id);
         }
         // 否則，只渲染已啟動的分頁
         return markdownDocIds.filter(id => activatedDocIds.has(id));
-    }, [mergeVaultOnPdfExport, currentDoc?.folderId, documents, markdownDocIds, activatedDocIds]);
+    }, [mergeVaultOnPdfExport, currentDoc?.folderId, documents, markdownDocIds, activatedDocIds, isPrinting, showPrintPreview]);
 
     // 狀態鎖定：防止 Intentional Scroll 與 IntersectionObserver 產生衝突
     const isManualScrolling = useRef(false);
@@ -523,11 +525,14 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
     }, []);
 
     // DIFFERENT LAYOUT STRATEGY BASED ON MODE
-    if (mode === 'markdown') {
+    // 只有在「列印中」或「開啟列印預覽模式」時，才允許 Mermaid 模式進入合併文件佈局
+    const isMergedMode = (isPrinting || printSettings.showPrintPreview) && printSettings.mergeVaultOnPdfExport && !!currentDocId && !!documents?.find((d: any) => d.id === currentDocId)?.folderId;
+
+    if (mode === 'markdown' || isMergedMode) {
         const markdownDocIds = (openDocIds ?? [currentDocId].filter(Boolean) as string[])
             .filter(id => {
                 const doc = documents?.find((d: any) => d.id === id);
-                return doc?.mode === 'markdown';
+                return doc?.mode === 'markdown' || (isMergedMode && doc?.mode === 'mermaid');
             });
 
         return (

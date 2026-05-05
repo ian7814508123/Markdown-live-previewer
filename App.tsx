@@ -629,22 +629,27 @@ const App: React.FC = () => {
 
   /** 統一下載 / 列印：注入 @page CSS 後呼叫 window.print() */
   const handlePrint = useCallback((printMode: EditorMode) => {
-    const { paperSize, orientation, scale, margin, mergeVaultOnMdExport } = settings.printSettings;
+    const { paperSize, orientation, scale, margin, mergeVaultOnPdfExport } = settings.printSettings;
     const marginMap: Record<string, string> = { normal: '1.5cm', narrow: '0.5cm', none: '0' };
 
     // 計算列印時的檔案名稱
     let printFileName = currentDocument?.name || 'document';
-    if (printMode === 'markdown' && mergeVaultOnMdExport && currentDocument?.folderId) {
-      const vaultDocs = documents.filter(d => d.folderId === currentDocument.folderId && d.mode === 'markdown');
+    const isMergedPrint = mergeVaultOnPdfExport && currentDocument?.folderId;
+
+    if (isMergedPrint) {
+      const vaultDocs = documents.filter(d => d.folderId === currentDocument.folderId && (d.mode === 'markdown' || d.mode === 'mermaid'));
       if (vaultDocs.length > 1) {
         const folder = folders.find(f => f.id === currentDocument.folderId);
         printFileName = folder ? `${folder.name}` : `${printFileName}`;
       }
     }
 
+    // 決定有效的列印模式：如果是合併列印，則強制使用 markdown 佈局
+    const effectivePrintMode = isMergedPrint ? 'markdown' : printMode;
+
     // 縮放與佈局樣式
     let additionalCSS = '';
-    if (printMode === 'mermaid') {
+    if (effectivePrintMode === 'mermaid') {
       // 重置 transform scale（螢幕縮放），移除畫布裝飾，讓 SVG 直接以頁面寬度輸出
       const svgWidthCSS = scale === 'fit'
         ? 'svg { max-width: 100% !important; width: 100% !important; height: auto !important; }'
@@ -972,15 +977,20 @@ const App: React.FC = () => {
 
     // 如果開啟了「合併資料夾 (Markdown)」且文件在資料夾中
     if (settings.printSettings.mergeVaultOnMdExport && currentDocument?.folderId) {
-      const vaultDocs = documents.filter(d => d.folderId === currentDocument.folderId && d.mode === 'markdown');
+      const vaultDocs = documents.filter(d => d.folderId === currentDocument.folderId && (d.mode === 'markdown' || d.mode === 'mermaid'));
       if (vaultDocs.length > 1) {
         contentToDownload = vaultDocs
           .map(d => {
-            // 替換所有WikiLink為錨點連結
-            const processedDocContent = d.content.replace(/\[\[(.*?)\]\]/g, (match, p1) => {
-              return `[${p1}](#wikilink-${encodeURIComponent(p1)})`;
-            });
-            return `--- \n# ${d.name}\n<a id="wikilink-${encodeURIComponent(d.name)}"></a>\n\n${processedDocContent}`;
+            let docContent = d.content;
+            if (d.mode === 'mermaid') {
+              docContent = `\`\`\`mermaid\n${docContent}\n\`\`\``;
+            } else {
+              // 替換所有WikiLink為錨點連結
+              docContent = docContent.replace(/\[\[(.*?)\]\]/g, (match, p1) => {
+                return `[${p1}](#wikilink-${encodeURIComponent(p1)})`;
+              });
+            }
+            return `--- \n# ${d.name}\n<a id="wikilink-${encodeURIComponent(d.name)}"></a>\n\n${docContent}`;
           })
           .join('\n\n');
 

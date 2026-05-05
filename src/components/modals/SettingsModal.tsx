@@ -242,17 +242,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     </div>
                                 </div>
                                 <div className="space-y-4">
-                                    {/*<div className="p-5 bg-gradient-to-br from-indigo-50 to-white dark:from-slate-800 dark:to-slate-800/50 rounded-2xl border border-indigo-100/50 dark:border-slate-700/50 shadow-sm">
-                                         <div className="flex items-center gap-3 mb-3">
+                                    <div className="p-5 bg-gradient-to-br from-indigo-50 to-white dark:from-slate-800 dark:to-slate-800/50 rounded-2xl border border-indigo-100/50 dark:border-slate-700/50 shadow-sm">
+                                        <div className="flex items-center gap-3 mb-3">
                                             <div className="p-2 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-500 dark:text-indigo-400 rounded-2xl">
                                                 <PackagePlus size={18} />
                                             </div>
-                                            <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">音樂樂譜渲染 (abc notation)</h4>
+                                            <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">合併列印 Markdown & Mermaid</h4>
                                         </div>
                                         <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed ml-11">
-                                            現在您可以直接在 Markdown 文件中使用 <code className="px-1 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-[10px] font-mono mx-1">abc</code> 語法區塊來編寫傳統五線譜！系統會自動將其渲染為高解析度、可自由縮放的高品質向量樂譜，並深度優化深色模式與文件列印的顯示效果。
-                                        </p> 
-                                    </div> */}
+                                            在資料夾模式下,您可以開啟 <code className="px-1 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-[10px] font-mono mx-1">合併列印PDF</code> 來同時列印多個markdown文件與Mermaid，文件中的圖表與圖片會保持高品質，wikilink也會自動轉換成超連結。
+                                        </p>
+                                        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed ml-11">
+                                            開啟 <code className="px-1 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-[10px] font-mono mx-1">合併下載(Markdown)</code> 也會自動將Mermaid轉成code block樣式。
+                                        </p>
+                                    </div>
                                     <div className="p-5 bg-gradient-to-br from-indigo-50 to-white dark:from-slate-800 dark:to-slate-800/50 rounded-2xl border border-indigo-100/50 dark:border-slate-700/50 shadow-sm">
                                         <div className="flex items-center gap-3 mb-3">
                                             <div className="p-2 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-2xl">

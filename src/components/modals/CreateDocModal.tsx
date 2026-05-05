@@ -10,7 +10,7 @@ interface CreateDocModalProps {
     initialName?: string;
 }
 
-const COMMON_ICONS = ['📝', '📊', '💡', '📅', '🚀', '🛠️', '🎨', '🔒', '🌟', '📁'];
+const COMMON_ICONS = ['📝', '📊', '💡', '📅', '🚀', '🛠️', '🎨', '🔒', '🌟', '🎶', '🖼️'];
 
 const MD_TEMPLATES = [
     { id: 'markdown-standard', name: '進階導覽', desc: '包含所有語法與進階引擎示範', icon: Zap, color: 'text-amber-500', bg: 'bg-amber-100 dark:bg-amber-900/40' },
@@ -50,19 +50,6 @@ const CreateDocModal: React.FC<CreateDocModalProps> = ({ isOpen, onClose, onCrea
             setTimeout(() => {
                 inputRef.current?.focus();
             }, 100);
-            // 初始化 AdSense - 延遲執行並判斷寬度 (xl 螢幕: 1280px)
-            const adTimer = setTimeout(() => {
-                try {
-                    if (typeof window !== 'undefined' && window.innerWidth >= 1280) {
-                        const adsbygoogle = (window as any).adsbygoogle || [];
-                        // 此 Modal 僅保留右側側邊廣告位
-                        adsbygoogle.push({});
-                    }
-                } catch (e) {
-                    console.error('AdSense CreateDocModal error:', e);
-                }
-            }, 600);
-            return () => clearTimeout(adTimer);
         }
     }, [isOpen]);
 
@@ -141,7 +128,7 @@ const CreateDocModal: React.FC<CreateDocModalProps> = ({ isOpen, onClose, onCrea
                 {/* Body with Animation Container */}
                 <div className="relative min-h-[300px]">
                     {/* Step 1: Type Selection */}
-                    <div className={`p-5 flex flex-col gap-6 transition-all duration-300 ${step === 'type' ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0 pointer-events-none absolute inset-0'}`}>
+                    <div className={`p-5 flex flex-col gap-5 transition-all duration-300 ${step === 'type' ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0 pointer-events-none absolute inset-0'}`}>
 
                         {/* Unified Input Row */}
                         <div className="flex items-end gap-3">
@@ -155,7 +142,11 @@ const CreateDocModal: React.FC<CreateDocModalProps> = ({ isOpen, onClose, onCrea
                                         : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800'
                                         }`}
                                 >
-                                    {selectedIcon || (selectedMode === 'markdown' ? '📝' : '📊')}
+                                    {selectedIcon ? (
+                                        selectedIcon
+                                    ) : (
+                                        <Plus size={20} className="text-slate-300 dark:text-slate-600" />
+                                    )}
                                 </button>
                             </div>
 
@@ -177,65 +168,111 @@ const CreateDocModal: React.FC<CreateDocModalProps> = ({ isOpen, onClose, onCrea
                         <div style={{
                             display: 'grid',
                             gridTemplateRows: isIconPickerOpen ? '1fr' : '0fr',
-                            transition: 'grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                            transition: 'grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            marginBottom: isIconPickerOpen ? '0.5rem' : '0'
                         }} className="overflow-hidden">
                             <div className="min-h-0">
-                                <div className="p-3 g-slate-50/50 dark:bg-slate-800/30 rounded-3xl border border-slate-100 dark:border-slate-800 mb-2">
-                                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 ml-1">選擇圖示 (選填)</p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {COMMON_ICONS.map(icon => (
-                                            <button
-                                                key={icon}
-                                                onClick={() => {
-                                                    setSelectedIcon(selectedIcon === icon ? '' : icon);
-                                                    setIsIconPickerOpen(false);
-                                                }}
-                                                className={`w-9 h-9 flex items-center justify-center rounded-xl text-lg transition-all ${selectedIcon === icon
-                                                    ? 'bg-brand-primary text-white shadow-md scale-110'
-                                                    : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm'
-                                                    }`}
-                                            >
-                                                {icon}
-                                            </button>
-                                        ))}
+                                <div className="pt-2">
+                                    <div className="p-3 g-slate-50/50 dark:bg-slate-800/30 rounded-3xl border border-slate-100 dark:border-slate-800">
+                                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 ml-1">選擇圖示 (選填)</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {COMMON_ICONS.map(icon => (
+                                                <button
+                                                    key={icon}
+                                                    onClick={() => {
+                                                        setSelectedIcon(selectedIcon === icon ? '' : icon);
+                                                        setIsIconPickerOpen(false);
+                                                    }}
+                                                    className={`w-9 h-9 flex items-center justify-center rounded-xl text-lg transition-all ${selectedIcon === icon
+                                                        ? 'bg-brand-primary text-white shadow-md scale-110'
+                                                        : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm'
+                                                        }`}
+                                                >
+                                                    {icon}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Mode Buttons */}
-                        <div className="grid grid-cols-2 gap-3 pt-2">
+                        <div className={`grid grid-cols-2 gap-3 transition-all duration-300 ${isIconPickerOpen ? 'pt-2' : 'mt-0'}`}>
                             <button
                                 onClick={() => handleSelectType('markdown')}
-                                className={`flex flex-col items-center gap-3 p-4 rounded-3xl transition-all group border ${selectedMode === 'markdown'
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
-                                    : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-blue-900/10 hover:border-blue-100'
+                                className={`flex flex-col items-center gap-3 p-4 border rounded-3xl transition-all group
+                                    ${selectedMode === 'markdown'
+                                        ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-500 shadow-sm' // [選中狀態] 深藍邊框
+                                        : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-200' // [未選中 + Hover]
                                     }`}
                             >
-                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${selectedMode === 'markdown' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' : 'bg-slate-100 dark:bg-slate-700 text-slate-400'
-                                    }`}>
+                                <div
+                                    className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110
+                                        ${selectedMode === 'markdown'
+                                            ? 'bg-blue-600 text-white' // [選中時] 藍底白字
+                                            : 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' // [未選中時] 淺藍色
+                                        }`}
+                                >
                                     <FileText size={24} />
                                 </div>
+
                                 <div className="text-center">
-                                    <span className={`block text-sm font-bold ${selectedMode === 'markdown' ? 'text-blue-700 dark:text-blue-300' : 'text-slate-600 dark:text-slate-400'}`}>標記掉落</span>
-                                    <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-medium">Markdown</span>
+                                    <span className={`block text-sm font-bold transition-colors
+                                        ${selectedMode === 'markdown'
+                                            ? 'text-blue-700 dark:text-blue-300'
+                                            : 'text-slate-700 dark:text-slate-200'
+                                        }`}
+                                    >
+                                        標記掉落
+                                    </span>
+                                    <span className={`text-[10px] uppercase font-medium transition-colors
+                                        ${selectedMode === 'markdown'
+                                            ? 'text-blue-500/70'
+                                            : 'text-slate-400 dark:text-slate-500'
+                                        }`}
+                                    >
+                                        Markdown
+                                    </span>
                                 </div>
                             </button>
 
+
                             <button
                                 onClick={() => handleSelectType('mermaid')}
-                                className={`flex flex-col items-center gap-3 p-4 rounded-3xl transition-all group border ${selectedMode === 'mermaid'
-                                    ? 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800'
-                                    : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:bg-purple-50 dark:hover:bg-purple-900/10 hover:border-purple-100'
+                                className={`flex flex-col items-center gap-3 p-4 border rounded-3xl transition-all group
+                                    ${selectedMode === 'mermaid'
+                                        ? 'bg-purple-50 dark:bg-purple-900/30 border-purple-500 shadow-sm' // [選中狀態]
+                                        : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:border-purple-200' // [未選中狀態 + Hover]
                                     }`}
                             >
-                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${selectedMode === 'mermaid' ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400' : 'bg-slate-100 dark:bg-slate-700 text-slate-400'
-                                    }`}>
+                                <div
+                                    className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110
+                                        ${selectedMode === 'mermaid'
+                                            ? 'bg-purple-600 text-white' // [選中時] 圖示變深底白字，更醒目
+                                            : 'bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400' // [未選中時] 原本的淺紫色
+                                        }`}
+                                >
                                     <ImageIcon size={24} />
                                 </div>
+
                                 <div className="text-center">
-                                    <span className={`block text-sm font-bold ${selectedMode === 'mermaid' ? 'text-purple-700 dark:text-purple-300' : 'text-slate-600 dark:text-slate-400'}`}>美人魚</span>
-                                    <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-medium">Mermaid</span>
+                                    <span className={`block text-sm font-bold transition-colors
+                                        ${selectedMode === 'mermaid'
+                                            ? 'text-purple-700 dark:text-purple-300'
+                                            : 'text-slate-700 dark:text-slate-200'
+                                        }`}
+                                    >
+                                        美人魚
+                                    </span>
+                                    <span className={`text-[10px] uppercase font-medium transition-colors
+                                        ${selectedMode === 'mermaid'
+                                            ? 'text-purple-500/70'
+                                            : 'text-slate-400 dark:text-slate-500'
+                                        }`}
+                                    >
+                                        Mermaid
+                                    </span>
                                 </div>
                             </button>
                         </div>

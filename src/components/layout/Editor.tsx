@@ -217,22 +217,23 @@ const Editor = forwardRef<ReactCodeMirrorRef, EditorProps>(({
                             請在左側工具欄點選文件圖示，從「我的文檔」中選擇文件開始編輯。
                         </p>
                     </div>
-                    <div className="flex flex-col sm:flex-row items-center gap-3">
-                        <RippleButton
-                            onClick={onToggleSidebar}
+                    <button
+                        onClick={onToggleSidebar}
+                        className="flex items-center gap-2 px-6 py-2.5 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-xl font-bold text-sm shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/40 active:scale-95 transition-all"
+                    >
+                        <Menu size={15} />
+                        開啟側邊欄
+                    </button>
+                    <div className="flex flex-col items-center gap-2">
+                        <p className="text-sm leading-relaxed">
+                            不知道如何開始嗎?要不要看看
+                        </p>
+                        <button
+                            onClick={() => setIsIntroOpen(true)}
                             className="flex items-center gap-2 px-6 py-2.5 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-xl font-bold text-sm shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/40 active:scale-95 transition-all"
                         >
-                            <Menu size={15} />
-                            開啟側邊欄
-                        </RippleButton>
-                        <RippleButton
-                            onClick={() => setIsIntroOpen(true)}
-                            variant="tonal"
-                            className="flex items-center gap-2 px-6 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-sm transition-all"
-                        >
-                            <FileSearch size={15} />
                             功能介紹
-                        </RippleButton>
+                        </button>
                     </div>
                 </div>
             </div>

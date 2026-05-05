@@ -9,11 +9,9 @@ WORKDIR /app
 # 複製 package 檔案
 COPY package*.json ./
 
-# 更新 npm 到最新版本
-RUN npm install -g npm@latest
-
-# 安裝所有依賴（包含 devDependencies，vite build 需要）
-RUN npm ci
+# 安裝依賴（利用 Docker 快取掛載加速）
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
 
 # 複製所有原始碼
 COPY . .

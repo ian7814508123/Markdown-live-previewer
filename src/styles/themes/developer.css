@@ -1,0 +1,77 @@
+/* Developer Theme: Technical, Monospace, High Contrast */
+
+.theme-developer {
+    --dev-font-mono: "Fira Code", "JetBrains Mono", "Cascadia Code", monospace;
+    --dev-accent: #34d399; /* 提升至 Emerald 400，增加亮度 */
+    --dev-bg: #0b1120;     /* 加深背景色至更深的 Slate-950 */
+    --dev-text: #f8fafc;   /* Slate-50，確保文字清晰 */
+}
+
+.theme-developer.prose {
+    font-family: var(--dev-font-mono);
+    color: var(--dev-text);
+    line-height: 1.6;
+}
+
+.theme-developer.prose h1,
+.theme-developer.prose h2,
+.theme-developer.prose h3 {
+    color: var(--dev-accent);
+    text-transform: lowercase;
+}
+
+.theme-developer.prose h1::before {
+    content: "# ";
+    opacity: 0.5;
+}
+
+.theme-developer.prose h2::before {
+    content: "## ";
+    opacity: 0.5;
+}
+
+.theme-developer.prose blockquote {
+    background-color: rgba(16, 185, 129, 0.1);
+    border-left: 4px solid var(--dev-accent);
+    padding: 1rem 1.5rem;
+    color: #94a3b8;
+}
+
+.theme-developer.prose code:not(pre code) {
+    background-color: #1e293b;
+    color: #38bdf8;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+}
+
+.theme-developer.prose pre {
+    background-color: #010409 !important; /* GitHub Dark Dimmed 風格的極黑背景 */
+    border: 1px solid rgba(52, 211, 153, 0.2) !important;
+    border-left: 4px solid var(--dev-accent) !important;
+}
+
+.theme-developer.prose strong {
+    color: #fbbf24;
+}
+
+/* Print Specifics for Developer */
+@media print {
+    .theme-developer.prose {
+        background-color: white !important;
+        color: #0b1120 !important;
+        font-size: 10pt !important;
+    }
+
+    .theme-developer.prose h1,
+    .theme-developer.prose h2,
+    .theme-developer.prose h3 {
+        color: #059669 !important; /* 深翡翠綠，確保列印品質 */
+    }
+
+    .theme-developer.prose pre {
+        background-color: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-left: 3pt solid #10b981 !important;
+        color: #1e293b !important;
+    }
+}

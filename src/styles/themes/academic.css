@@ -1,0 +1,95 @@
+/* Academic Theme: Formal, Serif-based, Professional */
+
+.theme-academic {
+    --academic-font-serif: "Times New Roman", Times, Baskerville, Georgia, serif;
+    --academic-line-height: 1.6;
+    --academic-text-color: #1a1a1a;
+    --academic-accent: #000;
+}
+
+.theme-academic.prose {
+    font-family: var(--academic-font-serif);
+    color: var(--academic-text-color);
+    line-height: var(--academic-line-height);
+    max-width: 100%;
+    text-align: justify;
+}
+
+.theme-academic.prose h1,
+.theme-academic.prose h2,
+.theme-academic.prose h3,
+.theme-academic.prose h4 {
+    font-family: var(--academic-font-serif);
+    color: var(--academic-accent);
+    text-align: center; /* Academic titles often centered */
+    border-bottom: none;
+    margin-top: 2.5rem;
+}
+
+.theme-academic.prose h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 2rem;
+}
+
+.theme-academic.prose h2 {
+    font-size: 1.75rem;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 0.5rem;
+    text-align: left;
+}
+
+.theme-academic.prose blockquote {
+    font-style: italic;
+    border-left: 3px solid #ccc;
+    padding-left: 1.5rem;
+    margin: 2rem 0;
+    color: #444;
+}
+
+.theme-academic.prose table {
+    border-top: 2px solid #000;
+    border-bottom: 2px solid #000;
+    width: 100%;
+    margin: 2rem 0;
+}
+
+.theme-academic.prose th {
+    border-bottom: 1px solid #000;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    padding: 0.75rem;
+}
+
+.theme-academic.prose td {
+    padding: 0.5rem 0.75rem;
+}
+
+/* Print Specifics for Academic */
+@media print {
+    .theme-academic.prose {
+        background-color: white !important;
+        color: black !important;
+        font-size: 11pt !important;
+        line-height: 1.5 !important;
+    }
+
+    .theme-academic.prose h1 {
+        font-size: 24pt !important;
+        margin-top: 0 !important;
+        margin-bottom: 30pt !important;
+    }
+
+    .theme-academic.prose h2 {
+        border-bottom: 0.5pt solid black !important;
+        font-size: 16pt !important;
+        margin-top: 20pt !important;
+    }
+
+    .theme-academic.prose blockquote {
+        border-left: 2pt solid #666 !important;
+        font-style: italic !important;
+    }
+}

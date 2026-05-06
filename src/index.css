@@ -565,19 +565,18 @@
             animation: none !important;
         }
 
-        /* 2. 全域強制顏色與背景重置 */
-        :root,
-        .dark {
-            --brand-surface: #ffffff !important;
-            background-color: white !important;
-            color-scheme: light !important;
-            /* 強制回歸淺色配色方案 */
-        }
-
-        /* 即使 html 標籤帶有 .dark，列印時也要強制回歸淺色 */
-        html.dark body {
+        /* 2. 全域強制顏色與背景重置 (僅針對基礎容器) */
+        body {
             background-color: white !important;
             color: black;
+            -webkit-print-color-adjust: exact;
+        }
+
+        /* 確保暗色模式下的 html 不會帶入深色背景 */
+        html.dark,
+        .dark {
+            background-color: white !important;
+            color-scheme: light !important;
         }
 
         /* 3. 在列印環境下重新宣告語法高亮變數（不依賴 .dark 類別）
@@ -658,15 +657,72 @@
         color: var(--code-token-punctuation);
     }
 
+    /* ── 圖表列印對齊優化 ── */
+    .chart-wrapper {
+        display: flex;
+        width: 100%;
+        margin: 1.5rem 0;
+        overflow: visible;
+        background: transparent !important;
+    }
+
+    /* 對齊類別 */
+    .chart-wrapper.align-left   { justify-content: flex-start; }
+    .chart-wrapper.align-center { justify-content: center;     }
+    .chart-wrapper.align-right  { justify-content: flex-end;    }
+
+    .chart-content {
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        flex-shrink: 0;
+        transition: width 0.3s ease;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .chart-content canvas,
+    .chart-content svg {
+        max-width: 100% !important;
+        height: auto !important;
+        display: block;
+    }
+
+    /* 強制圖表填滿其 Content 容器，避免出現多餘畫布 */
+    .diagram-block-container svg {
+        width: 100% !important;
+        height: auto !important;
+        max-width: 100% !important;
+        display: block;
+    }
+
+    @media print {
+        .chart-wrapper {
+            page-break-inside: avoid;
+            margin: 1rem 0 !important;
+        }
+
+        .chart-content {
+            box-shadow: none !important;
+        }
+
+        .diagram-block-container {
+            padding: 1rem !important;
+            /* 列印時使用較小的內距，更緊湊 */
+        }
+    }
+
     /* 程式碼區塊的外層包裝，處理溢出與寬度限制 */
     .code-block-wrapper {
         max-width: 100%;
         overflow: hidden;
     }
 
-    /* 針對圖表容器特定的間距優化 (ResizableWrapper 已內含間距) */
+    /* 針對圖表容器特定的間距優化 */
     .diagram-block-container {
         margin: 0;
+        width: 100% !important;
+        /* 內部容器始終填滿 Content 區域 */
     }
 
     /* 🌟 智能行號與斷行控制 (CSS Counters & Hanging Indent) */

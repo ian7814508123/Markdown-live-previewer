@@ -60,6 +60,21 @@ const PdfSettingsPanel: React.FC<{
                         }}
                     />
                 </div>
+
+                {/* Markdown 主題選擇 */}
+                <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-700/50">
+                    <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">預覽風格 (Theme)</p>
+                    <GlassRailSelector
+                        options={[
+                            { label: '預設', value: 'default', hint: 'Tailwind' },
+                            { label: '學術', value: 'academic', hint: 'Serif' },
+                            { label: '極簡', value: 'minimal', hint: 'Modern' },
+                            { label: '工程師', value: 'developer', hint: 'Mono' },
+                        ]}
+                        value={settings.previewTheme}
+                        onChange={(v) => onChange({ previewTheme: v as any })}
+                    />
+                </div>
             </div>
 
 
@@ -255,6 +270,18 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                         <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed ml-11">
                                             開啟 <code className="px-1 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-[10px] font-mono mx-1">合併下載(Markdown)</code> 也會自動將Mermaid轉成code block樣式。
                                         </p>
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="p-2 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-500 dark:text-indigo-400 rounded-2xl">
+                                                <PackagePlus size={18} />
+                                            </div>
+                                            <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">更多預覽風格</h4>
+                                        </div>
+                                        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed ml-11">
+                                            開啟 <code className="px-1 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-[10px] font-mono mx-1">偏好設定 &gt; 列印與匯出 &gt; 預覽風格</code> 套用不同風格。
+                                        </p>
+                                        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed ml-11">
+                                            (注意!: 此功能仍在測試中,如果某風格的排版不符合預期,<br />請暫時切換回預設風格或其他可行風格。)
+                                        </p>
                                     </div>
                                     <div className="p-5 bg-gradient-to-br from-indigo-50 to-white dark:from-slate-800 dark:to-slate-800/50 rounded-2xl border border-indigo-100/50 dark:border-slate-700/50 shadow-sm">
                                         <div className="flex items-center gap-3 mb-3">
@@ -264,7 +291,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                             <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">體驗優化與修正</h4>
                                         </div>
                                         <ul className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed ml-11 list-disc list-outside space-y-1.5 pl-4 opacity-90">
-                                            <li>讓設計動起來！支援動圖渲染功能。</li>
+                                            <li>內嵌圖表支援置中/置左/置右功能。</li>
                                             <li>![立即試試](./image/livelogo_v1.svg "還有 v2 可以玩玩看哦！")
                                                 <ol>(提醒：若匯出 PDF 等靜態格式，動圖將固定於特定幀，建議僅在數位展示環境下使用。)</ol></li>
                                             <li>使用<strong>\pagebreak</strong> , <strong>[page-break]</strong> , <strong>---pb---</strong> 指令強制換頁 (開啟列印預覽下可以看到強制換頁線)</li>

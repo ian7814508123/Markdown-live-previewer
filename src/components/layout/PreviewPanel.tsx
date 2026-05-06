@@ -59,6 +59,7 @@ interface PrintPaperProps {
     isPrinting: boolean;
     printSessionId: number;
     isMergedPrint: boolean;
+    previewTheme: 'default' | 'academic' | 'minimal' | 'developer';
     theme: any;
     isDarkMode: boolean;
     documents: any[];
@@ -82,6 +83,7 @@ const PrintPaper: React.FC<PrintPaperProps> = ({
     isPrinting,
     printSessionId,
     isMergedPrint,
+    previewTheme,
     theme,
     isDarkMode,
     documents,
@@ -164,7 +166,7 @@ const PrintPaper: React.FC<PrintPaperProps> = ({
             <div className={showPrintPreview ? 'prose-container relative' : 'max-w-4xl mx-auto p-8 lg:p-12 min-h-full print:p-0'}>
                 <MarkdownPreview
                     content={doc?.mode === 'mermaid' ? `\`\`\`mermaid\n${doc.content}\n\`\`\`` : (doc?.content ?? '')}
-                    theme={theme}
+                    previewTheme={previewTheme}
                     isDarkMode={isDarkMode}
                     documents={documents}
                     onSelectDocument={onSelectDocument}
@@ -430,6 +432,7 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
                                     isPrinting={isPrinting}
                                     printSessionId={printSessionId}
                                     isMergedPrint={isMergedMode}
+                                    previewTheme={printSettings.previewTheme}
                                     theme={theme}
                                     isDarkMode={isDarkMode}
                                     documents={documents}

@@ -1,42 +1,29 @@
 import React from 'react';
+import { AlignLeft, AlignCenter, AlignRight, RotateCcw } from 'lucide-react';
 
 /**
- * ResizableWrapper: 可調整寬度與高度的容器組件
- * 提供交互式的縮放工具面板，支持主題切換與列印自動調整
+ * ResizableWrapper: 可調整寬度的容器組件
+ * 提供交互式的寬度與對齊工具面板
  */
 export const ResizableWrapper: React.FC<{
     children: React.ReactNode;
     width: string;
-    height: string;
-    scale: number;
+    align: string;
     onWidthChange: (width: string) => void;
-    onHeightChange: (height: string) => void;
-    onScaleChange: (scale: number) => void;
+    onAlignChange: (align: string) => void;
     onReset: () => void;
     isDarkMode: boolean;
-}> = ({ children, width, height, scale, onWidthChange, onHeightChange, onScaleChange, onReset, isDarkMode }) => {
+}> = ({ children, width, align, onWidthChange, onAlignChange, onReset, isDarkMode }) => {
+    
     return (
-        <div className="relative group/resizable my-8 print:my-4 print:p-0">
+        <div 
+            className={`chart-wrapper relative group/resizable print:p-0 flex w-full align-${align}`}
+        >
             <div
-                className="mx-auto transition-all duration-300 ease-in-out relative flex justify-center"
-                style={{
-                    width,
-                    maxHeight: height === 'auto' ? 'none' : height,
-                    overflow: height === 'auto' ? 'visible' : 'hidden'
-                }}
+                className="transition-all duration-300 ease-in-out relative chart-content"
+                style={{ width }}
             >
-                <div
-                    className="print:![transform:none] print:![zoom:var(--print-scale)] w-full"
-                    style={{
-                        transform: `scale(${scale})`,
-                        transformOrigin: 'top center',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        '--print-scale': scale
-                    } as any}
-                >
-                    {children}
-                </div>
+                {children}
             </div>
 
             {/* 調整大小的 UI 面板 - 懸浮顯示 (列印時隱藏) */}
@@ -45,48 +32,67 @@ export const ResizableWrapper: React.FC<{
                     ? 'bg-slate-800/95 border-slate-700 text-slate-200'
                     : 'bg-white/95 border-slate-200 text-slate-600'
                     }`}>
+                    
                     {/* Width Control */}
                     <div className="flex items-center gap-1.5 border-r border-slate-200/20 pr-2.5">
-                        <span className="text-[10px] font-bold uppercase tracking-wider select-none opacity-50">W</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider select-none opacity-50">Width</span>
                         <input
                             type="range" min="30" max="100" step="5"
-                            value={parseInt(width)}
+                            value={parseInt(width) || 100}
                             onChange={(e) => onWidthChange(`${e.target.value}%`)}
-                            className={`w-16 h-1 rounded-lg appearance-none cursor-pointer accent-brand-primary bg-slate-200 dark:bg-slate-700`}
+                            className={`w-24 h-1 rounded-lg appearance-none cursor-pointer accent-brand-primary bg-slate-200 dark:bg-slate-700`}
                         />
-                        <span className="text-[10px] font-mono min-w-[2.2rem] opacity-70">{width}</span>
+                        <span className="text-[10px] font-mono min-w-[2.2rem] opacity-70 text-right">{width}</span>
                     </div>
 
-                    {/* Height Control */}
-                    <div className="flex items-center gap-1.5 border-r border-slate-200/20 pr-2.5">
-                        <span className="text-[10px] font-bold uppercase tracking-wider select-none opacity-50">H</span>
-                        <input
-                            type="range" min="150" max="800" step="10"
-                            value={height === 'auto' ? 800 : parseInt(height)}
-                            onChange={(e) => onHeightChange(`${e.target.value}px`)}
-                            className={`w-16 h-1 rounded-lg appearance-none cursor-pointer accent-teal-500 bg-slate-200 dark:bg-slate-700`}
-                        />
-                        <span className="text-[10px] font-mono min-w-[2.2rem] opacity-70">{height === 'auto' ? 'Auto' : height}</span>
-                    </div>
-
-                    {/* Scale Control */}
-                    <div className="flex items-center gap-1.5 border-r border-slate-200/20 pr-2.5">
-                        <span className="text-[10px] font-bold uppercase tracking-wider select-none opacity-50">S</span>
-                        <input
-                            type="range" min="0.5" max="2" step="0.1"
-                            value={scale}
-                            onChange={(e) => onScaleChange(parseFloat(e.target.value))}
-                            className={`w-16 h-1 rounded-lg appearance-none cursor-pointer accent-amber-500 bg-slate-200 dark:bg-slate-700`}
-                        />
-                        <span className="text-[10px] font-mono min-w-[2.2rem] opacity-70">{scale.toFixed(1)}x</span>
+                    {/* Alignment Control */}
+                    <div className="flex items-center gap-1 px-1 border-r border-slate-200/20 pr-2.5">
+                        <button
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                onAlignChange('left');
+                            }}
+                            className={`p-1 rounded-md transition-colors ${align === 'left' ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+                            title="Align Left"
+                        >
+                            <AlignLeft size={14} />
+                        </button>
+                        <button
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                onAlignChange('center');
+                            }}
+                            className={`p-1 rounded-md transition-colors ${align === 'center' ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+                            title="Align Center"
+                        >
+                            <AlignCenter size={14} />
+                        </button>
+                        <button
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                onAlignChange('right');
+                            }}
+                            className={`p-1 rounded-md transition-colors ${align === 'right' ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+                            title="Align Right"
+                        >
+                            <AlignRight size={14} />
+                        </button>
                     </div>
 
                     {/* Reset Button */}
                     <button
-                        onClick={onReset}
-                        className={`text-[9px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-brand-primary hover:text-white transition-colors duration-200`}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onReset();
+                        }}
+                        className={`p-1.5 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-brand-primary hover:text-white transition-colors duration-200`}
+                        title="Reset Settings"
                     >
-                        RESET
+                        <RotateCcw size={12} />
                     </button>
                 </div>
             </div>

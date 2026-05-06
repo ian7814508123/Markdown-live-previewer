@@ -1,0 +1,79 @@
+/* Minimal Theme: Modern, Clean, Sans-serif */
+
+.theme-minimal {
+    --minimal-font-sans: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --minimal-accent: #3b82f6;
+    --minimal-bg-soft: #f8fafc;
+}
+
+.theme-minimal.prose {
+    font-family: var(--minimal-font-sans);
+    color: #334155;
+    line-height: 1.75;
+}
+
+.theme-minimal.prose h1,
+.theme-minimal.prose h2,
+.theme-minimal.prose h3 {
+    color: #1e293b;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.theme-minimal.prose h1 {
+    font-size: 2.75rem;
+    margin-bottom: 2.5rem;
+}
+
+.theme-minimal.prose blockquote {
+    background-color: var(--minimal-bg-soft);
+    border-left: 4px solid var(--minimal-accent);
+    border-radius: 0 8px 8px 0;
+    padding: 1.5rem 2rem;
+    font-style: normal;
+    color: #475569;
+}
+
+.theme-minimal.prose a {
+    color: var(--minimal-accent);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+}
+
+.theme-minimal.prose a:hover {
+    border-bottom-color: var(--minimal-accent);
+}
+
+.theme-minimal.prose hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #e2e8f0, transparent);
+    margin: 4rem 0;
+}
+
+.theme-minimal.prose img {
+    border-radius: 12px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* Print Specifics for Minimal */
+@media print {
+    .theme-minimal.prose {
+        background-color: white !important;
+        color: #1e293b !important;
+        line-height: 1.6 !important;
+    }
+
+    .theme-minimal.prose blockquote {
+        background-color: #f8fafc !important;
+        border-radius: 0 !important;
+        border: 1px solid #e2e8f0 !important;
+        border-left: 4pt solid #3b82f6 !important;
+    }
+
+    .theme-minimal.prose hr {
+        background: #e2e8f0 !important;
+        height: 0.5pt !important;
+    }
+}

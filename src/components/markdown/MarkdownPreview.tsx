@@ -28,6 +28,7 @@ interface MarkdownPreviewProps {
     showPrintPreview?: boolean;
     printSessionId?: number;
     isMergedPrint?: boolean;
+    previewTheme?: 'default' | 'academic' | 'minimal' | 'developer';
 }
 
 // 原有的輔助 Hook 與組件已抽離至 DiagramBlock.tsx 與 ResizableWrapper.tsx 處理
@@ -54,7 +55,7 @@ const MermaidBlock: React.FC<{ code: string; isDarkMode: boolean; isPrinting?: b
         });
 
         const id = `mermaid-${hashString(renderCode + (isDark ? 'dark' : 'light'))}`;
-        
+
         // 1. 先進行語法檢查，避免 mermaid.render 回傳 "Syntax error in text" 的 SVG
         await mermaid.parse(renderCode, { suppressErrors: false });
 
@@ -234,7 +235,7 @@ interface ResizableImageProps {
 const ResizableImage: React.FC<ResizableImageProps> = ({ src, alt, getImage, isDarkMode }) => {
     // ─── 狀態持久化：從 LocalStorage 讀取初始設定 ───────────────────────────────────────
     const storageKey = useMemo(() => `chart-size-img:${src}`, [src]);
-    const { width, height, scale, updateWidth, updateHeight, updateScale, reset } = usePersistentCanvasSettings(storageKey);
+    const { width, align, updateWidth, updateAlign, reset } = usePersistentCanvasSettings(storageKey);
 
     const isLocal = src?.startsWith('img-local://');
     const imgId = isLocal ? src.replace('img-local://', '') : '';
@@ -242,11 +243,9 @@ const ResizableImage: React.FC<ResizableImageProps> = ({ src, alt, getImage, isD
     return (
         <ResizableWrapper
             width={width}
-            height={height}
-            scale={scale}
+            align={align}
             onWidthChange={updateWidth}
-            onHeightChange={updateHeight}
-            onScaleChange={updateScale}
+            onAlignChange={updateAlign}
             onReset={reset}
             isDarkMode={isDarkMode}
         >
@@ -432,7 +431,7 @@ const EnhancedCodeBlock: React.FC<EnhancedCodeBlockProps> = ({
 // ─── 區塊判斷上下文：用於解決 react-markdown v10 移除 inline prop 後的辨識問題 ───────
 const IsInPreContext = React.createContext(false);
 
-const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDarkMode, documents = [], onSelectDocument, onCreateMissing, currentDocId, isPrinting, showPrintPreview, printSessionId = 0, isMergedPrint }) => {
+const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDarkMode, documents = [], onSelectDocument, onCreateMissing, currentDocId, isPrinting, showPrintPreview, printSessionId = 0, isMergedPrint, previewTheme }) => {
     // 關鍵修正：判斷當前是否處於「需要白色底」或「列印中」的狀態
     // 優先使用 Props 以確保 React 渲染週期同步，避免 reliance on DOM queries
     const isActuallyPrinting = !!isPrinting || !!showPrintPreview;
@@ -465,6 +464,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
         showPrintPreview,
         printSessionId,
         isMergedPrint,
+        previewTheme,
         getImage
     };
 
@@ -626,7 +626,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
     }, [debouncedContent]);
 
     return (
-        <div className={`prose max-w-none p-8 select-text ${shouldShowDark ? 'prose-invert' : 'prose-slate'} prose-headings:font-bold prose-a:text-brand-primary prose-img:rounded-xl prose-table:border-collapse prose-th:border prose-th:border-slate-300 dark:prose-th:border-slate-700 prose-th:p-2 prose-td:border prose-td:border-slate-300 dark:prose-td:border-slate-700 prose-td:p-2 print:p-0 print:max-w-none print:bg-white`}>
+        <div className={`prose max-w-none p-8 select-text ${previewTheme && previewTheme !== 'default' ? `theme-${previewTheme}` : ''} ${shouldShowDark ? 'prose-invert' : 'prose-slate'} prose-headings:font-bold prose-a:text-brand-primary prose-img:rounded-xl prose-table:border-collapse prose-th:border prose-th:border-slate-300 dark:prose-th:border-slate-700 prose-th:p-2 prose-td:border prose-td:border-slate-300 dark:prose-td:border-slate-700 prose-td:p-2 print:p-0 print:max-w-none print:bg-white`}>
             <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkMath]}
                 rehypePlugins={[rehypeRaw]}

@@ -15,6 +15,8 @@ export interface PrintSettings {
     mergeVaultOnPdfExport: boolean;
     /** 在預覽區顯示列印預覽（邊界與分頁線） */
     showPrintPreview: boolean;
+    /** Markdown 預覽主題 */
+    previewTheme: 'default' | 'academic' | 'minimal' | 'developer';
 }
 
 export interface AppSettings {
@@ -30,6 +32,7 @@ const DEFAULT_PRINT_SETTINGS: PrintSettings = {
     mergeVaultOnMdExport: false,
     mergeVaultOnPdfExport: false,
     showPrintPreview: false,
+    previewTheme: 'default',
 };
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -90,7 +93,10 @@ export function useAppSettings() {
                         ...parsed,
                         customMacros: hasChanges ? newMacros : parsed.customMacros,
                         // 旧用戶沒有 printSettings時补上預設就
-                        printSettings: parsed.printSettings ?? DEFAULT_PRINT_SETTINGS,
+                        printSettings: {
+                            ...DEFAULT_PRINT_SETTINGS,
+                            ...(parsed.printSettings ?? {})
+                        },
                     };
                 }
                 // stored 存在但沒有 customMacros，補上預設後回傳

@@ -67,6 +67,8 @@ interface PrintPaperProps {
     onCreateMissing?: (name: string) => void;
     onScroll?: (e: React.UIEvent<HTMLDivElement>) => void;
     scrollRef?: React.Ref<HTMLDivElement>;
+    isGlobalAnnotationMode?: boolean;
+    setIsGlobalAnnotationMode?: (isMode: boolean) => void;
 }
 
 const PrintPaper: React.FC<PrintPaperProps> = ({
@@ -90,7 +92,9 @@ const PrintPaper: React.FC<PrintPaperProps> = ({
     onSelectDocument,
     onCreateMissing,
     onScroll,
-    scrollRef
+    scrollRef,
+    isGlobalAnnotationMode,
+    setIsGlobalAnnotationMode,
 }) => {
     const [contentHeight, setContentHeight] = useState(0);
     const [manualBreaks, setManualBreaks] = useState<number[]>([]);
@@ -155,15 +159,15 @@ const PrintPaper: React.FC<PrintPaperProps> = ({
             className={`
                 ${showPrintPreview
                     ? `print-paper bg-white shadow-2xl mx-auto paper-${paperSize.toLowerCase()} paper-${orientation} margin-${margin} relative`
-                    : `flex-1 w-full h-full overflow-auto custom-scrollbar bg-white dark:bg-slate-900 transition-colors duration-200`}
+                    : `flex-1 w-full h-full overflow-auto print:overflow-visible custom-scrollbar bg-white dark:bg-slate-900 transition-colors duration-200`}
                 ${isVisibleOnScreen ? 'block' : 'hidden'} 
-                ${!isVisibleOnScreen && isVisibleInPrint ? 'print:block' : ''} 
+                ${!isVisibleOnScreen && isVisibleInPrint ? 'print:block' : 'print:hidden'} 
                 ${!isActive && (!showPrintPreview && !isVisibleInPrint) ? 'tab-inactive' : ''} 
                 ${isActive && showPrintPreview ? 'ring-4 ring-[#0284C7]' : ''}
-                print:block print:static print:p-0 print:shadow-none print:ring-0
+                print:static print:p-0 print:shadow-none print:ring-0
             `}
         >
-            <div className={showPrintPreview ? 'prose-container relative' : 'max-w-4xl mx-auto p-8 lg:p-12 min-h-full print:p-0'}>
+            <div className={showPrintPreview ? 'prose-container relative' : 'max-w-4xl mx-auto p-8 lg:p-12 min-h-full print:p-0 print:overflow-visible'}>
                 <MarkdownPreview
                     content={doc?.mode === 'mermaid' ? `\`\`\`mermaid\n${doc.content}\n\`\`\`` : (doc?.content ?? '')}
                     previewTheme={previewTheme}
@@ -176,6 +180,8 @@ const PrintPaper: React.FC<PrintPaperProps> = ({
                     showPrintPreview={showPrintPreview}
                     printSessionId={printSessionId}
                     isMergedPrint={isMergedPrint}
+                    isGlobalAnnotationMode={isGlobalAnnotationMode}
+                    setIsGlobalAnnotationMode={setIsGlobalAnnotationMode}
                 />
                 {showPrintPreview && (
                     <PageBreaksOverlay
@@ -209,6 +215,8 @@ interface MarkdownPreviewSectionProps {
     printSettings: any;
     isPrinting?: boolean;
     printSessionId?: number;
+    isGlobalAnnotationMode?: boolean;
+    setIsGlobalAnnotationMode?: (isMode: boolean) => void;
 }
 
 const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
@@ -227,6 +235,8 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
     printSettings,
     isPrinting = false,
     printSessionId = 0,
+    isGlobalAnnotationMode,
+    setIsGlobalAnnotationMode,
 }) => {
     // 當前文件物件
     const currentDoc = documents?.find((d: any) => d.id === currentDocId);
@@ -305,7 +315,7 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
     // 決定要渲染的文件列表
     const docsToRenderIds = useMemo(() => {
         const isMergedActive = (isPrinting || showPrintPreview) && mergeVaultOnPdfExport && currentDoc?.folderId;
-        
+
         // 修正：只有當開啟了「合併列印 (PDF)」且處於預覽/列印狀態時，才讀取整個資料夾的文件
         if (isMergedActive) {
             return (documents ?? [])
@@ -313,9 +323,15 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
                 .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.updatedAt - b.updatedAt)
                 .map((d: any) => d.id);
         }
-        // 否則，只渲染已啟動的分頁
+        
+        // 如果正在列印或開啟列印預覽，且非合併模式，則只渲染當前文件
+        if (isPrinting || showPrintPreview) {
+            return [currentDocId].filter(Boolean) as string[];
+        }
+
+        // 否則，渲染所有已啟動的分頁（背景快取用）
         return markdownDocIds.filter(id => activatedDocIds.has(id));
-    }, [mergeVaultOnPdfExport, currentDoc?.folderId, documents, markdownDocIds, activatedDocIds, isPrinting, showPrintPreview]);
+    }, [mergeVaultOnPdfExport, currentDoc?.folderId, documents, markdownDocIds, activatedDocIds, isPrinting, showPrintPreview, currentDocId]);
 
     // 狀態鎖定：防止 Intentional Scroll 與 IntersectionObserver 產生衝突
     const isManualScrolling = useRef(false);
@@ -440,6 +456,8 @@ const MarkdownPreviewSection: React.FC<MarkdownPreviewSectionProps> = ({
                                     onCreateMissing={onCreateMissing}
                                     onScroll={onScroll}
                                     scrollRef={scrollRef}
+                                    isGlobalAnnotationMode={isGlobalAnnotationMode}
+                                    setIsGlobalAnnotationMode={setIsGlobalAnnotationMode}
                                 />
                             );
                         })}
@@ -481,6 +499,8 @@ interface PreviewPanelProps {
     printSettings: any;
     isPrinting?: boolean;
     printSessionId?: number;
+    isGlobalAnnotationMode?: boolean;
+    setIsGlobalAnnotationMode?: (isMode: boolean) => void;
 }
 
 const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
@@ -512,6 +532,8 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
     printSettings,
     isPrinting,
     printSessionId,
+    isGlobalAnnotationMode,
+    setIsGlobalAnnotationMode,
 }, ref) => {
     const [isHUDExpanded, setIsHUDExpanded] = useState(false);
     const hudRef = useRef<HTMLDivElement>(null);
@@ -555,6 +577,8 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
                 printSettings={printSettings}
                 isPrinting={isPrinting}
                 printSessionId={printSessionId}
+                isGlobalAnnotationMode={isGlobalAnnotationMode}
+                setIsGlobalAnnotationMode={setIsGlobalAnnotationMode}
             />
         );
     }

@@ -27,6 +27,7 @@ interface HistorySidebarProps {
     onRenameFolder: (folderId: string, newName: string) => void;
     onMoveDocument: (docId: string, folderId: string | null) => void;
     onReorderDocuments: (docIds: string[]) => void;
+    onImportFile?: () => void;
 }
 
 const HistorySidebar: React.FC<HistorySidebarProps> = ({
@@ -49,6 +50,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
     onRenameFolder,
     onMoveDocument,
     onReorderDocuments,
+    onImportFile,
 }) => {
     const [isToolsOpen, setIsToolsOpen] = useState(false);
     const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
@@ -56,6 +58,20 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
     const [editFolderName, setEditFolderName] = useState('');
     const [hasPushedAd, setHasPushedAd] = useState(false);
     const adContainerRef = useRef<HTMLDivElement>(null);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const autoScrollRef = useRef<{
+        lastY: number;
+        isActive: boolean;
+        startTime: number | null;
+        animationFrame: number | null;
+        scrollLoopFn: (() => void) | null;
+    }>({
+        lastY: 0,
+        isActive: false,
+        startTime: null,
+        animationFrame: null,
+        scrollLoopFn: null,
+    });
 
     // 初始化側邊欄廣告
     useEffect(() => {
@@ -105,6 +121,82 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
             onRenameFolder(folderId, editFolderName.trim());
         }
         setEditingFolderId(null);
+    };
+
+    /**
+     * 處理拖曳時的邊緣滾動 (Auto-Scroll) - 使用 requestAnimationFrame 達到平滑效果
+     */
+    useEffect(() => {
+        const state = autoScrollRef.current;
+
+        const scrollLoop = () => {
+            const container = scrollContainerRef.current;
+            if (!container || !state.isActive) {
+                state.animationFrame = null;
+                return;
+            }
+
+            const rect = container.getBoundingClientRect();
+            const threshold = 60; // 觸發邊距
+            const maxSpeed = 15;  // 最高速度
+            const delay = 300;    // 停頓延遲 (ms)
+
+            const distTop = state.lastY - rect.top;
+            const distBottom = rect.bottom - state.lastY;
+
+            let speed = 0;
+            let direction = 0;
+
+            if (distTop < threshold && distTop > 0) {
+                direction = -1;
+                speed = (1 - Math.max(0, distTop / threshold)) * maxSpeed;
+            } else if (distBottom < threshold && distBottom > 0) {
+                direction = 1;
+                speed = (1 - Math.max(0, distBottom / threshold)) * maxSpeed;
+            }
+
+            if (direction !== 0) {
+                if (!state.startTime) state.startTime = Date.now();
+                const elapsed = Date.now() - state.startTime;
+                if (elapsed >= delay) {
+                    container.scrollTop += direction * speed;
+                }
+            } else {
+                state.startTime = null;
+            }
+
+            state.animationFrame = requestAnimationFrame(scrollLoop);
+        };
+
+        state.scrollLoopFn = scrollLoop;
+
+        return () => {
+            if (state.animationFrame) {
+                cancelAnimationFrame(state.animationFrame);
+            }
+        };
+    }, []);
+
+    const handleDragOverScroll = (e: React.DragEvent) => {
+        const state = autoScrollRef.current;
+        state.lastY = e.clientY;
+
+        if (!state.isActive) {
+            state.isActive = true;
+            if (!state.animationFrame && state.scrollLoopFn) {
+                state.animationFrame = requestAnimationFrame(state.scrollLoopFn);
+            }
+        }
+    };
+
+    const handleDragEnd = () => {
+        const state = autoScrollRef.current;
+        state.isActive = false;
+        state.startTime = null;
+        if (state.animationFrame) {
+            cancelAnimationFrame(state.animationFrame);
+            state.animationFrame = null;
+        }
     };
 
     /**
@@ -220,7 +312,13 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                 </div>
 
                 {/* 文檔列表 */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                <div
+                    ref={scrollContainerRef}
+                    className="flex-1 overflow-y-auto custom-scrollbar"
+                    onDragOver={handleDragOverScroll}
+                    onDragLeave={handleDragEnd}
+                    onDrop={handleDragEnd}
+                >
                     {documents.length === 0 && folders.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full px-4 text-center">
                             <FolderOpen size={48} className="text-slate-300 dark:text-slate-700 mb-3" />
@@ -435,6 +533,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({
                 currentDocContent={currentDocContent}
                 currentDocMode={currentDocMode}
                 onInsertIntoDoc={onInsertIntoDoc}
+                onImportFile={onImportFile}
             />
         </>
     );

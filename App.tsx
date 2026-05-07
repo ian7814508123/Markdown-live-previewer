@@ -141,8 +141,16 @@ const App: React.FC = () => {
   const [openDocIds, setOpenDocIds] = useState<string[]>([]);
   const [isPrinting, setIsPrinting] = useState(false);
   const [printSessionId, setPrintSessionId] = useState(0);
+  const [isGlobalAnnotationMode, setIsGlobalAnnotationMode] = useState(false);
 
   const { settings, updateMacros, updatePrintSettings, restoreDefaults } = useAppSettings();
+
+  // 列印預覽關閉時，強制退出標註模式（避免座標系統不一致）
+  useEffect(() => {
+    if (!settings.printSettings.showPrintPreview) {
+      setIsGlobalAnnotationMode(false);
+    }
+  }, [settings.printSettings.showPrintPreview]);
 
   // 從當前文檔取得 mode 和 code
   const mode = currentDocument?.mode || 'markdown';
@@ -246,6 +254,7 @@ const App: React.FC = () => {
 
   const previewRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<ReactCodeMirrorRef>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sync Scroll State
   const targetScrollTop = useRef(0);
@@ -907,9 +916,8 @@ const App: React.FC = () => {
 
       window.print();
 
-      // 恢復原本的標題 (或 currentDocument.name)
+      // 恢復原本的標題
       document.title = prevTitle;
-
       setIsPrinting(false);
       document.getElementById('app-print-override')?.remove();
     };
@@ -1201,7 +1209,6 @@ const App: React.FC = () => {
     const extension = file.name.split('.').pop()?.toLowerCase();
     let importMode: EditorMode = 'markdown';
 
-    // 只根據副檔名判斷，避免誤判包含 Mermaid 程式碼區塊的 Markdown 文件
     if (extension === 'mmd') {
       importMode = 'mermaid';
     }
@@ -1210,6 +1217,38 @@ const App: React.FC = () => {
     if (newDocId) {
       handleDocumentSwitch(newDocId);
     }
+  };
+
+  const handleTriggerImport = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    const fileName = file.name.toLowerCase();
+
+    try {
+      if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls') || fileName.endsWith('.csv')) {
+        // 這裡需要導入 parseExcelToMarkdown
+        const { parseExcelToMarkdown } = await import('./src/services/excelParser');
+        const md = await parseExcelToMarkdown(file);
+        if (md) handleInsertIntoDoc(md);
+      } else {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const content = event.target?.result as string;
+          if (content !== undefined) handleImportFullFile(file, content);
+        };
+        reader.readAsText(file);
+      }
+    } catch (error) {
+      console.error("Failed to parse file", error);
+      alert("匯入失敗，請檢查檔案格式是否正確");
+    }
+    e.target.value = '';
   };
 
   const mathJaxConfig = {
@@ -1261,6 +1300,22 @@ const App: React.FC = () => {
   return (
     <MathJaxContext config={mathJaxConfig}>
       <div className="flex flex-col h-screen max-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
+
+        {/* ── Hybrid 列印 Loading Overlay ────────────────────────────────
+         * 截圖 Annotation 期間顯示全螢幕蒙版，告知使用者請勿操作 
+        {isFlattenPrinting && (
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-white/80 backdrop-blur-sm print:hidden"
+            aria-live="polite"
+          >
+            <div className="flex flex-col items-center gap-3 px-8 py-6 bg-white rounded-2xl shadow-2xl border border-slate-100">
+              <div className="w-10 h-10 rounded-full border-4 border-slate-200 border-t-sky-500 animate-spin" />
+              <p className="text-sm font-semibold text-slate-700">正在合成標註圖層...</p>
+              <p className="text-xs text-slate-400">完成後將自動開啟列印對話框</p>
+            </div>
+          </div>
+        )}
+        */}
         <Header
           mode={mode}
           // setMode={handleModeSwitch} // Removed from UI
@@ -1273,12 +1328,15 @@ const App: React.FC = () => {
           isSyncScroll={isSyncScroll}
           setIsSyncScroll={setIsSyncScroll}
           onInsertCode={(newCode) => handleCodeChange(code + '\n\n' + newCode)}
-          onImportFullFile={handleImportFullFile}
           onOpenSettings={() => setIsSettingsOpen(true)}
           onPrint={() => handlePrint(mode)}
           isInFolder={!!currentDocument?.folderId}
           printSettings={settings.printSettings}
           onUpdatePrintSettings={updatePrintSettings}
+          isGlobalAnnotationMode={isGlobalAnnotationMode}
+          setIsGlobalAnnotationMode={setIsGlobalAnnotationMode}
+          showPrintPreview={settings.printSettings.showPrintPreview}
+          hasOpenDocuments={openDocIds.length > 0}
         />
 
         <main className="flex-1 flex justify-center overflow-hidden print:block print:overflow-visible bg-slate-200/40 dark:bg-black/20">
@@ -1303,6 +1361,15 @@ const App: React.FC = () => {
             onRenameFolder={renameFolder}
             onMoveDocument={moveDocument}
             onReorderDocuments={reorderDocuments}
+            onImportFile={handleTriggerImport}
+          />
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept=".xlsx,.xls,.csv,.md,.txt,.mmd"
+            onChange={handleFileChange}
           />
 
           {/* Create Document Modal */}
@@ -1378,6 +1445,8 @@ const App: React.FC = () => {
               printSettings={settings.printSettings}
               isPrinting={isPrinting}
               printSessionId={printSessionId}
+              isGlobalAnnotationMode={isGlobalAnnotationMode}
+              setIsGlobalAnnotationMode={setIsGlobalAnnotationMode}
             />
           </div>
         </main>

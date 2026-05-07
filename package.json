@@ -3,7 +3,7 @@
   "author": "Ian Huang",
   "description": "A desktop application for live previewing Markdown files.",
   "private": true,
-  "version": "3.4.8",
+  "version": "3.4.10",
   "type": "module",
   "engines": {
     "node": ">=22"
@@ -31,12 +31,14 @@
     "codemirror-lang-mermaid": "^0.5.0",
     "extend": "^3.0.2",
     "framer-motion": "^12.38.0",
+    "html2canvas": "^1.4.1",
     "lucide-react": "^0.562.0",
     "mermaid": "^11.12.2",
     "pdf-lib": "^1.17.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-markdown": "^10.1.0",
+    "react-rnd": "^10.5.3",
     "react-syntax-highlighter": "^16.1.0",
     "rehype-mathjax": "^7.1.0",
     "rehype-raw": "^7.0.0",

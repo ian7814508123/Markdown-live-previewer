@@ -9,12 +9,15 @@ import embed from 'vega-embed';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import SmilesDrawer from 'smiles-drawer';
 import { useImageStorage } from '../../hooks/useImageStorage';
-import { WrapText } from 'lucide-react';
 import DiagramBlock from './DiagramBlock';
 import { ResizableWrapper } from '../ui/ResizableWrapper';
 import { hashString } from '../../utils';
 import { useDebounce } from '../../hooks/useDebounce';
 import { usePersistentCanvasSettings } from '../../hooks/usePersistentCanvasSettings';
+import { useAnnotations } from '../../hooks/useAnnotations';
+import { AnnotationLayer } from './AnnotationLayer';
+import AnnotationToolbar from './AnnotationToolbar';
+import { WrapText, X, MousePointer2, Trash2 } from 'lucide-react';
 
 interface MarkdownPreviewProps {
     content: string;
@@ -29,11 +32,13 @@ interface MarkdownPreviewProps {
     printSessionId?: number;
     isMergedPrint?: boolean;
     previewTheme?: 'default' | 'academic' | 'minimal' | 'developer';
+    isGlobalAnnotationMode?: boolean;
+    setIsGlobalAnnotationMode?: (isMode: boolean) => void;
 }
 
 // 原有的輔助 Hook 與組件已抽離至 DiagramBlock.tsx 與 ResizableWrapper.tsx 處理
 
-// 原有的輔助 Hook 與組件已抽離至 DiagramBlock.tsx 處理
+// ─── 標註工具按鈕元件 ──────────────────────────────────────────────────────
 
 /** 
  * 淨化 Mermaid 生成的 SVG 字串
@@ -203,7 +208,7 @@ const LocalImage: React.FC<LocalImageProps & { getImage: (id: string) => Promise
 
     if (status === 'loading') {
         return (
-            <div className={`flex flex-col items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800/50 animate-pulse w-full min-h-[150px] ${className || ''}`}>
+            <div className={`flex flex-col items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800/50  w-full min-h-[150px] ${className || ''}`}>
                 <span className="flex items-center gap-2 text-slate-400 dark:text-slate-500 text-xs">
                     <span className="w-3 h-3 rounded-full border-2 border-slate-400 border-t-transparent animate-spin inline-block" />
                     載入圖片中…
@@ -237,6 +242,8 @@ const ResizableImage: React.FC<ResizableImageProps> = ({ src, alt, getImage, isD
     const storageKey = useMemo(() => `chart-size-img:${src}`, [src]);
     const { width, align, updateWidth, updateAlign, reset } = usePersistentCanvasSettings(storageKey);
 
+    const containerRef = useRef<HTMLDivElement>(null);
+
     const isLocal = src?.startsWith('img-local://');
     const imgId = isLocal ? src.replace('img-local://', '') : '';
 
@@ -249,12 +256,17 @@ const ResizableImage: React.FC<ResizableImageProps> = ({ src, alt, getImage, isD
             onReset={reset}
             isDarkMode={isDarkMode}
         >
-            {isLocal ? (
-                <LocalImage id={imgId} alt={alt} getImage={getImage} />
-            ) : (
-                <img src={src} alt={alt} className="rounded-xl max-w-full h-auto" />
-            )}
-            <div className="absolute bottom-2 right-3 text-[10px] text-slate-400 dark:text-slate-600 font-mono select-none pointer-events-none opacity-0 group-hover/resizable:opacity-100 transition-opacity">
+            <div
+                ref={containerRef}
+                className="relative rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-900/20"
+            >
+                {isLocal ? (
+                    <LocalImage id={imgId} alt={alt} getImage={getImage} />
+                ) : (
+                    <img src={src} alt={alt} className="rounded-xl max-w-full h-auto block" />
+                )}
+            </div>
+            <div className="absolute bottom-2 right-3 text-[10px] text-slate-400 dark:text-slate-600 font-mono select-none pointer-events-none opacity-0 group-hover/resizable:opacity-100 transition-opacity z-10">
                 {isLocal ? 'LOCAL IMAGE' : 'IMAGE'}
             </div>
         </ResizableWrapper>
@@ -430,11 +442,32 @@ const EnhancedCodeBlock: React.FC<EnhancedCodeBlockProps> = ({
 
 // ─── 區塊判斷上下文：用於解決 react-markdown v10 移除 inline prop 後的辨識問題 ───────
 const IsInPreContext = React.createContext(false);
+const GlobalAnnotationContext = React.createContext<{
+    isEditable: boolean;
+    setIsEditable: (v: boolean) => void;
+} | null>(null);
 
-const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDarkMode, documents = [], onSelectDocument, onCreateMissing, currentDocId, isPrinting, showPrintPreview, printSessionId = 0, isMergedPrint, previewTheme }) => {
+const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ 
+    content, 
+    isDarkMode, 
+    documents = [], 
+    onSelectDocument, 
+    onCreateMissing, 
+    currentDocId, 
+    isPrinting, 
+    showPrintPreview, 
+    printSessionId = 0, 
+    isMergedPrint, 
+    previewTheme,
+    isGlobalAnnotationMode = false,
+    setIsGlobalAnnotationMode,
+}) => {
     // 關鍵修正：判斷當前是否處於「需要白色底」或「列印中」的狀態
     // 優先使用 Props 以確保 React 渲染週期同步，避免 reliance on DOM queries
     const isActuallyPrinting = !!isPrinting || !!showPrintPreview;
+    // 只有真正執行 window.print() 時才為 true（列印預覽不在此列）
+    // 用於封鎖標註互動，允許列印預覽下正常操作便利貼
+    const isReallyPrinting = !!isPrinting;
     const shouldShowDark = isDarkMode && !isActuallyPrinting;
     const processedContent = useMemo(() => {
         return content
@@ -446,6 +479,147 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
     const debouncedContent = useDebounce(processedContent, 200);
     // 在 MarkdownPreview 頂層呼叫一次，避免每個 LocalImage 獨立開啟 DB 連線
     const { getImage } = useImageStorage();
+
+    // ─── 全局標註功能 ───────────────────────────────────────────────────────
+    const {
+        annotations: globalAnnotations,
+        addAnnotation: addGlobalAnnotation,
+        updateAnnotation: updateGlobalAnnotation,
+        removeAnnotation: removeGlobalAnnotation,
+        bringToFront: bringGlobalToFront,
+        clearAnnotations
+    } = useAnnotations(`doc-global:${currentDocId || 'none'}`);
+
+    const [activeTool, setActiveTool] = useState<'sticky' | 'rect' | 'circle'>('sticky');
+    const [activeColor, setActiveColor] = useState({ name: 'Yellow', bg: '#fef3c7', border: '#fcd34d', text: '#92400e' });
+    const [isDrawing, setIsDrawing] = useState(false);
+    const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
+    const [drawStart, setDrawStart] = useState<{ x: number, y: number } | null>(null);
+    const [drawRect, setDrawRect] = useState<{ x: number, y: number, w: number, h: number } | null>(null);
+
+    // 標註模式關閉時，清除選中狀態，避免殘留的 UI 在下次開啟時出現
+    useEffect(() => {
+        if (!isGlobalAnnotationMode) {
+            setSelectedAnnotationId(null);
+        }
+    }, [isGlobalAnnotationMode]);
+
+    // 進入列印狀態時清除選取，避免選取邊框（ring-4 highlight）被印入 PDF
+    useEffect(() => {
+        if (isActuallyPrinting) {
+            setSelectedAnnotationId(null);
+        }
+    }, [isActuallyPrinting]);
+
+    const globalContainerRef = useRef<HTMLDivElement>(null);
+
+    // 顏色清單
+    const colors = [
+        { name: 'Yellow', bg: '#fef3c7', border: '#fcd34d', text: '#92400e' },
+        { name: 'Blue', bg: '#e0f2fe', border: '#7dd3fc', text: '#0369a1' },
+        { name: 'Green', bg: '#dcfce7', border: '#86efac', text: '#166534' },
+        { name: 'Red', bg: '#fee2e2', border: '#fca5a5', text: '#991b1b' },
+        { name: 'Purple', bg: '#f3e8ff', border: '#d8b4fe', text: '#6b21a8' },
+    ];
+
+    // 監聽來自 ToolsModal 的全域事件
+    useEffect(() => {
+        const handleAddMemo = (e: any) => {
+            setIsGlobalAnnotationMode?.(true);
+            // 直接在中心新增一個便利貼
+            addGlobalAnnotation({
+                type: 'sticky',
+                content: '',
+                x: 35,
+                y: 35,
+                width: 200,
+                height: 120,
+                style: {
+                    backgroundColor: activeColor.bg,
+                    borderColor: activeColor.border,
+                    color: activeColor.text,
+                    borderRadius: '4px'
+                }
+            });
+        };
+        const handleToggleMode = () => setIsGlobalAnnotationMode?.(!isGlobalAnnotationMode);
+
+        window.addEventListener('add-global-memo', handleAddMemo);
+        window.addEventListener('toggle-global-memo-mode', handleToggleMode);
+        return () => {
+            window.removeEventListener('add-global-memo', handleAddMemo);
+            window.removeEventListener('toggle-global-memo-mode', handleToggleMode);
+        };
+    }, [addGlobalAnnotation, currentDocId, activeColor]);
+
+    // ─── 繪製邏輯 ──────────────────────────────────────────────────────────
+    const handleMouseDown = (e: React.MouseEvent) => {
+        if (!isGlobalAnnotationMode || isReallyPrinting) return;
+
+        // 如果點擊的是現有的標註（RnD 元件），設定選中並不觸發繪製
+        const draggable = (e.target as HTMLElement).closest('.react-draggable');
+        if (draggable) return;
+
+        // 點擊空白處：取消選取並準備繪製
+        setSelectedAnnotationId(null);
+
+        const rect = globalContainerRef.current?.getBoundingClientRect();
+        if (!rect) return;
+
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+        setIsDrawing(true);
+        setDrawStart({ x, y });
+        setDrawRect({ x, y, w: 0, h: 0 });
+    };
+
+    const handleMouseMove = (e: React.MouseEvent) => {
+        if (!isDrawing || !drawStart) return;
+
+        const rect = globalContainerRef.current?.getBoundingClientRect();
+        if (!rect) return;
+
+        const currentX = ((e.clientX - rect.left) / rect.width) * 100;
+        const currentY = ((e.clientY - rect.top) / rect.height) * 100;
+
+        setDrawRect({
+            x: Math.min(drawStart.x, currentX),
+            y: Math.min(drawStart.y, currentY),
+            w: Math.abs(currentX - drawStart.x),
+            h: Math.abs(currentY - drawStart.y)
+        });
+    };
+
+    const handleMouseUp = () => {
+        if (!isDrawing || !drawRect) return;
+
+        // 只有當面積夠大時才新增
+        if (drawRect.w > 1 && drawRect.h > 1) {
+            const rect = globalContainerRef.current?.getBoundingClientRect();
+            const widthPx = rect ? (drawRect.w / 100) * rect.width : 150;
+            const heightPx = rect ? (drawRect.h / 100) * rect.height : 100;
+
+            addGlobalAnnotation({
+                type: activeTool,
+                content: '',
+                x: drawRect.x,
+                y: drawRect.y,
+                width: widthPx,
+                height: heightPx,
+                style: {
+                    backgroundColor: activeColor.bg,
+                    borderColor: activeColor.border,
+                    color: activeColor.text,
+                    borderRadius: activeTool === 'circle' ? '50%' : activeTool === 'rect' ? '4px' : '0px'
+                }
+            });
+        }
+
+        setIsDrawing(false);
+        setDrawStart(null);
+        setDrawRect(null);
+    };
 
     const renderContextRef = useRef<any>(null);
 
@@ -626,16 +800,70 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, theme, isDar
     }, [debouncedContent]);
 
     return (
-        <div className={`prose max-w-none p-8 select-text ${previewTheme && previewTheme !== 'default' ? `theme-${previewTheme}` : ''} ${shouldShowDark ? 'prose-invert' : 'prose-slate'} prose-headings:font-bold prose-a:text-brand-primary prose-img:rounded-xl prose-table:border-collapse prose-th:border prose-th:border-slate-300 dark:prose-th:border-slate-700 prose-th:p-2 prose-td:border prose-td:border-slate-300 dark:prose-td:border-slate-700 prose-td:p-2 print:p-0 print:max-w-none print:bg-white`}>
-            <ReactMarkdown
-                remarkPlugins={[remarkGfm, remarkMath]}
-                rehypePlugins={[rehypeRaw]}
-                remarkRehypeOptions={remarkRehypeOptions}
-                components={components}
-                urlTransform={urlTransform}
-            >
-                {debouncedContent}
-            </ReactMarkdown>
+        <div
+            className={`relative w-full h-full min-h-[500px] print:h-auto print:min-h-0 ${isGlobalAnnotationMode ? 'cursor-crosshair' : ''}`}
+            ref={globalContainerRef}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+        >
+            <div className={`prose max-w-none p-8 select-text ${previewTheme && previewTheme !== 'default' ? `theme-${previewTheme}` : ''} ${shouldShowDark ? 'prose-invert' : 'prose-slate'} prose-headings:font-bold prose-a:text-brand-primary prose-img:rounded-xl prose-table:border-collapse prose-th:border prose-th:border-slate-300 dark:prose-th:border-slate-700 prose-th:p-2 prose-td:border prose-td:border-slate-300 dark:prose-td:border-slate-700 prose-td:p-2 print:p-0 print:max-w-none print:bg-white relative z-10`}>
+                <ReactMarkdown
+                    remarkPlugins={[remarkGfm, remarkMath]}
+                    rehypePlugins={[rehypeRaw]}
+                    remarkRehypeOptions={remarkRehypeOptions}
+                    components={components}
+                    urlTransform={urlTransform}
+                >
+                    {debouncedContent}
+                </ReactMarkdown>
+            </div>
+
+            {/* 繪製中的預覽矩形 */}
+            {isDrawing && drawRect && (
+                <div
+                    className="absolute border-2 border-dashed border-brand-primary bg-brand-primary/10 z-[60] pointer-events-none"
+                    style={{
+                        left: `${drawRect.x}%`,
+                        top: `${drawRect.y}%`,
+                        width: `${drawRect.w}%`,
+                        height: `${drawRect.h}%`,
+                        borderRadius: activeTool === 'circle' ? '50%' : '4px'
+                    }}
+                />
+            )}
+
+            {/* 全局標註層 */}
+            <AnnotationLayer
+                annotations={globalAnnotations}
+                onUpdate={updateGlobalAnnotation}
+                onRemove={removeGlobalAnnotation}
+                isEditable={isGlobalAnnotationMode && !isReallyPrinting}
+                containerRef={globalContainerRef}
+                selectedId={selectedAnnotationId}
+                onSelect={setSelectedAnnotationId}
+            />
+
+            {/* 全局編輯狀態提示 (浮動於底部中心) - 膠囊形狀 Context-Aware Bar */}
+            {/* isActuallyPrinting 僅傳 isPrinting（真正列印時才隱藏），
+                showPrintPreview 時 toolbar 應保持顯示供使用者操作標註 */}
+            <AnnotationToolbar
+                isVisible={!!isGlobalAnnotationMode}
+                isActuallyPrinting={!!isPrinting}
+                activeTool={activeTool}
+                setActiveTool={setActiveTool}
+                activeColor={activeColor}
+                setActiveColor={setActiveColor}
+                selectedAnnotationId={selectedAnnotationId}
+                setSelectedAnnotationId={setSelectedAnnotationId}
+                annotations={globalAnnotations}
+                onUpdateAnnotation={updateGlobalAnnotation}
+                onAddAnnotation={addGlobalAnnotation}
+                onRemoveAnnotation={removeGlobalAnnotation}
+                onBringToFront={bringGlobalToFront}
+                onExitMode={() => setIsGlobalAnnotationMode?.(false)}
+                colors={colors}
+            />
         </div>
     );
 };

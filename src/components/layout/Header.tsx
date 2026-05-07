@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
-import { Download, ChevronDown, Image as ImageIcon, FileImage, FileJson, FileText, Printer, Sun, Moon, FileUp, Settings, Box } from 'lucide-react';
-import { parseExcelToMarkdown } from '../../services/excelParser';
+import { Download, ChevronDown, Image as ImageIcon, FileImage, FileJson, FileText, Printer, Sun, Moon, FileUp, Settings, Box, MousePointer2 } from 'lucide-react';
 import RippleButton from '../ui/RippleButton';
 import MagneticButton from '../ui/MagneticButton';
 import InteractiveLogo from '../ui/InteractiveLogo';
@@ -16,7 +15,6 @@ interface HeaderProps {
     isSyncScroll: boolean;
     setIsSyncScroll: (isSync: boolean) => void;
     onInsertCode: (code: string) => void;
-    onImportFullFile: (file: File, content: string) => void;
     onOpenSettings: () => void;
     /** 統一列印 / PDF 呼叫 */
     onPrint: () => void;
@@ -26,6 +24,12 @@ interface HeaderProps {
     printSettings?: any;
     /** 更新設定的回呼 */
     onUpdatePrintSettings?: (patch: any) => void;
+    isGlobalAnnotationMode?: boolean;
+    setIsGlobalAnnotationMode?: (isMode: boolean) => void;
+    /** 列印預覽是否開啟（只有開啟時才允許進入標註模式） */
+    showPrintPreview?: boolean;
+    /** 是否有任何文件被打開 */
+    hasOpenDocuments?: boolean;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -39,18 +43,20 @@ const Header: React.FC<HeaderProps> = ({
     isSyncScroll,
     setIsSyncScroll,
     onInsertCode,
-    onImportFullFile,
     onOpenSettings,
     onPrint,
     isInFolder,
     printSettings,
     onUpdatePrintSettings,
+    isGlobalAnnotationMode,
+    setIsGlobalAnnotationMode,
+    showPrintPreview = false,
+    hasOpenDocuments = false,
 }) => {
     const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState(false);
     const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
     const downloadMenuRef = useRef<HTMLDivElement>(null);
     const themeMenuRef = useRef<HTMLDivElement>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
     const [logoVariant, setLogoVariant] = useState<'v1' | 'v2'>('v1');
 
     // 主顕選句映射
@@ -114,32 +120,6 @@ const Header: React.FC<HeaderProps> = ({
         setIsDownloadMenuOpen(false);
     }
 
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (!files || files.length === 0) return;
-
-        const file = files[0];
-        const fileName = file.name.toLowerCase();
-
-        try {
-            if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls') || fileName.endsWith('.csv')) {
-                const md = await parseExcelToMarkdown(file);
-                if (md) onInsertCode(md);
-            } else {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    const content = event.target?.result as string;
-                    if (content !== undefined) onImportFullFile(file, content);
-                };
-                reader.readAsText(file);
-            }
-        } catch (error) {
-            console.error("Failed to parse file", error);
-            alert("匯入失敗，請檢查檔案格式是否正確");
-        }
-
-        e.target.value = '';
-    };
 
     // ── 下載選單項目的共用樣式 ──────────────────────────────
     const menuItem = (onClick: () => void, icon: React.ReactNode, label: string, sub: string) => (
@@ -158,13 +138,6 @@ const Header: React.FC<HeaderProps> = ({
 
     return (
         <header className="h-16 flex items-center justify-between px-6 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-50 shrink-0 shadow-sm transition-colors duration-200 select-none print:hidden">
-            <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept=".xlsx,.xls,.csv,.md,.txt,.mmd"
-                onChange={handleFileUpload}
-            />
 
             {/* Logo + 標題 */}
             <div className="flex items-center gap-3">
@@ -206,6 +179,7 @@ const Header: React.FC<HeaderProps> = ({
                         aria-label="PDF 版面設定"
                         title="PDF 版面設定"
                         className="text-slate-500 dark:text-slate-400 hover:text-brand-primary"
+                        disabled={!hasOpenDocuments}
                         magneticOptions={{ maxOffset: 6, radius: 45 }}>
                         <Settings size={20} />
                     </MagneticButton>
@@ -214,10 +188,11 @@ const Header: React.FC<HeaderProps> = ({
 
                     {/* 主題選擇器 */}
                     <div className="relative ml-1" ref={themeMenuRef}>
-                        <button onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
+                        <button onClick={() => hasOpenDocuments && setIsThemeMenuOpen(!isThemeMenuOpen)}
                             aria-label="開啟主題選擇選單"
+                            disabled={!hasOpenDocuments}
                             style={{ position: 'relative', overflow: 'hidden' }}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-50 hover:bg-slate-100 dark:hover:bg-white/10 transition-all select-none">
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-50 hover:bg-slate-100 dark:hover:bg-white/10 transition-all select-none disabled:opacity-50 disabled:cursor-not-allowed">
                             <span className="text-[10px] font-bold text-slate-700 dark:text-slate-100 uppercase tracking-wide">主題</span>
                             <span>{currentTheme.emoji} {currentTheme.label}</span>
                             <ChevronDown size={12} className={`transition-transform duration-200 ${isThemeMenuOpen ? 'rotate-180' : ''}`} />
@@ -247,8 +222,9 @@ const Header: React.FC<HeaderProps> = ({
 
                     {/* 下載選單（Mermaid）：主要 CTA，使用較強磁力吸引使用者點擊 */}
                     <div className="relative" ref={downloadMenuRef}>
-                        <MagneticButton variant="filled" onClick={() => setIsDownloadMenuOpen(!isDownloadMenuOpen)}
+                        <MagneticButton variant="filled" onClick={() => hasOpenDocuments && setIsDownloadMenuOpen(!isDownloadMenuOpen)}
                             aria-label="開啟導出選單"
+                            disabled={!hasOpenDocuments}
                             className="text-sm pr-3"
                             magneticOptions={{ maxOffset: 14, radius: 70, stiffness: 250, damping: 18 }}>
                             <Download size={16} />
@@ -349,6 +325,7 @@ const Header: React.FC<HeaderProps> = ({
                         aria-label="偏好設定"
                         title="偏好設定"
                         className="text-slate-500 dark:text-slate-400 hover:text-brand-primary"
+                        disabled={!hasOpenDocuments}
                         magneticOptions={{ maxOffset: 6, radius: 45 }}>
                         <Settings size={20} />
                     </MagneticButton>
@@ -356,34 +333,44 @@ const Header: React.FC<HeaderProps> = ({
                     <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
 
                     {/* 同步滾動 */}
-                    <MagneticButton onClick={() => setIsSyncScroll(!isSyncScroll)} title="同步滾動"
+                    <MagneticButton onClick={() => hasOpenDocuments && setIsSyncScroll(!isSyncScroll)} title="同步滾動"
+                        disabled={!hasOpenDocuments}
                         style={{ position: 'relative', overflow: 'hidden' }}
                         className={`inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-semibold transition-all select-none
-                            ${isSyncScroll
+                            ${isSyncScroll && hasOpenDocuments
                                 ? 'bg-slate-100 dark:bg-slate-800 text-brand-primary shadow-sm ring-1 ring-brand-primary/10'
                                 : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-slate-200'
                             }`}>
-                        <span className={`w-2 h-2 rounded-full shrink-0 transition-colors ${isSyncScroll ? 'bg-brand-primary animate-pulse' : 'bg-slate-300 dark:bg-slate-600'}`} />
+                        <span className={`w-2 h-2 rounded-full shrink-0 transition-colors ${isSyncScroll && hasOpenDocuments ? 'bg-brand-primary animate-pulse' : 'bg-slate-300 dark:bg-slate-600'}`} />
                         同步滾動
                     </MagneticButton>
 
                     <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
 
-                    {/* 進口檔案 */}
-                    <MagneticButton onClick={() => fileInputRef.current?.click()}
-                        title="進口檔案 (.md, .txt, .xlsx, .csv)"
-                        style={{ position: 'relative', overflow: 'hidden' }}
-                        className="inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-slate-200 transition-all select-none">
-                        <FileUp size={14} />
-                        進口檔案
+                    {/* 標註模式開關：只有列印預覽開啟時才能使用，確保座標系統一致 */}
+                    <MagneticButton
+                        onClick={() => hasOpenDocuments && showPrintPreview && setIsGlobalAnnotationMode?.(!isGlobalAnnotationMode)}
+                        title={!hasOpenDocuments ? '請先開啟文件以使用標註模式' : (showPrintPreview ? '開啟視覺標註模式' : '請先開啟列印預覽以使用標註模式')}
+                        disabled={!hasOpenDocuments || !showPrintPreview}
+                        style={{ position: 'relative', overflow: 'hidden', cursor: (hasOpenDocuments && showPrintPreview) ? undefined : 'not-allowed' }}
+                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all select-none
+                            ${(!showPrintPreview || !hasOpenDocuments)
+                                ? 'opacity-35 text-slate-400 dark:text-slate-600'
+                                : isGlobalAnnotationMode
+                                    ? 'bg-slate-100 dark:bg-slate-800 text-brand-primary shadow-sm ring-1 ring-brand-primary/10'
+                                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-slate-200'
+                            }`}>
+                        <MousePointer2 size={14} className={isGlobalAnnotationMode && showPrintPreview && hasOpenDocuments ? 'animate-bounce' : ''} />
+                        標註模式
                     </MagneticButton>
 
                     <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
 
                     {/* 下載選單（Markdown）：主要 CTA，使用較強磁力吸引使用者點擊 */}
                     <div className="relative" ref={downloadMenuRef}>
-                        <MagneticButton variant="filled" onClick={() => setIsDownloadMenuOpen(!isDownloadMenuOpen)}
+                        <MagneticButton variant="filled" onClick={() => hasOpenDocuments && setIsDownloadMenuOpen(!isDownloadMenuOpen)}
                             aria-label="開啟導出選單"
+                            disabled={!hasOpenDocuments}
                             className="text-sm pr-3"
                             magneticOptions={{ maxOffset: 14, radius: 70, stiffness: 250, damping: 18 }}>
                             <Download size={16} />

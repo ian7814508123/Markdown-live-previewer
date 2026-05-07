@@ -54,7 +54,6 @@ const DiagramBlock: React.FC<DiagramBlockProps> = React.memo(({
 
     const storageKey = useMemo(() => `chart-size-${type}:${hashString(code)}`, [type, code]);
     
-    // 從 Hook 獲取狀態與更新函數
     const { 
         width, 
         align, 
@@ -117,10 +116,10 @@ const DiagramBlock: React.FC<DiagramBlockProps> = React.memo(({
     }, [renderCode, isDark, render, type, notifyReady, isActuallyPrinting]);
 
     // 列印模式：套用使用者調整的 width 與 align，確保列印結果與預覽一致
-    if (isPrinting || showPrintPreview) {
+    if (isActuallyPrinting) {
         return (
             <div
-                className={`chart-wrapper align-${align} ${containerClassName}`}
+                className={`chart-wrapper align-${align} ${containerClassName} relative`}
             >
                 <div 
                     className="chart-content"
@@ -128,7 +127,7 @@ const DiagramBlock: React.FC<DiagramBlockProps> = React.memo(({
                 >
                     <div
                         data-diagram-id={storageKey}
-                        className="diagram-block-container flex p-6 rounded-2xl border border-slate-200"
+                        className="diagram-block-container flex p-6 rounded-2xl border border-slate-200 relative"
                         style={{ 
                             backgroundColor: 'var(--code-bg)',
                             justifyContent: 'center',
@@ -143,6 +142,7 @@ const DiagramBlock: React.FC<DiagramBlockProps> = React.memo(({
         );
     }
 
+
     return (
         <div className="group/diagram-wrapper w-full">
             <ResizableWrapper
@@ -155,7 +155,7 @@ const DiagramBlock: React.FC<DiagramBlockProps> = React.memo(({
             >
                 <div
                     data-diagram-id={storageKey}
-                    className={`diagram-block-container flex p-6 rounded-2xl shadow-sm border overflow-hidden transition-opacity duration-300 ${isDark ? 'border-slate-700/50' : 'border-slate-200/50'} ${isPending ? 'opacity-50' : 'opacity-100'} ${containerClassName}`}
+                    className={`diagram-block-container flex p-6 rounded-2xl shadow-sm border overflow-hidden transition-opacity duration-300 relative ${isDark ? 'border-slate-700/50' : 'border-slate-200/50'} ${isPending ? 'opacity-50' : 'opacity-100'} ${containerClassName}`}
                     style={{ 
                         width: '100%', 
                         height: 'auto', 

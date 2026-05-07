@@ -667,9 +667,17 @@
     }
 
     /* 對齊類別 */
-    .chart-wrapper.align-left   { justify-content: flex-start; }
-    .chart-wrapper.align-center { justify-content: center;     }
-    .chart-wrapper.align-right  { justify-content: flex-end;    }
+    .chart-wrapper.align-left {
+        justify-content: flex-start;
+    }
+
+    .chart-wrapper.align-center {
+        justify-content: center;
+    }
+
+    .chart-wrapper.align-right {
+        justify-content: flex-end;
+    }
 
     .chart-content {
         max-width: 100%;
@@ -1310,6 +1318,45 @@
             padding: 0 !important;
             border-radius: 0 !important;
             transition: none !important;
+        }
+
+        /* ── 標註層列印專用修正 ──────────────────────────────────
+         * 問題：Annotation 容器的 overflow:hidden 會裁切超出邊界的便利貼，
+         *       rounded-2xl 在白色紙張上留下不正常的底部圓角線條。
+         * 注意：不可對 .react-draggable 設定 transform:none，
+         *       因為 react-rnd 使用 transform:translate(x,y) 來定位各 Annotation，
+         *       清除後所有節點會歸零堆疊在左上角。
+         * ─────────────────────────────────────────────────────── */
+
+        /* 方案 D：用 clip-path 取代 overflow-hidden + rounded-2xl
+         * 正常瀏覽： clip-path: inset(0 round 1rem) 提供相同的圓角裁切，但不產生 GPU 合成層
+         * 列印時：   clip-path: none 完全移除裁切，也消除合成層白底問題 */
+        .annotation-layer-root {
+            clip-path: none !important;
+            overflow: visible !important;
+            border-radius: 0 !important;
+            background-color: transparent !important;
+        }
+
+
+        .react-draggable>div {
+            /* 1. 強制讓瀏覽器列印背景色與陰影 */
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+
+            /* 2. 陰影在列印時通常較淡，目前維持去陰影扁平化，未來如果想加回陰影樣式，可以改成0 1px 4px rgba(0, 0, 0, 0.15)*/
+            box-shadow: none !important;
+
+            /* 4. 避免便利貼在分頁時被切斷 */
+            break-inside: avoid;
+
+            /* 如果 style 屬性在這一層，這會強制列印引擎重新評估它。如果中間還是白色的，請確保裡面的子元素沒有 background: #fff 
+            background-color: inherit !important;*/
+        }
+
+        .react-draggable>div * {
+            /* 確保內層不會遮擋背景 */
+            background-color: transparent !important;
         }
     }
 }

@@ -13,10 +13,11 @@ export const ResizableWrapper: React.FC<{
     onAlignChange: (align: string) => void;
     onReset: () => void;
     isDarkMode: boolean;
-}> = ({ children, width, align, onWidthChange, onAlignChange, onReset, isDarkMode }) => {
-    
+    extraControls?: React.ReactNode;
+}> = ({ children, width, align, onWidthChange, onAlignChange, onReset, isDarkMode, extraControls }) => {
+
     return (
-        <div 
+        <div
             className={`chart-wrapper relative group/resizable print:p-0 flex w-full align-${align}`}
         >
             <div
@@ -32,7 +33,7 @@ export const ResizableWrapper: React.FC<{
                     ? 'bg-slate-800/95 border-slate-700 text-slate-200'
                     : 'bg-white/95 border-slate-200 text-slate-600'
                     }`}>
-                    
+
                     {/* Width Control */}
                     <div className="flex items-center gap-1.5 border-r border-slate-200/20 pr-2.5">
                         <span className="text-[10px] font-bold uppercase tracking-wider select-none opacity-50">Width</span>
@@ -94,6 +95,8 @@ export const ResizableWrapper: React.FC<{
                     >
                         <RotateCcw size={12} />
                     </button>
+
+
                 </div>
             </div>
         </div>

@@ -139,17 +139,17 @@ const IntroModal: React.FC<IntroModalProps> = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="p-4 bg-slate-100/50 dark:bg-slate-800/30 rounded-2xl border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-colors">
+                  <div className="p-4 bg-gradient-to-br from-brand-primary/5 to-transparent dark:from-brand-primary/10 rounded-3xl border border-brand-primary/10 dark:border-brand-primary/20">
                     <BarChart3 size={16} className="text-slate-400 mb-2" />
                     <h5 className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">數據視覺化</h5>
                     <p className="text-[10px] text-slate-500 dark:text-slate-500">內建 Vega-Lite，用 JSON 畫出互動圖表。</p>
                   </div>
-                  <div className="p-4 bg-slate-100/50 dark:bg-slate-800/30 rounded-2xl border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-colors">
+                  <div className="p-4 bg-gradient-to-br from-brand-primary/5 to-transparent dark:from-brand-primary/10 rounded-3xl border border-brand-primary/10 dark:border-brand-primary/20">
                     <Music size={16} className="text-slate-400 mb-2" />
                     <h5 className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">ABC 樂譜</h5>
                     <p className="text-[10px] text-slate-500 dark:text-slate-500">標準樂譜語法渲染，高品質向量輸出。</p>
                   </div>
-                  <div className="p-4 bg-slate-100/50 dark:bg-slate-800/30 rounded-2xl border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-colors">
+                  <div className="p-4 bg-gradient-to-br from-brand-primary/5 to-transparent dark:from-brand-primary/10 rounded-3xl border border-brand-primary/10 dark:border-brand-primary/20">
                     <HelpCircle size={16} className="text-slate-400 mb-2" />
                     <h5 className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">進階化學</h5>
                     <p className="text-[10px] text-slate-500 dark:text-slate-500">mhchem 語法與 SMILES 分子結構渲染。</p>
